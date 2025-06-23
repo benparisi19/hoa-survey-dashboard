@@ -39,8 +39,12 @@ venv.bak/
 *.db
 *.sqlite3
 *.csv
-*.json
 *.pdf
+
+# Data JSON files (but keep package.json and tsconfig.json)
+exports/*.json
+data-archive/*.json
+database/*.json
 
 # Survey Data (PRIVATE - DO NOT COMMIT)
 data-archive/
