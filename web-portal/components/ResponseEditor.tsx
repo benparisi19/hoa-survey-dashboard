@@ -324,9 +324,6 @@ export default function ResponseEditor({ response }: ResponseEditorProps) {
               {renderYesNoField('Sharing and learning skills through community mentorship', 'lawn_maintenance')}
               {renderYesNoField('Managing a specific area near your home', 'seasonal_planning')}
             </div>
-            <div className="mt-4">
-              {renderField('Other interests', 'other_interests', 'textarea')}
-            </div>
           </div>
 
           {/* Q8: Equipment Ownership */}

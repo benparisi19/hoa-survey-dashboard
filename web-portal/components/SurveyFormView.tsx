@@ -5,6 +5,7 @@ import { Edit3, Save, X, FileText, User, MapPin, Mail, Phone } from 'lucide-reac
 import { parseContactInfo } from '@/lib/utils';
 import ReviewControls from './ReviewControls';
 import NotesSection from './NotesSection';
+import { supabase } from '@/lib/supabase';
 
 interface SurveyNote {
   note_id: number;
@@ -84,10 +85,145 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // TODO: Implement save functionality with Supabase
-      console.log('Saving response:', editedResponse);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate save
+      // Update main response table
+      const { error: responseError } = await supabase
+        .from('responses')
+        .update({
+          address: editedResponse.address,
+          name: editedResponse.name,
+          email_contact: editedResponse.email_contact,
+          anonymous: editedResponse.anonymous
+        })
+        .eq('response_id', editedResponse.response_id);
+
+      if (responseError) throw responseError;
+
+      // Update Q1/Q2 table
+      const { error: q1q2Error } = await supabase
+        .from('q1_q2_preference_rating')
+        .update({
+          q1_preference: editedResponse.q1_preference,
+          q2_service_rating: editedResponse.q2_service_rating
+        })
+        .eq('response_id', editedResponse.response_id);
+
+      if (q1q2Error) throw q1q2Error;
+
+      // Update Q3 table
+      const { error: q3Error } = await supabase
+        .from('q3_opt_out_reasons')
+        .update({
+          maintain_self: editedResponse.q3_maintain_self,
+          quality: editedResponse.q3_quality,
+          pet_safety: editedResponse.q3_pet_safety,
+          privacy: editedResponse.q3_privacy,
+          other_text: editedResponse.q3_other_text
+        })
+        .eq('response_id', editedResponse.response_id);
+
+      if (q3Error) throw q3Error;
+
+      // Update Q4 table
+      const { error: q4Error } = await supabase
+        .from('q4_landscaping_issues')
+        .update({
+          irrigation: editedResponse.irrigation,
+          poor_mowing: editedResponse.poor_mowing,
+          property_damage: editedResponse.property_damage,
+          missed_service: editedResponse.missed_service,
+          inadequate_weeds: editedResponse.inadequate_weeds,
+          irrigation_detail: editedResponse.irrigation_detail,
+          other_issues: editedResponse.other_issues
+        })
+        .eq('response_id', editedResponse.response_id);
+
+      if (q4Error) throw q4Error;
+
+      // Update Q5/Q6 table
+      const { error: q5q6Error } = await supabase
+        .from('q5_q6_construction_group')
+        .update({
+          q5_construction_issues: editedResponse.q5_construction_issues,
+          q5_explanation: editedResponse.q5_explanation,
+          q6_group_action: editedResponse.q6_group_action
+        })
+        .eq('response_id', editedResponse.response_id);
+
+      if (q5q6Error) throw q5q6Error;
+
+      // Update Q7 table (using NEW column names after SQL migration)
+      const { error: q7Error } = await supabase
+        .from('q7_interest_areas')
+        .update({
+          paid_work: editedResponse.plant_selection,
+          volunteering: editedResponse.watering_irrigation,
+          equipment_coop: editedResponse.fertilizing_pest,
+          mentorship: editedResponse.lawn_maintenance,
+          manage_area: editedResponse.seasonal_planning
+        })
+        .eq('response_id', editedResponse.response_id);
+
+      if (q7Error) throw q7Error;
+
+      // Update Q8 table
+      const { error: q8Error } = await supabase
+        .from('q8_equipment_ownership')
+        .update({
+          lawn_mower: editedResponse.lawn_mower,
+          trimmer: editedResponse.trimmer,
+          blower: editedResponse.blower,
+          basic_tools: editedResponse.basic_tools,
+          truck_trailer: editedResponse.truck_trailer
+        })
+        .eq('response_id', editedResponse.response_id);
+
+      if (q8Error) throw q8Error;
+
+      // Update Q9 table
+      const { error: q9Error } = await supabase
+        .from('q9_dues_preference')
+        .update({
+          q9_response: editedResponse.dues_preference
+        })
+        .eq('response_id', editedResponse.response_id);
+
+      if (q9Error) throw q9Error;
+
+      // Update Q10 table
+      const { error: q10Error } = await supabase
+        .from('q10_biggest_concern')
+        .update({
+          q10_text: editedResponse.biggest_concern
+        })
+        .eq('response_id', editedResponse.response_id);
+
+      if (q10Error) throw q10Error;
+
+      // Update Q11 table
+      const { error: q11Error } = await supabase
+        .from('q11_cost_reduction')
+        .update({
+          q11_text: editedResponse.cost_reduction_ideas
+        })
+        .eq('response_id', editedResponse.response_id);
+
+      if (q11Error) throw q11Error;
+
+      // Update Q12 table
+      const { error: q12Error } = await supabase
+        .from('q12_involvement')
+        .update({
+          q12_response: editedResponse.involvement_preference
+        })
+        .eq('response_id', editedResponse.response_id);
+
+      if (q12Error) throw q12Error;
+
       setIsEditing(false);
+      alert('Response saved successfully!');
+      
+      // Refresh the page to show updated data
+      window.location.reload();
     } catch (error) {
       console.error('Error saving response:', error);
       alert('Error saving response. Please try again.');
@@ -602,21 +738,6 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
               <CheckBox checked={editedResponse.fertilizing_pest === 'Yes'} label="Joining a landscaping equipment co-op (shared tools)" field="fertilizing_pest" />
               <CheckBox checked={editedResponse.lawn_maintenance === 'Yes'} label="Sharing and learning skills through community mentorship" field="lawn_maintenance" />
               <CheckBox checked={editedResponse.seasonal_planning === 'Yes'} label="Managing a specific area near your home" field="seasonal_planning" />
-              {(editedResponse.other_interests || isEditing) && (
-                <div className="mt-2">
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editedResponse.other_interests || ''}
-                      onChange={(e) => updateField('other_interests', e.target.value)}
-                      placeholder="Other interests..."
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
-                    />
-                  ) : (
-                    <span className="text-sm"><strong>Other interests:</strong> {editedResponse.other_interests}</span>
-                  )}
-                </div>
-              )}
             </div>
           </div>
 
