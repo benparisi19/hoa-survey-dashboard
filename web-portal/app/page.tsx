@@ -116,7 +116,14 @@ async function DashboardContent() {
     getServiceRatingData(),
   ]);
   
-  const alertMetrics = [
+  const keyMetrics = [
+    {
+      label: 'Contact Information',
+      value: stats.hasContactInfo,
+      total: stats.totalResponses,
+      type: 'info' as const,
+      description: 'Responses with contact information for follow-up',
+    },
     {
       label: 'Poor Service Ratings',
       value: stats.poorRatings,
@@ -131,40 +138,13 @@ async function DashboardContent() {
       type: 'warning' as const,
       description: 'Residents who want to opt out of HOA landscaping',
     },
-    {
-      label: 'Irrigation Issues',
-      value: stats.irrigationIssues,
-      total: stats.totalResponses,
-      type: 'error' as const,
-      description: 'Properties reporting irrigation problems',
-    },
-  ];
-  
-  const positiveMetrics = [
-    {
-      label: 'Total Responses',
-      value: stats.totalResponses,
-      total: stats.totalResponses,
-      type: 'success' as const,
-      description: 'Complete survey responses received',
-    },
-    {
-      label: 'Contact Information',
-      value: stats.hasContactInfo,
-      total: stats.totalResponses,
-      type: 'info' as const,
-      description: 'Responses with contact information for follow-up',
-    },
   ];
   
   return (
     <div className="space-y-8">
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {positiveMetrics.map((metric) => (
-          <MetricCard key={metric.label} {...metric} />
-        ))}
-        {alertMetrics.map((metric) => (
+        {keyMetrics.map((metric) => (
           <MetricCard key={metric.label} {...metric} />
         ))}
       </div>
