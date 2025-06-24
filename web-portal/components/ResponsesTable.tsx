@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, Filter, Download, ChevronUp, ChevronDown, User, UserX, Mail, MailX, Phone } from 'lucide-react';
+import { Search, Filter, Download, ChevronUp, ChevronDown, User, UserX, Mail, MailX, Phone, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 import { ResponseData } from '@/app/responses/page';
 import { parseContactInfo } from '@/lib/utils';
 
@@ -426,9 +427,13 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
               return (
                 <tr key={response.response_id} className="hover:bg-gray-50">
                   <td className="border border-gray-200 px-4 py-3 text-sm">
-                    <span className="font-mono font-medium">
-                      {response.response_id}
-                    </span>
+                    <Link
+                      href={`/responses/${response.response_id}`}
+                      className="flex items-center space-x-2 font-mono font-medium text-primary-600 hover:text-primary-800 transition-colors"
+                    >
+                      <span>{response.response_id}</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
                   </td>
                   <td className="border border-gray-200 px-4 py-3 text-sm">
                     {response.q2_service_rating && (
