@@ -316,13 +316,13 @@ export default function ResponseEditor({ response }: ResponseEditorProps) {
 
           {/* Q7: Interest Areas */}
           <div className="bg-indigo-50 p-4 rounded-lg">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Q7: Learning Interest Areas</h3>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              {renderYesNoField('Plant selection', 'plant_selection')}
-              {renderYesNoField('Watering/irrigation', 'watering_irrigation')}
-              {renderYesNoField('Fertilizing/pest control', 'fertilizing_pest')}
-              {renderYesNoField('Lawn maintenance', 'lawn_maintenance')}
-              {renderYesNoField('Seasonal planning', 'seasonal_planning')}
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Q7: Community Interest Areas</h3>
+            <div className="grid grid-cols-1 gap-4 mb-4">
+              {renderYesNoField('Part-time paid landscaping work/management for the HOA', 'plant_selection')}
+              {renderYesNoField('Volunteering for community beautification projects', 'watering_irrigation')}
+              {renderYesNoField('Joining a landscaping equipment co-op (shared tools)', 'fertilizing_pest')}
+              {renderYesNoField('Sharing and learning skills through community mentorship', 'lawn_maintenance')}
+              {renderYesNoField('Managing a specific area near your home', 'seasonal_planning')}
             </div>
             <div className="mt-4">
               {renderField('Other interests', 'other_interests', 'textarea')}

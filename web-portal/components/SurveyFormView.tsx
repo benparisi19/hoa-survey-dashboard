@@ -101,7 +101,23 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
     setIsEditing(false);
   };
 
-  const updateField = (field: keyof ResponseData, value: string | null) => {
+  const updateField = (field: keyof ResponseData | string, value: string | null) => {
+    // Handle pseudo-fields for conditional display
+    if (field === 'has_q3_other') {
+      setEditedResponse(prev => ({ 
+        ...prev, 
+        q3_other_text: value === 'Yes' ? (prev.q3_other_text || '') : null 
+      }));
+      return;
+    }
+    if (field === 'has_other_issues') {
+      setEditedResponse(prev => ({ 
+        ...prev, 
+        other_issues: value === 'Yes' ? (prev.other_issues || '') : null 
+      }));
+      return;
+    }
+    
     setEditedResponse(prev => ({ ...prev, [field]: value }));
   };
 
@@ -113,7 +129,7 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
   }: { 
     checked: boolean; 
     label: string; 
-    field?: keyof ResponseData;
+    field?: keyof ResponseData | string;
     disabled?: boolean;
   }) => {
     if (isEditing && field) {
@@ -150,7 +166,7 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
     selected: boolean; 
     label: string; 
     value: string;
-    field?: keyof ResponseData;
+    field?: keyof ResponseData | string;
     disabled?: boolean;
   }) => {
     if (isEditing && field) {
@@ -187,7 +203,7 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
     value: string | null; 
     placeholder?: string;
     multiline?: boolean;
-    field?: keyof ResponseData;
+    field?: keyof ResponseData | string;
   }) => {
     if (isEditing && field) {
       return multiline ? (
@@ -448,21 +464,24 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
               <CheckBox checked={editedResponse.q3_quality === 'Yes'} label="Quality concerns" field="q3_quality" />
               <CheckBox checked={editedResponse.q3_pet_safety === 'Yes'} label="Pet safety" field="q3_pet_safety" />
               <CheckBox checked={editedResponse.q3_privacy === 'Yes'} label="Privacy" field="q3_privacy" />
-              {(editedResponse.q3_other_text || isEditing) && (
-                <div className="mt-2">
+              <CheckBox 
+                checked={!!editedResponse.q3_other_text} 
+                label="Other" 
+                field="has_q3_other"
+                disabled={!isEditing}
+              />
+              {editedResponse.q3_other_text && (
+                <div className="mt-2 ml-6">
                   {isEditing ? (
-                    <div>
-                      <label className="text-sm font-medium">Other reasons:</label>
-                      <input
-                        type="text"
-                        value={editedResponse.q3_other_text || ''}
-                        onChange={(e) => updateField('q3_other_text', e.target.value)}
-                        placeholder="Other reasons..."
-                        className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      value={editedResponse.q3_other_text || ''}
+                      onChange={(e) => updateField('q3_other_text', e.target.value)}
+                      placeholder="Specify other reason..."
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                    />
                   ) : (
-                    <span className="text-sm"><strong>Other:</strong> {editedResponse.q3_other_text}</span>
+                    <span className="text-sm text-gray-600"><strong>Other:</strong> {editedResponse.q3_other_text}</span>
                   )}
                 </div>
               )}
@@ -495,21 +514,24 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
               <CheckBox checked={editedResponse.property_damage === 'Yes'} label="Damage to personal property" field="property_damage" />
               <CheckBox checked={editedResponse.missed_service === 'Yes'} label="Missed service dates" field="missed_service" />
               <CheckBox checked={editedResponse.inadequate_weeds === 'Yes'} label="Inadequate weed control" field="inadequate_weeds" />
-              {(editedResponse.other_issues || isEditing) && (
-                <div className="mt-2">
+              <CheckBox 
+                checked={!!editedResponse.other_issues} 
+                label="Other (describe below)" 
+                field="has_other_issues"
+                disabled={!isEditing}
+              />
+              {editedResponse.other_issues && (
+                <div className="mt-2 ml-6">
                   {isEditing ? (
-                    <div>
-                      <label className="text-sm font-medium">Other issues:</label>
-                      <textarea
-                        value={editedResponse.other_issues || ''}
-                        onChange={(e) => updateField('other_issues', e.target.value)}
-                        placeholder="Describe any other issues..."
-                        rows={2}
-                        className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
+                    <textarea
+                      value={editedResponse.other_issues || ''}
+                      onChange={(e) => updateField('other_issues', e.target.value)}
+                      placeholder="Describe any other issues..."
+                      rows={2}
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                    />
                   ) : (
-                    <span className="text-sm"><strong>Other issues:</strong> {editedResponse.other_issues}</span>
+                    <span className="text-sm text-gray-600"><strong>Description:</strong> {editedResponse.other_issues}</span>
                   )}
                 </div>
               )}
@@ -527,7 +549,7 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
               <RadioButton selected={editedResponse.q5_construction_issues === 'No'} label="No construction-related issues" value="No" field="q5_construction_issues" />
               <RadioButton selected={editedResponse.q5_construction_issues?.includes('Not sure') || false} label="Not sure" value="Not sure" field="q5_construction_issues" />
             </div>
-            {(editedResponse.q5_explanation || isEditing) && (
+            {(editedResponse.q5_construction_issues?.includes('Not sure') || editedResponse.q5_explanation) && (
               <div className="mt-2 ml-4">
                 {isEditing ? (
                   <textarea
@@ -572,14 +594,14 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
           {/* Question 7 */}
           <div>
             <h4 className="text-base font-medium text-gray-900 mb-3">
-              7. Would you be interested in learning about any of the following? (Check all that apply)
+              7. Would you be interested in any of the following? (Check all that apply)
             </h4>
             <div className="ml-4 space-y-1">
-              <CheckBox checked={editedResponse.plant_selection === 'Yes'} label="Plant selection" field="plant_selection" />
-              <CheckBox checked={editedResponse.watering_irrigation === 'Yes'} label="Watering/irrigation" field="watering_irrigation" />
-              <CheckBox checked={editedResponse.fertilizing_pest === 'Yes'} label="Fertilizing/pest control" field="fertilizing_pest" />
-              <CheckBox checked={editedResponse.lawn_maintenance === 'Yes'} label="Lawn maintenance" field="lawn_maintenance" />
-              <CheckBox checked={editedResponse.seasonal_planning === 'Yes'} label="Seasonal planning" field="seasonal_planning" />
+              <CheckBox checked={editedResponse.plant_selection === 'Yes'} label="Part-time paid landscaping work/management for the HOA" field="plant_selection" />
+              <CheckBox checked={editedResponse.watering_irrigation === 'Yes'} label="Volunteering for community beautification projects" field="watering_irrigation" />
+              <CheckBox checked={editedResponse.fertilizing_pest === 'Yes'} label="Joining a landscaping equipment co-op (shared tools)" field="fertilizing_pest" />
+              <CheckBox checked={editedResponse.lawn_maintenance === 'Yes'} label="Sharing and learning skills through community mentorship" field="lawn_maintenance" />
+              <CheckBox checked={editedResponse.seasonal_planning === 'Yes'} label="Managing a specific area near your home" field="seasonal_planning" />
               {(editedResponse.other_interests || isEditing) && (
                 <div className="mt-2">
                   {isEditing ? (
@@ -618,11 +640,12 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
               9. If opting out of HOA landscaping reduced your dues proportionally, would you:
             </h4>
             <div className="ml-4 space-y-1">
-              <RadioButton selected={editedResponse.dues_preference?.includes('maintain it myself') || false} label="Maintain it myself (and keep the savings)" value="maintain it myself" field="dues_preference" />
-              <RadioButton selected={editedResponse.dues_preference?.includes('hire my own landscaper') || false} label="Hire my own landscaper (and keep some savings)" value="hire my own landscaper" field="dues_preference" />
-              <RadioButton selected={editedResponse.dues_preference?.includes('participate in cooperative') || false} label="Participate in a resident-owned cooperative" value="participate in cooperative" field="dues_preference" />
-              <RadioButton selected={editedResponse.dues_preference?.includes('stay with HOA') || false} label="Stay with HOA service even with higher dues" value="stay with HOA" field="dues_preference" />
-              {editedResponse.dues_preference && !editedResponse.dues_preference.match(/(maintain it myself|hire my own landscaper|participate in cooperative|stay with HOA)/i) && (
+              <RadioButton selected={editedResponse.dues_preference?.includes('Still use HOA landscaping even if dues increase') || false} label="Still use HOA landscaping even if dues increase to cover the full cost" value="Still use HOA landscaping even if dues increase" field="dues_preference" />
+              <RadioButton selected={editedResponse.dues_preference?.includes('Use HOA landscaping only if') || false} label="Use HOA landscaping only if it's significantly cheaper than private options" value="Use HOA landscaping only if it's significantly cheaper" field="dues_preference" />
+              <RadioButton selected={editedResponse.dues_preference?.includes('Opt out and hire my own landscaper') || false} label="Opt out and hire my own landscaper with the savings" value="Opt out and hire my own landscaper" field="dues_preference" />
+              <RadioButton selected={editedResponse.dues_preference?.includes('Opt out and do it myself') || false} label="Opt out and do it myself with the savings" value="Opt out and do it myself" field="dues_preference" />
+              <RadioButton selected={editedResponse.dues_preference?.includes('Depends on how much') || false} label="Depends on how much the dues reduction would be" value="Depends on how much the dues reduction would be" field="dues_preference" />
+              {editedResponse.dues_preference && !editedResponse.dues_preference.match(/(Still use HOA|Use HOA landscaping only|Opt out and hire|Opt out and do|Depends on how much)/i) && (
                 <div className="mt-2">
                   <span className="text-sm"><strong>Other response:</strong> {editedResponse.dues_preference}</span>
                 </div>

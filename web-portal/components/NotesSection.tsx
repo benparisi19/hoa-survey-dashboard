@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MessageSquare, AlertTriangle, Clock, CheckCircle, Plus, Edit, Trash2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface SurveyNote {
   note_id: number;
@@ -26,6 +27,7 @@ interface NotesSectionProps {
 
 export default function NotesSection({ notes, responseId, editable = true }: NotesSectionProps) {
   const [isAddingNote, setIsAddingNote] = useState(false);
+  const [editingNote, setEditingNote] = useState<number | null>(null);
   const [newNote, setNewNote] = useState({
     note_text: '',
     section: 'general',
@@ -63,16 +65,92 @@ export default function NotesSection({ notes, responseId, editable = true }: Not
   };
 
   const handleAddNote = async () => {
-    // TODO: Implement note creation
-    console.log('Adding note:', newNote);
-    setIsAddingNote(false);
-    setNewNote({
-      note_text: '',
-      section: 'general',
-      note_type: 'margin_note',
-      priority: 'medium',
-      requires_follow_up: false
-    });
+    try {
+      const { data, error } = await supabase
+        .from('survey_notes')
+        .insert({
+          response_id: responseId,
+          section: newNote.section,
+          question_context: null,
+          note_text: newNote.note_text,
+          note_type: newNote.note_type,
+          requires_follow_up: newNote.requires_follow_up,
+          priority: newNote.priority,
+          resolved: false
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding note:', error);
+        alert('Failed to add note. Please try again.');
+        return;
+      }
+
+      // Reset form and refresh page
+      setIsAddingNote(false);
+      setNewNote({
+        note_text: '',
+        section: 'general',
+        note_type: 'margin_note',
+        priority: 'medium',
+        requires_follow_up: false
+      });
+      window.location.reload();
+    } catch (error) {
+      console.error('Error adding note:', error);
+      alert('Failed to add note. Please try again.');
+    }
+  };
+
+  const handleDeleteNote = async (noteId: number) => {
+    if (!confirm('Are you sure you want to delete this note?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('survey_notes')
+        .delete()
+        .eq('note_id', noteId);
+
+      if (error) {
+        console.error('Error deleting note:', error);
+        alert('Failed to delete note. Please try again.');
+        return;
+      }
+
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      alert('Failed to delete note. Please try again.');
+    }
+  };
+
+  const handleEditNote = async (note: SurveyNote) => {
+    const newText = prompt('Edit note text:', note.note_text);
+    if (newText === null || newText.trim() === '') return;
+
+    try {
+      const { error } = await supabase
+        .from('survey_notes')
+        .update({
+          note_text: newText.trim(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('note_id', note.note_id);
+
+      if (error) {
+        console.error('Error updating note:', error);
+        alert('Failed to update note. Please try again.');
+        return;
+      }
+
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating note:', error);
+      alert('Failed to update note. Please try again.');
+    }
   };
 
   return (
@@ -255,10 +333,18 @@ export default function NotesSection({ notes, responseId, editable = true }: Not
                 
                 {editable && (
                   <div className="flex items-center space-x-1 ml-4">
-                    <button className="p-1 text-gray-400 hover:text-gray-600">
+                    <button 
+                      onClick={() => handleEditNote(note)}
+                      className="p-1 text-gray-400 hover:text-gray-600"
+                      title="Edit note"
+                    >
                       <Edit className="h-4 w-4" />
                     </button>
-                    <button className="p-1 text-gray-400 hover:text-red-600">
+                    <button 
+                      onClick={() => handleDeleteNote(note.note_id)}
+                      className="p-1 text-gray-400 hover:text-red-600"
+                      title="Delete note"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
