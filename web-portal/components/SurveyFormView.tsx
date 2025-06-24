@@ -242,14 +242,14 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
     if (field === 'has_q3_other') {
       setEditedResponse(prev => ({ 
         ...prev, 
-        q3_other_text: value === 'Yes' ? (prev.q3_other_text || '') : null 
+        q3_other_text: value === 'Yes' ? (prev.q3_other_text || '') : ''
       }));
       return;
     }
     if (field === 'has_other_issues') {
       setEditedResponse(prev => ({ 
         ...prev, 
-        other_issues: value === 'Yes' ? (prev.other_issues || '') : null 
+        other_issues: value === 'Yes' ? (prev.other_issues || '') : ''
       }));
       return;
     }
@@ -604,9 +604,8 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
                 checked={!!editedResponse.q3_other_text} 
                 label="Other" 
                 field="has_q3_other"
-                disabled={!isEditing}
               />
-              {editedResponse.q3_other_text && (
+              {!!editedResponse.q3_other_text && (
                 <div className="mt-2 ml-6">
                   {isEditing ? (
                     <input
@@ -654,9 +653,8 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
                 checked={!!editedResponse.other_issues} 
                 label="Other (describe below)" 
                 field="has_other_issues"
-                disabled={!isEditing}
               />
-              {editedResponse.other_issues && (
+              {!!editedResponse.other_issues && (
                 <div className="mt-2 ml-6">
                   {isEditing ? (
                     <textarea
@@ -787,7 +785,21 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
               10. What's your biggest concern about HOA finances?
             </h4>
             <div className="ml-4">
-              <TextResponse value={editedResponse.biggest_concern} multiline field="biggest_concern" />
+              {isEditing ? (
+                <textarea
+                  value={editedResponse.biggest_concern || ''}
+                  onChange={(e) => updateField('biggest_concern', e.target.value)}
+                  placeholder="Share your concerns..."
+                  rows={3}
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              ) : (
+                <div className="border-b border-gray-300 min-h-16 pb-1 mb-2">
+                  <span className="text-sm">
+                    {editedResponse.biggest_concern || <span className="text-gray-400 italic">No response provided</span>}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -797,7 +809,21 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
               11. Other ideas for reducing landscaping costs?
             </h4>
             <div className="ml-4">
-              <TextResponse value={editedResponse.cost_reduction_ideas} multiline field="cost_reduction_ideas" />
+              {isEditing ? (
+                <textarea
+                  value={editedResponse.cost_reduction_ideas || ''}
+                  onChange={(e) => updateField('cost_reduction_ideas', e.target.value)}
+                  placeholder="Share your ideas..."
+                  rows={3}
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              ) : (
+                <div className="border-b border-gray-300 min-h-16 pb-1 mb-2">
+                  <span className="text-sm">
+                    {editedResponse.cost_reduction_ideas || <span className="text-gray-400 italic">No response provided</span>}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
