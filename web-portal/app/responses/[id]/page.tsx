@@ -77,18 +77,33 @@ interface ResponseDetailData {
 
 async function getResponseDetail(id: string): Promise<ResponseDetailData | null> {
   try {
-    const { data, error } = await supabase
-      .from('complete_responses')
-      .select('*')
-      .eq('response_id', id)
-      .single();
-    
-    if (error) {
-      console.error('Error fetching response detail:', error);
+    // Get response data and review data separately since complete_responses view 
+    // hasn't been updated with review columns yet
+    const [responseResult, reviewResult] = await Promise.all([
+      supabase.from('complete_responses').select('*').eq('response_id', id).single(),
+      supabase.from('responses').select('review_status, reviewed_by, reviewed_at, review_notes').eq('response_id', id).single()
+    ]);
+
+    if (responseResult.error) {
+      console.error('Error fetching response detail:', responseResult.error);
       return null;
     }
+
+    if (reviewResult.error) {
+      console.error('Error fetching review data:', reviewResult.error);
+      // Continue without review data if it fails
+    }
+
+    // Merge the data
+    const combinedData = {
+      ...responseResult.data,
+      review_status: reviewResult.data?.review_status || 'unreviewed',
+      reviewed_by: reviewResult.data?.reviewed_by || null,
+      reviewed_at: reviewResult.data?.reviewed_at || null,
+      review_notes: reviewResult.data?.review_notes || null,
+    };
     
-    return data;
+    return combinedData;
   } catch (error) {
     console.error('Error:', error);
     return null;
