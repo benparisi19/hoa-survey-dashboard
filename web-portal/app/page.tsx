@@ -15,6 +15,9 @@ interface DashboardStats {
   wantOptOut: number;
   hasContactInfo: number;
   irrigationIssues: number;
+  unreviewed: number;
+  reviewed: number;
+  flagged: number;
   contactByType: {
     none: number;
     email: number;
@@ -32,10 +35,10 @@ interface ServiceRatingData {
 
 async function getDashboardStats(): Promise<DashboardStats> {
   try {
-    // Get total responses
+    // Get total responses with review status
     const { data: responses, error: responsesError } = await supabase
       .from('responses')
-      .select('response_id, anonymous, email_contact');
+      .select('response_id, anonymous, email_contact, review_status');
     
     if (responsesError) throw responsesError;
     
@@ -73,6 +76,11 @@ async function getDashboardStats(): Promise<DashboardStats> {
     
     const irrigationIssues = issues?.filter(i => i.irrigation === 'Yes').length || 0;
     
+    // Calculate review status counts
+    const unreviewed = responses?.filter(r => !r.review_status || r.review_status === 'unreviewed').length || 0;
+    const reviewed = responses?.filter(r => r.review_status === 'reviewed').length || 0;
+    const flagged = responses?.filter(r => r.review_status === 'flagged').length || 0;
+    
     return {
       totalResponses,
       anonymousResponses,
@@ -80,6 +88,9 @@ async function getDashboardStats(): Promise<DashboardStats> {
       wantOptOut,
       hasContactInfo,
       irrigationIssues,
+      unreviewed,
+      reviewed,
+      flagged,
       contactByType: contactAnalysis,
     };
   } catch (error) {
@@ -91,6 +102,9 @@ async function getDashboardStats(): Promise<DashboardStats> {
       wantOptOut: 0,
       hasContactInfo: 0,
       irrigationIssues: 0,
+      unreviewed: 0,
+      reviewed: 0,
+      flagged: 0,
       contactByType: { none: 0, email: 0, phone: 0, both: 0, other: 0 },
     };
   }
@@ -133,11 +147,11 @@ async function DashboardContent() {
   
   const keyMetrics = [
     {
-      label: 'Contact Information',
-      value: stats.hasContactInfo,
+      label: 'Unreviewed Responses',
+      value: stats.unreviewed,
       total: stats.totalResponses,
-      type: 'info' as const,
-      description: 'Responses with contact information for follow-up',
+      type: 'warning' as const,
+      description: 'Responses that need review and validation',
     },
     {
       label: 'Poor Service Ratings',
@@ -155,11 +169,42 @@ async function DashboardContent() {
     },
   ];
   
+  const reviewMetrics = [
+    {
+      label: 'Reviewed',
+      value: stats.reviewed,
+      total: stats.totalResponses,
+      type: 'success' as const,
+      description: 'Responses verified and approved',
+    },
+    {
+      label: 'Flagged',
+      value: stats.flagged,
+      total: stats.totalResponses,
+      type: 'error' as const,
+      description: 'Responses requiring attention or clarification',
+    },
+    {
+      label: 'Contact Information',
+      value: stats.hasContactInfo,
+      total: stats.totalResponses,
+      type: 'info' as const,
+      description: 'Responses with contact information for follow-up',
+    },
+  ];
+  
   return (
     <div className="space-y-8">
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {keyMetrics.map((metric) => (
+          <MetricCard key={metric.label} {...metric} />
+        ))}
+      </div>
+      
+      {/* Review Status Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {reviewMetrics.map((metric) => (
           <MetricCard key={metric.label} {...metric} />
         ))}
       </div>

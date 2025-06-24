@@ -58,7 +58,8 @@ interface SurveyFormViewProps {
 }
 
 export default function SurveyFormView({ response }: SurveyFormViewProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  // Auto-enable editing for unreviewed responses
+  const [isEditing, setIsEditing] = useState(response.review_status === 'unreviewed');
   const [editedResponse, setEditedResponse] = useState(response);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -204,7 +205,7 @@ export default function SurveyFormView({ response }: SurveyFormViewProps) {
   return (
     <div className="bg-white">
       {/* Review Controls Header */}
-      <div className="bg-gray-50 p-4 border-b border-gray-200 -mx-6 -mt-6 mb-6">
+      <div className="bg-gray-50 p-4 border-b border-gray-200 mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <FileText className="h-6 w-6 text-gray-600" />
@@ -215,34 +216,47 @@ export default function SurveyFormView({ response }: SurveyFormViewProps) {
           </div>
           
           <div className="flex items-center space-x-3">
-            {/* Edit Toggle Button */}
-            {isEditing ? (
-              <>
-                <button
-                  onClick={handleCancel}
-                  disabled={isSaving}
-                  className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                  <span>Cancel</span>
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="flex items-center space-x-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50"
-                >
-                  <Save className="h-4 w-4" />
-                  <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
-                </button>
-              </>
-            ) : (
+            {/* Edit/Save Buttons */}
+            {editedResponse.review_status === 'unreviewed' ? (
+              // For unreviewed, show save button since we're auto-editing
               <button
-                onClick={() => setIsEditing(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex items-center space-x-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50"
               >
-                <Edit3 className="h-4 w-4" />
-                <span>Edit Response</span>
+                <Save className="h-4 w-4" />
+                <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
               </button>
+            ) : (
+              // For reviewed/flagged, show edit button only when not editing
+              isEditing ? (
+                <>
+                  <button
+                    onClick={handleCancel}
+                    disabled={isSaving}
+                    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                    <span>Cancel</span>
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="flex items-center space-x-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    <Save className="h-4 w-4" />
+                    <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  <Edit3 className="h-4 w-4" />
+                  <span>Edit Response</span>
+                </button>
+              )
             )}
             
             <ReviewControls
@@ -251,6 +265,14 @@ export default function SurveyFormView({ response }: SurveyFormViewProps) {
               reviewedBy={editedResponse.reviewed_by}
               reviewedAt={editedResponse.reviewed_at}
               reviewNotes={editedResponse.review_notes}
+              onStatusChange={(newStatus) => {
+                // Update local state when status changes
+                setEditedResponse(prev => ({ ...prev, review_status: newStatus }));
+                // If marking as reviewed, exit edit mode
+                if (newStatus === 'reviewed') {
+                  setIsEditing(false);
+                }
+              }}
             />
           </div>
         </div>

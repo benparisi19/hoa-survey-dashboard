@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle, Flag, Clock, AlertCircle, Save } from 'lucide-react';
+import { CheckCircle, Flag } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface ReviewControlsProps {
@@ -22,11 +22,9 @@ export default function ReviewControls({
   onStatusChange
 }: ReviewControlsProps) {
   const [status, setStatus] = useState(currentStatus);
-  const [notes, setNotes] = useState(reviewNotes || '');
   const [isSaving, setIsSaving] = useState(false);
-  const [showNotes, setShowNotes] = useState(false);
 
-  const updateReviewStatus = async (newStatus: string, noteText?: string) => {
+  const updateReviewStatus = async (newStatus: string) => {
     setIsSaving(true);
     try {
       const updateData: any = {
@@ -34,10 +32,6 @@ export default function ReviewControls({
         reviewed_by: 'Admin', // TODO: Replace with actual user when auth is implemented
         reviewed_at: new Date().toISOString(),
       };
-
-      if (noteText !== undefined) {
-        updateData.review_notes = noteText;
-      }
 
       const { error } = await supabase
         .from('responses')
@@ -60,104 +54,38 @@ export default function ReviewControls({
     }
   };
 
-  const saveNotes = async () => {
-    await updateReviewStatus(status, notes);
-    setShowNotes(false);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'reviewed': return 'bg-green-600 hover:bg-green-700';
-      case 'in_progress': return 'bg-blue-600 hover:bg-blue-700';
-      case 'flagged': return 'bg-red-600 hover:bg-red-700';
-      default: return 'bg-gray-600 hover:bg-gray-700';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'reviewed': return <CheckCircle className="h-4 w-4" />;
-      case 'in_progress': return <Clock className="h-4 w-4" />;
-      case 'flagged': return <Flag className="h-4 w-4" />;
-      default: return <AlertCircle className="h-4 w-4" />;
-    }
-  };
-
   return (
     <div className="flex items-center space-x-2">
-      {/* Status Dropdown */}
-      <select 
-        value={status}
-        onChange={(e) => {
-          const newStatus = e.target.value;
-          setStatus(newStatus);
-          updateReviewStatus(newStatus);
-        }}
-        disabled={isSaving}
-        className="text-sm border border-gray-300 rounded px-2 py-1 min-w-[120px]"
-      >
-        <option value="unreviewed">Unreviewed</option>
-        <option value="in_progress">In Progress</option>
-        <option value="reviewed">Reviewed</option>
-        <option value="flagged">Flagged</option>
-      </select>
+      {/* Only show buttons if not already in that status */}
+      {status !== 'reviewed' && (
+        <button
+          onClick={() => updateReviewStatus('reviewed')}
+          disabled={isSaving}
+          className="flex items-center space-x-1 text-sm bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition-colors"
+        >
+          <CheckCircle className="h-3 w-3" />
+          <span>Mark Reviewed</span>
+        </button>
+      )}
 
-      {/* Quick Action Buttons */}
-      <button
-        onClick={() => updateReviewStatus('reviewed')}
-        disabled={isSaving || status === 'reviewed'}
-        className="flex items-center space-x-1 text-sm bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition-colors"
-      >
-        <CheckCircle className="h-3 w-3" />
-        <span>Mark Reviewed</span>
-      </button>
+      {status !== 'flagged' && (
+        <button
+          onClick={() => updateReviewStatus('flagged')}
+          disabled={isSaving}
+          className="flex items-center space-x-1 text-sm bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition-colors"
+        >
+          <Flag className="h-3 w-3" />
+          <span>Flag</span>
+        </button>
+      )}
 
-      <button
-        onClick={() => updateReviewStatus('flagged')}
-        disabled={isSaving || status === 'flagged'}
-        className="flex items-center space-x-1 text-sm bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition-colors"
-      >
-        <Flag className="h-3 w-3" />
-        <span>Flag</span>
-      </button>
-
-      {/* Notes Button */}
-      <button
-        onClick={() => setShowNotes(!showNotes)}
-        className="text-sm border border-gray-300 hover:bg-gray-50 px-3 py-1 rounded transition-colors"
-      >
-        Notes
-      </button>
-
-      {/* Notes Modal/Dropdown */}
-      {showNotes && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw]">
-            <h3 className="text-lg font-medium mb-4">Review Notes</h3>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add notes about this response review..."
-              rows={4}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-            <div className="flex justify-end space-x-3 mt-4">
-              <button
-                onClick={() => setShowNotes(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveNotes}
-                disabled={isSaving}
-                className="flex items-center space-x-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded"
-              >
-                <Save className="h-4 w-4" />
-                <span>Save Notes</span>
-              </button>
-            </div>
-          </div>
+      {/* Show current status */}
+      {(status === 'reviewed' || status === 'flagged') && (
+        <div className={`flex items-center space-x-1 text-sm px-3 py-1 rounded ${
+          status === 'reviewed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`}>
+          {status === 'reviewed' ? <CheckCircle className="h-3 w-3" /> : <Flag className="h-3 w-3" />}
+          <span>{status === 'reviewed' ? 'Reviewed' : 'Flagged'}</span>
         </div>
       )}
 
