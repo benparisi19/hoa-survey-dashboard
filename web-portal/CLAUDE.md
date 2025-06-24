@@ -180,4 +180,8 @@ export default function Page() {
 - Icons from Lucide React only
 - Consistent spacing: `space-y-6` for sections, `space-y-4` for groups
 
-See `NEXT_STEPS.md` for planned enhancements including comprehensive notes/ticketing system for advanced quality control workflows.
+## Reference Documentation
+
+- **`DATABASE_SCHEMA.md`** - Complete current database schema with all 11 tables, constraints, and views
+- **`SURVEY_CONTENT.md`** - Original survey questions and content for data validation reference  
+- **`NEXT_STEPS.md`** - Planned enhancements including comprehensive notes/ticketing system for advanced quality control workflows
