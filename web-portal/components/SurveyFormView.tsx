@@ -79,6 +79,8 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
   const [isEditing, setIsEditing] = useState(response.review_status === 'unreviewed');
   const [editedResponse, setEditedResponse] = useState(response);
   const [isSaving, setIsSaving] = useState(false);
+  const [showQ3Other, setShowQ3Other] = useState(!!response.q3_other_text);
+  const [showQ4Other, setShowQ4Other] = useState(!!response.other_issues);
   
   const contactInfo = parseContactInfo(isEditing ? editedResponse.email_contact : response.email_contact);
 
@@ -240,17 +242,19 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
   const updateField = (field: keyof ResponseData | string, value: string | null) => {
     // Handle pseudo-fields for conditional display
     if (field === 'has_q3_other') {
-      setEditedResponse(prev => ({ 
-        ...prev, 
-        q3_other_text: value === 'Yes' ? (prev.q3_other_text || '') : ''
-      }));
+      const isChecked = value === 'Yes';
+      setShowQ3Other(isChecked);
+      if (!isChecked) {
+        setEditedResponse(prev => ({ ...prev, q3_other_text: null }));
+      }
       return;
     }
     if (field === 'has_other_issues') {
-      setEditedResponse(prev => ({ 
-        ...prev, 
-        other_issues: value === 'Yes' ? (prev.other_issues || '') : ''
-      }));
+      const isChecked = value === 'Yes';
+      setShowQ4Other(isChecked);
+      if (!isChecked) {
+        setEditedResponse(prev => ({ ...prev, other_issues: null }));
+      }
       return;
     }
     
@@ -601,11 +605,11 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
               <CheckBox checked={editedResponse.q3_pet_safety === 'Yes'} label="Pet safety" field="q3_pet_safety" />
               <CheckBox checked={editedResponse.q3_privacy === 'Yes'} label="Privacy" field="q3_privacy" />
               <CheckBox 
-                checked={!!editedResponse.q3_other_text} 
+                checked={showQ3Other} 
                 label="Other" 
                 field="has_q3_other"
               />
-              {!!editedResponse.q3_other_text && (
+              {showQ3Other && (
                 <div className="mt-2 ml-6">
                   {isEditing ? (
                     <input
@@ -650,11 +654,11 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
               <CheckBox checked={editedResponse.missed_service === 'Yes'} label="Missed service dates" field="missed_service" />
               <CheckBox checked={editedResponse.inadequate_weeds === 'Yes'} label="Inadequate weed control" field="inadequate_weeds" />
               <CheckBox 
-                checked={!!editedResponse.other_issues} 
+                checked={showQ4Other} 
                 label="Other (describe below)" 
                 field="has_other_issues"
               />
-              {!!editedResponse.other_issues && (
+              {showQ4Other && (
                 <div className="mt-2 ml-6">
                   {isEditing ? (
                     <textarea
