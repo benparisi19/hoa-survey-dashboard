@@ -183,7 +183,7 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
       const { error: q9Error } = await supabase
         .from('q9_dues_preference')
         .update({
-          q9_response: editedResponse.dues_preference
+          dues_preference: editedResponse.dues_preference
         })
         .eq('response_id', editedResponse.response_id);
 
@@ -193,7 +193,7 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
       const { error: q10Error } = await supabase
         .from('q10_biggest_concern')
         .update({
-          q10_text: editedResponse.biggest_concern
+          biggest_concern: editedResponse.biggest_concern
         })
         .eq('response_id', editedResponse.response_id);
 
@@ -203,7 +203,7 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
       const { error: q11Error } = await supabase
         .from('q11_cost_reduction')
         .update({
-          q11_text: editedResponse.cost_reduction_ideas
+          cost_reduction_ideas: editedResponse.cost_reduction_ideas
         })
         .eq('response_id', editedResponse.response_id);
 
@@ -213,7 +213,7 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
       const { error: q12Error } = await supabase
         .from('q12_involvement')
         .update({
-          q12_response: editedResponse.involvement_preference
+          involvement_preference: editedResponse.involvement_preference
         })
         .eq('response_id', editedResponse.response_id);
 

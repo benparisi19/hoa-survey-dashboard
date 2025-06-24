@@ -207,68 +207,68 @@ export interface Database {
       q9_dues_preference: {
         Row: {
           response_id: string;
-          q9_response: string | null;
+          dues_preference: string | null;
           created_at: string;
         };
         Insert: {
           response_id: string;
-          q9_response?: string | null;
+          dues_preference?: string | null;
           created_at?: string;
         };
         Update: {
           response_id?: string;
-          q9_response?: string | null;
+          dues_preference?: string | null;
           created_at?: string;
         };
       };
       q10_biggest_concern: {
         Row: {
           response_id: string;
-          q10_text: string | null;
+          biggest_concern: string | null;
           created_at: string;
         };
         Insert: {
           response_id: string;
-          q10_text?: string | null;
+          biggest_concern?: string | null;
           created_at?: string;
         };
         Update: {
           response_id?: string;
-          q10_text?: string | null;
+          biggest_concern?: string | null;
           created_at?: string;
         };
       };
       q11_cost_reduction: {
         Row: {
           response_id: string;
-          q11_text: string | null;
+          cost_reduction_ideas: string | null;
           created_at: string;
         };
         Insert: {
           response_id: string;
-          q11_text?: string | null;
+          cost_reduction_ideas?: string | null;
           created_at?: string;
         };
         Update: {
           response_id?: string;
-          q11_text?: string | null;
+          cost_reduction_ideas?: string | null;
           created_at?: string;
         };
       };
       q12_involvement: {
         Row: {
           response_id: string;
-          q12_response: string | null;
+          involvement_preference: string | null;
           created_at: string;
         };
         Insert: {
           response_id: string;
-          q12_response?: string | null;
+          involvement_preference?: string | null;
           created_at?: string;
         };
         Update: {
           response_id?: string;
-          q12_response?: string | null;
+          involvement_preference?: string | null;
           created_at?: string;
         };
       };
