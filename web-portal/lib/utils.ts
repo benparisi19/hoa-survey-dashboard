@@ -24,13 +24,15 @@ export function getServiceRatingColor(rating: string | null): string {
     case 'excellent':
       return 'text-green-600 bg-green-50 border-green-200';
     case 'good':
-      return 'text-green-600 bg-green-50 border-green-200';
+      return 'text-blue-600 bg-blue-50 border-blue-200';
     case 'fair':
       return 'text-yellow-600 bg-yellow-50 border-yellow-200';
     case 'poor':
-      return 'text-red-600 bg-red-50 border-red-200';
+      return 'text-orange-600 bg-orange-50 border-orange-200';
     case 'very poor':
       return 'text-red-600 bg-red-50 border-red-200';
+    case 'not specified':
+      return 'text-gray-600 bg-gray-50 border-gray-200';
     default:
       return 'text-gray-600 bg-gray-50 border-gray-200';
   }
@@ -99,7 +101,63 @@ export const CHART_COLORS = [
   '#6B7280', // Gray
 ];
 
-export const SERVICE_RATING_ORDER = ['Excellent', 'Good', 'Fair', 'Poor', 'Very Poor'];
+export const SERVICE_RATING_ORDER = ['Excellent', 'Good', 'Fair', 'Poor', 'Very Poor', 'Not Specified'];
+
+/**
+ * Normalizes service ratings by applying conservative approach:
+ * - When multiple ratings are marked, uses the worst (lowest) rating
+ * - Handles edge cases like "Not marked", contextual ratings, etc.
+ */
+export function normalizeServiceRating(rating: string | null): string | null {
+  if (!rating || rating.trim() === '') {
+    return null;
+  }
+
+  const ratingLower = rating.toLowerCase();
+
+  // Handle "Not marked" cases
+  if (ratingLower.includes('not marked')) {
+    return 'Not Specified';
+  }
+
+  // Rating hierarchy (lower number = worse rating)
+  const ratingHierarchy: { [key: string]: number } = {
+    'very poor': 1,
+    'poor': 2,
+    'fair': 3,
+    'good': 4,
+    'excellent': 5,
+  };
+
+  // Find all standard ratings mentioned in the text
+  const mentionedRatings: Array<{ rating: string; value: number }> = [];
+  
+  Object.entries(ratingHierarchy).forEach(([ratingName, value]) => {
+    if (ratingLower.includes(ratingName)) {
+      mentionedRatings.push({ rating: ratingName, value });
+    }
+  });
+
+  // If we found standard ratings, return the worst one (lowest value)
+  if (mentionedRatings.length > 0) {
+    const worstRating = mentionedRatings.reduce((worst, current) => 
+      current.value < worst.value ? current : worst
+    );
+    
+    // Convert back to proper case
+    switch (worstRating.rating) {
+      case 'very poor': return 'Very Poor';
+      case 'poor': return 'Poor';
+      case 'fair': return 'Fair';
+      case 'good': return 'Good';
+      case 'excellent': return 'Excellent';
+      default: return 'Not Specified';
+    }
+  }
+
+  // If no standard ratings found, mark as not specified
+  return 'Not Specified';
+}
 
 export const PREFERENCE_ORDER = [
   'Keep current HOA landscaping',

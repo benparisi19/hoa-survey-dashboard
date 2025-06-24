@@ -17,7 +17,7 @@ interface FilterState {
   issues: string[];
 }
 
-const SERVICE_RATINGS = ['Excellent', 'Good', 'Fair', 'Poor', 'Very Poor'];
+const SERVICE_RATINGS = ['Excellent', 'Good', 'Fair', 'Poor', 'Very Poor', 'Not Specified'];
 const ISSUES = [
   { key: 'irrigation', label: 'Irrigation' },
   { key: 'poor_mowing', label: 'Poor Mowing' },
@@ -134,7 +134,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
 
       // Special handling for service ratings
       if (sortField === 'q2_service_rating') {
-        const ratingOrder = ['Very Poor', 'Poor', 'Fair', 'Good', 'Excellent'];
+        const ratingOrder = ['Very Poor', 'Poor', 'Fair', 'Good', 'Excellent', 'Not Specified'];
         aValue = ratingOrder.indexOf(aValue) !== -1 ? ratingOrder.indexOf(aValue) : 999;
         bValue = ratingOrder.indexOf(bValue) !== -1 ? ratingOrder.indexOf(bValue) : 999;
       }
@@ -426,6 +426,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                         response.q2_service_rating === 'Fair' ? 'bg-yellow-100 text-yellow-800' :
                         response.q2_service_rating === 'Poor' ? 'bg-orange-100 text-orange-800' :
                         response.q2_service_rating === 'Very Poor' ? 'bg-red-100 text-red-800' :
+                        response.q2_service_rating === 'Not Specified' ? 'bg-gray-100 text-gray-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
                         {response.q2_service_rating}
