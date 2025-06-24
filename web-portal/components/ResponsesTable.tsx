@@ -127,7 +127,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
 
       // Review status filter
       if (filters.reviewStatus) {
-        const reviewStatus = (response as any).review_status || 'unreviewed';
+        const reviewStatus = response.review_status || 'unreviewed';
         if (reviewStatus !== filters.reviewStatus) return false;
       }
 
@@ -188,6 +188,9 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
       'Contact Preferences',
       'Issues Count',
       'Issues',
+      'Review Status',
+      'Reviewed By',
+      'Reviewed At',
       'Biggest Concern'
     ];
 
@@ -203,6 +206,9 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
         contactInfo.preferences.join('; '),
         getIssueCount(response),
         getIssues(response).join('; '),
+        response.review_status || 'unreviewed',
+        response.reviewed_by || '',
+        response.reviewed_at || '',
         response.biggest_concern || ''
       ];
     });
@@ -442,6 +448,9 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                 Issues
               </th>
               <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                Review Status
+              </th>
+              <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
                 Biggest Concern
               </th>
             </tr>
@@ -556,10 +565,37 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                       <span className="text-gray-400 text-xs">None</span>
                     )}
                   </td>
+                  <td className="border border-gray-200 px-4 py-3 text-sm">
+                    {(() => {
+                      const status = response.review_status || 'unreviewed';
+                      const isFlagged = status === 'flagged';
+                      
+                      return (
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                            status === 'reviewed' ? 'bg-green-100 text-green-800' :
+                            status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                            status === 'flagged' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {status === 'unreviewed' ? 'Unreviewed' :
+                             status === 'in_progress' ? 'In Progress' :
+                             status === 'reviewed' ? 'Reviewed' :
+                             status === 'flagged' ? 'Flagged' : status}
+                          </span>
+                          {isFlagged && (
+                            <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              🚩
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()} 
+                  </td>
                   <td className="border border-gray-200 px-4 py-3 text-sm max-w-xs">
                     <div className="truncate" title={response.biggest_concern || ''}>
                       {response.biggest_concern || (
-                        <span className="text-gray-400">Not provided</span>
+                        <span className="text-gray-400"></span>
                       )}
                     </div>
                   </td>

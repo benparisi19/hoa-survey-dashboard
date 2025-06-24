@@ -143,7 +143,7 @@ export default function ResponseEditor({ response }: ResponseEditorProps) {
       <div className="space-y-1">
         <label className="block text-sm font-medium text-gray-700">{label}</label>
         <div className="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md min-h-[2rem]">
-          {value || <span className="text-gray-500 italic">Not provided</span>}
+          {value || <span className="text-gray-500 italic"></span>}
         </div>
       </div>
     );

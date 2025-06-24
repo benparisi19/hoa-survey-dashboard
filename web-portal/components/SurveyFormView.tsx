@@ -164,7 +164,7 @@ export default function SurveyFormView({ response }: SurveyFormViewProps) {
 
   const TextResponse = ({ 
     value, 
-    placeholder = "No response provided",
+    placeholder = "",
     multiline = false,
     field
   }: { 
@@ -344,12 +344,12 @@ export default function SurveyFormView({ response }: SurveyFormViewProps) {
                     type="text"
                     value={editedResponse.address || ''}
                     onChange={(e) => updateField('address', e.target.value)}
-                    placeholder="Not provided"
+                    placeholder=""
                     className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               ) : (
-                <span><strong>Address:</strong> {editedResponse.address || 'Not provided'}</span>
+                <span><strong>Address:</strong> {editedResponse.address || ''}</span>
               )}
             </div>
             <div className="flex items-center space-x-2">

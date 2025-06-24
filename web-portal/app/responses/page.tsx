@@ -10,6 +10,9 @@ export interface ResponseData {
   name: string | null;
   email_contact: string | null;
   anonymous: string;
+  review_status: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
   q1_preference: string | null;
   q2_service_rating: string | null;
   q1_q2_notes: string | null;
@@ -62,15 +65,34 @@ export interface ResponseData {
 
 async function getResponsesData(): Promise<ResponseData[]> {
   try {
-    // Use the pre-built complete_responses view
-    const { data, error } = await supabase
+    // Fetch from complete_responses view and add review status from responses table
+    const { data: responsesData, error: responsesError } = await supabase
       .from('complete_responses')
       .select('*')
       .order('response_id');
     
-    if (error) throw error;
+    if (responsesError) throw responsesError;
     
-    return data || [];
+    // Fetch review status data separately
+    const { data: reviewData, error: reviewError } = await supabase
+      .from('responses')
+      .select('response_id, review_status, reviewed_by, reviewed_at')
+      .order('response_id');
+    
+    if (reviewError) throw reviewError;
+    
+    // Merge the data
+    const mergedData = responsesData?.map(response => {
+      const reviewInfo = reviewData?.find(r => r.response_id === response.response_id);
+      return {
+        ...response,
+        review_status: reviewInfo?.review_status || 'unreviewed',
+        reviewed_by: reviewInfo?.reviewed_by || null,
+        reviewed_at: reviewInfo?.reviewed_at || null
+      };
+    }) || [];
+    
+    return mergedData;
   } catch (error) {
     console.error('Error fetching responses data:', error);
     return [];
