@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, Filter, Download, ChevronUp, ChevronDown, User, UserX, Mail, MailX } from 'lucide-react';
+import { Search, Filter, Download, ChevronUp, ChevronDown, User, UserX, Mail, MailX, Phone } from 'lucide-react';
 import { ResponseData } from '@/app/responses/page';
+import { parseContactInfo } from '@/lib/utils';
 
 interface ResponsesTableProps {
   responses: ResponseData[];
@@ -44,10 +45,12 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
   const [showFilters, setShowFilters] = useState(false);
 
   // Helper functions
+  const getContactInfo = (response: ResponseData) => {
+    return parseContactInfo(response.email_contact);
+  };
+
   const hasContactInfo = (response: ResponseData) => {
-    return response.email_contact && 
-           response.email_contact.trim() !== '' && 
-           response.email_contact !== 'Not provided';
+    return getContactInfo(response).isValid;
   };
 
   const wantsOptOut = (response: ResponseData) => {
@@ -94,9 +97,8 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
 
       // Contact info filter
       if (filters.hasContact) {
-        const hasContact = hasContactInfo(response);
-        if (filters.hasContact === 'yes' && !hasContact) return false;
-        if (filters.hasContact === 'no' && hasContact) return false;
+        const contactInfo = getContactInfo(response);
+        if (filters.hasContact !== contactInfo.type) return false;
       }
 
       // Anonymous filter
@@ -172,22 +174,29 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
       'Service Rating',
       'Preference',
       'Anonymous',
-      'Has Contact',
+      'Contact Type',
+      'Contact Methods',
+      'Contact Preferences',
       'Issues Count',
       'Issues',
       'Biggest Concern'
     ];
 
-    const csvData = filteredData.map(response => [
-      response.response_id,
-      response.q2_service_rating || '',
-      response.q1_preference || '',
-      response.anonymous,
-      hasContactInfo(response) ? 'Yes' : 'No',
-      getIssueCount(response),
-      getIssues(response).join('; '),
-      response.biggest_concern || ''
-    ]);
+    const csvData = filteredData.map(response => {
+      const contactInfo = getContactInfo(response);
+      return [
+        response.response_id,
+        response.q2_service_rating || '',
+        response.q1_preference || '',
+        response.anonymous,
+        contactInfo.type,
+        [...contactInfo.emails, ...contactInfo.phones].join('; '),
+        contactInfo.preferences.join('; '),
+        getIssueCount(response),
+        getIssues(response).join('; '),
+        response.biggest_concern || ''
+      ];
+    });
 
     const csvContent = [headers, ...csvData]
       .map(row => row.map(cell => `"${cell}"`).join(','))
@@ -276,16 +285,19 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
             {/* Contact Info Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contact Available
+                Contact Type
               </label>
               <select
                 value={filters.hasContact}
                 onChange={(e) => setFilters(prev => ({ ...prev, hasContact: e.target.value }))}
                 className="w-full p-2 border border-gray-300 rounded-md text-sm"
               >
-                <option value="">All</option>
-                <option value="yes">Has Contact</option>
-                <option value="no">No Contact</option>
+                <option value="">All Types</option>
+                <option value="email">Email Only</option>
+                <option value="phone">Phone Only</option>
+                <option value="both">Email & Phone</option>
+                <option value="other">Other Method</option>
+                <option value="none">No Contact</option>
               </select>
             </div>
 
@@ -439,19 +451,48 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                     </div>
                   </td>
                   <td className="border border-gray-200 px-4 py-3 text-sm">
-                    <div className="flex items-center gap-1">
-                      {hasContact ? (
-                        <>
-                          <Mail className="h-4 w-4 text-green-600" />
-                          <span className="text-green-700 text-xs">Available</span>
-                        </>
-                      ) : (
-                        <>
-                          <MailX className="h-4 w-4 text-gray-400" />
-                          <span className="text-gray-500 text-xs">None</span>
-                        </>
-                      )}
-                    </div>
+                    {(() => {
+                      const contactInfo = getContactInfo(response);
+                      
+                      return (
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1">
+                            {contactInfo.type === 'both' ? (
+                              <>
+                                <Mail className="h-3 w-3 text-green-600" />
+                                <Phone className="h-3 w-3 text-green-600" />
+                                <span className="text-green-700 text-xs font-medium">Both</span>
+                              </>
+                            ) : contactInfo.type === 'email' ? (
+                              <>
+                                <Mail className="h-4 w-4 text-blue-600" />
+                                <span className="text-blue-700 text-xs">Email</span>
+                              </>
+                            ) : contactInfo.type === 'phone' ? (
+                              <>
+                                <Phone className="h-4 w-4 text-purple-600" />
+                                <span className="text-purple-700 text-xs">Phone</span>
+                              </>
+                            ) : contactInfo.type === 'other' ? (
+                              <>
+                                <Mail className="h-4 w-4 text-orange-600" />
+                                <span className="text-orange-700 text-xs">Other</span>
+                              </>
+                            ) : (
+                              <>
+                                <MailX className="h-4 w-4 text-gray-400" />
+                                <span className="text-gray-500 text-xs">None</span>
+                              </>
+                            )}
+                          </div>
+                          {contactInfo.preferences.length > 0 && (
+                            <div className="text-xs text-gray-500">
+                              {contactInfo.preferences.join(', ')}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="border border-gray-200 px-4 py-3 text-sm">
                     <div className="flex items-center gap-1">

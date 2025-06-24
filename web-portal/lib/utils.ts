@@ -69,22 +69,84 @@ export function isValidEmail(email: string): boolean {
   return emailRegex.test(email);
 }
 
-export function parseContactInfo(contact: string | null): {
+export interface ContactInfo {
   hasEmail: boolean;
   hasPhone: boolean;
   isValid: boolean;
-} {
+  type: 'none' | 'email' | 'phone' | 'both' | 'other';
+  emails: string[];
+  phones: string[];
+  preferences: string[];
+  displayText: string;
+  original: string;
+}
+
+export function parseContactInfo(contact: string | null): ContactInfo {
   if (!contact || contact === 'Not provided' || contact.trim() === '') {
-    return { hasEmail: false, hasPhone: false, isValid: false };
+    return { 
+      hasEmail: false, 
+      hasPhone: false, 
+      isValid: false,
+      type: 'none',
+      emails: [],
+      phones: [],
+      preferences: [],
+      displayText: 'No contact provided',
+      original: contact || ''
+    };
+  }
+
+  const text = contact.toLowerCase();
+  
+  // Extract emails
+  const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+  const emails = contact.match(emailRegex) || [];
+  
+  // Extract phone numbers (various formats)
+  const phoneRegex = /(\(\d{3}\)|\d{3})[-.\/\s]*\d{3}[-.\/\s]*\d{4}|\b\d{10}\b/g;
+  const phones = contact.match(phoneRegex) || [];
+  
+  // Extract communication preferences
+  const preferences: string[] = [];
+  if (text.includes('text')) preferences.push('Text');
+  if (text.includes('call') && !text.includes('recall')) preferences.push('Call');
+  if (text.includes('phone')) preferences.push('Phone');
+  if (text.includes('cell')) preferences.push('Cell');
+  if (text.includes('email') && emails.length === 0) preferences.push('Email');
+  if (text.includes('mail') && !text.includes('email')) preferences.push('Mail');
+  if (text.includes('person')) preferences.push('In-person');
+  
+  // Determine type
+  let type: ContactInfo['type'] = 'none';
+  if (emails.length > 0 && phones.length > 0) type = 'both';
+  else if (emails.length > 0) type = 'email';
+  else if (phones.length > 0) type = 'phone';
+  else if (preferences.length > 0) type = 'other';
+  
+  // Create display text
+  let displayText = 'No contact';
+  if (type === 'both' && emails[0] && phones[0]) {
+    displayText = `${emails[0]} & ${phones[0]}`;
+    if (preferences.length > 0) displayText += ` (${preferences.join(', ')})`;
+  } else if (type === 'email' && emails[0]) {
+    displayText = emails[0];
+  } else if (type === 'phone' && phones[0]) {
+    displayText = phones[0];
+    if (preferences.length > 0) displayText += ` (${preferences.join(', ')})`;
+  } else if (type === 'other') {
+    displayText = preferences.join(', ');
   }
   
-  const hasEmail = contact.includes('@');
-  const hasPhone = /\d{3}[-.]\d{3}[-.]\d{4}|\(\d{3}\)\s*\d{3}[-.]\d{4}|\d{10}/.test(contact);
-  
   return {
-    hasEmail,
-    hasPhone,
-    isValid: hasEmail || hasPhone,
+    hasEmail: emails.length > 0,
+    hasPhone: phones.length > 0,
+    isValid: emails.length > 0 || phones.length > 0 || preferences.length > 0,
+    type,
+    emails,
+    phones,
+    preferences: Array.from(new Set(preferences)), // Remove duplicates
+    displayText,
+    original: contact
   };
 }
 

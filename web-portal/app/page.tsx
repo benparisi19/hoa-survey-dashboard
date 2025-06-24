@@ -1,9 +1,10 @@
 import { Suspense } from 'react';
-import { Users, AlertCircle, CheckCircle2, BarChart3 } from 'lucide-react';
+import { Users, AlertCircle, CheckCircle2, BarChart3, Mail, Phone } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { formatPercentage, CHART_COLORS, SERVICE_RATING_ORDER } from '@/lib/utils';
+import { formatPercentage, CHART_COLORS, SERVICE_RATING_ORDER, parseContactInfo } from '@/lib/utils';
 import ServiceRatingChart from '@/components/ServiceRatingChart';
 import IssuesOverview from '@/components/IssuesOverview';
+import ContactOverview from '@/components/ContactOverview';
 import MetricCard from '@/components/MetricCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -14,6 +15,13 @@ interface DashboardStats {
   wantOptOut: number;
   hasContactInfo: number;
   irrigationIssues: number;
+  contactByType: {
+    none: number;
+    email: number;
+    phone: number;
+    both: number;
+    other: number;
+  };
 }
 
 interface ServiceRatingData {
@@ -53,11 +61,16 @@ async function getDashboardStats(): Promise<DashboardStats> {
     const wantOptOut = ratings?.filter(r => 
       r.q1_preference?.toLowerCase().includes('opt out')
     ).length || 0;
-    const hasContactInfo = responses?.filter(r => 
-      r.email_contact && 
-      r.email_contact !== 'Not provided' && 
-      r.email_contact.trim() !== ''
-    ).length || 0;
+    // Analyze contact information
+    const contactAnalysis = { none: 0, email: 0, phone: 0, both: 0, other: 0 };
+    let hasContactInfo = 0;
+    
+    responses?.forEach(r => {
+      const contactInfo = parseContactInfo(r.email_contact);
+      contactAnalysis[contactInfo.type]++;
+      if (contactInfo.isValid) hasContactInfo++;
+    });
+    
     const irrigationIssues = issues?.filter(i => i.irrigation === 'Yes').length || 0;
     
     return {
@@ -67,6 +80,7 @@ async function getDashboardStats(): Promise<DashboardStats> {
       wantOptOut,
       hasContactInfo,
       irrigationIssues,
+      contactByType: contactAnalysis,
     };
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
@@ -77,6 +91,7 @@ async function getDashboardStats(): Promise<DashboardStats> {
       wantOptOut: 0,
       hasContactInfo: 0,
       irrigationIssues: 0,
+      contactByType: { none: 0, email: 0, phone: 0, both: 0, other: 0 },
     };
   }
 }
@@ -150,7 +165,7 @@ async function DashboardContent() {
       </div>
       
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Service Rating Chart */}
         <div className="bg-white rounded-lg shadow-card border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
@@ -169,6 +184,18 @@ async function DashboardContent() {
           <Suspense fallback={<LoadingSpinner />}>
             <IssuesOverview />
           </Suspense>
+        </div>
+        
+        {/* Contact Overview */}
+        <div className="bg-white rounded-lg shadow-card border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Contact Methods</h2>
+            <Mail className="h-5 w-5 text-gray-400" />
+          </div>
+          <ContactOverview 
+            contactByType={stats.contactByType} 
+            totalResponses={stats.totalResponses} 
+          />
         </div>
       </div>
     </div>
