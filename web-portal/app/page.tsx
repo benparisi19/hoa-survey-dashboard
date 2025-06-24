@@ -159,25 +159,6 @@ async function DashboardContent() {
   
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-card border border-gray-200 p-6">
-        <div className="md:flex md:items-center md:justify-between">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-              HOA Survey Dashboard
-            </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Comprehensive analysis of 113 landscaping survey responses
-            </p>
-          </div>
-          <div className="mt-4 md:mt-0 md:ml-4">
-            <div className="text-sm text-gray-500">
-              Last updated: {new Date().toLocaleDateString()}
-            </div>
-          </div>
-        </div>
-      </div>
-      
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {positiveMetrics.map((metric) => (
