@@ -5,7 +5,7 @@ import { Edit3, Save, X, FileText, User, MapPin, Mail, Phone } from 'lucide-reac
 import { parseContactInfo } from '@/lib/utils';
 import ReviewControls from './ReviewControls';
 import NotesSection from './NotesSection';
-import { supabase } from '@/lib/supabase';
+import { saveResponse } from '@/app/actions/saveResponse';
 
 interface SurveyNote {
   note_id: number;
@@ -87,145 +87,53 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Update main response table
-      const { error: responseError } = await supabase
-        .from('responses')
-        .update({
-          address: editedResponse.address,
-          name: editedResponse.name,
-          email_contact: editedResponse.email_contact,
-          anonymous: editedResponse.anonymous
-        })
-        .eq('response_id', editedResponse.response_id);
+      const result = await saveResponse({
+        response_id: editedResponse.response_id,
+        address: editedResponse.address,
+        name: editedResponse.name,
+        email_contact: editedResponse.email_contact,
+        anonymous: editedResponse.anonymous,
+        q1_preference: editedResponse.q1_preference,
+        q2_service_rating: editedResponse.q2_service_rating,
+        q3_maintain_self: editedResponse.q3_maintain_self,
+        q3_quality: editedResponse.q3_quality,
+        q3_pet_safety: editedResponse.q3_pet_safety,
+        q3_privacy: editedResponse.q3_privacy,
+        q3_other_text: editedResponse.q3_other_text,
+        irrigation: editedResponse.irrigation,
+        poor_mowing: editedResponse.poor_mowing,
+        property_damage: editedResponse.property_damage,
+        missed_service: editedResponse.missed_service,
+        inadequate_weeds: editedResponse.inadequate_weeds,
+        irrigation_detail: editedResponse.irrigation_detail,
+        other_issues: editedResponse.other_issues,
+        q5_construction_issues: editedResponse.q5_construction_issues,
+        q5_explanation: editedResponse.q5_explanation,
+        q6_group_action: editedResponse.q6_group_action,
+        paid_work: editedResponse.plant_selection,
+        volunteering: editedResponse.watering_irrigation,
+        equipment_coop: editedResponse.fertilizing_pest,
+        mentorship: editedResponse.lawn_maintenance,
+        manage_area: editedResponse.seasonal_planning,
+        lawn_mower: editedResponse.lawn_mower,
+        trimmer: editedResponse.trimmer,
+        blower: editedResponse.blower,
+        basic_tools: editedResponse.basic_tools,
+        truck_trailer: editedResponse.truck_trailer,
+        dues_preference: editedResponse.dues_preference,
+        biggest_concern: editedResponse.biggest_concern,
+        cost_reduction_ideas: editedResponse.cost_reduction_ideas,
+        involvement_preference: editedResponse.involvement_preference
+      });
 
-      if (responseError) throw responseError;
-
-      // Update Q1/Q2 table
-      const { error: q1q2Error } = await supabase
-        .from('q1_q2_preference_rating')
-        .update({
-          q1_preference: editedResponse.q1_preference,
-          q2_service_rating: editedResponse.q2_service_rating
-        })
-        .eq('response_id', editedResponse.response_id);
-
-      if (q1q2Error) throw q1q2Error;
-
-      // Update Q3 table
-      const { error: q3Error } = await supabase
-        .from('q3_opt_out_reasons')
-        .update({
-          maintain_self: editedResponse.q3_maintain_self,
-          quality: editedResponse.q3_quality,
-          pet_safety: editedResponse.q3_pet_safety,
-          privacy: editedResponse.q3_privacy,
-          other_text: editedResponse.q3_other_text
-        })
-        .eq('response_id', editedResponse.response_id);
-
-      if (q3Error) throw q3Error;
-
-      // Update Q4 table
-      const { error: q4Error } = await supabase
-        .from('q4_landscaping_issues')
-        .update({
-          irrigation: editedResponse.irrigation,
-          poor_mowing: editedResponse.poor_mowing,
-          property_damage: editedResponse.property_damage,
-          missed_service: editedResponse.missed_service,
-          inadequate_weeds: editedResponse.inadequate_weeds,
-          irrigation_detail: editedResponse.irrigation_detail,
-          other_issues: editedResponse.other_issues
-        })
-        .eq('response_id', editedResponse.response_id);
-
-      if (q4Error) throw q4Error;
-
-      // Update Q5/Q6 table
-      const { error: q5q6Error } = await supabase
-        .from('q5_q6_construction_group')
-        .update({
-          q5_construction_issues: editedResponse.q5_construction_issues,
-          q5_explanation: editedResponse.q5_explanation,
-          q6_group_action: editedResponse.q6_group_action
-        })
-        .eq('response_id', editedResponse.response_id);
-
-      if (q5q6Error) throw q5q6Error;
-
-      // Update Q7 table (using NEW column names after SQL migration)
-      const { error: q7Error } = await supabase
-        .from('q7_interest_areas')
-        .update({
-          paid_work: editedResponse.plant_selection,
-          volunteering: editedResponse.watering_irrigation,
-          equipment_coop: editedResponse.fertilizing_pest,
-          mentorship: editedResponse.lawn_maintenance,
-          manage_area: editedResponse.seasonal_planning
-        })
-        .eq('response_id', editedResponse.response_id);
-
-      if (q7Error) throw q7Error;
-
-      // Update Q8 table
-      const { error: q8Error } = await supabase
-        .from('q8_equipment_ownership')
-        .update({
-          lawn_mower: editedResponse.lawn_mower,
-          trimmer: editedResponse.trimmer,
-          blower: editedResponse.blower,
-          basic_tools: editedResponse.basic_tools,
-          truck_trailer: editedResponse.truck_trailer
-        })
-        .eq('response_id', editedResponse.response_id);
-
-      if (q8Error) throw q8Error;
-
-      // Update Q9 table
-      const { error: q9Error } = await supabase
-        .from('q9_dues_preference')
-        .update({
-          dues_preference: editedResponse.dues_preference
-        })
-        .eq('response_id', editedResponse.response_id);
-
-      if (q9Error) throw q9Error;
-
-      // Update Q10 table
-      const { error: q10Error } = await supabase
-        .from('q10_biggest_concern')
-        .update({
-          biggest_concern: editedResponse.biggest_concern
-        })
-        .eq('response_id', editedResponse.response_id);
-
-      if (q10Error) throw q10Error;
-
-      // Update Q11 table
-      const { error: q11Error } = await supabase
-        .from('q11_cost_reduction')
-        .update({
-          cost_reduction_ideas: editedResponse.cost_reduction_ideas
-        })
-        .eq('response_id', editedResponse.response_id);
-
-      if (q11Error) throw q11Error;
-
-      // Update Q12 table
-      const { error: q12Error } = await supabase
-        .from('q12_involvement')
-        .update({
-          involvement_preference: editedResponse.involvement_preference
-        })
-        .eq('response_id', editedResponse.response_id);
-
-      if (q12Error) throw q12Error;
-
-      setIsEditing(false);
-      alert('Response saved successfully!');
-      
-      // Refresh the page to show updated data
-      window.location.reload();
+      if (result.success) {
+        setIsEditing(false);
+        alert('Response saved successfully!');
+        // Refresh the page to show updated data
+        window.location.reload();
+      } else {
+        throw new Error(result.error || 'Unknown error occurred');
+      }
     } catch (error) {
       console.error('Error saving response:', error);
       alert('Error saving response. Please try again.');

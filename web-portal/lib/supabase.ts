@@ -4,6 +4,7 @@ import type { Database } from '@/types/database';
 // Validate environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
 if (!supabaseUrl) {
   throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL');
@@ -13,12 +14,25 @@ if (!supabaseAnonKey) {
   throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY');
 }
 
-// Create a single supabase client for interacting with your database
+// Create read-only client for frontend queries
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: false, // We're not using auth for this dashboard
   },
 });
+
+// Create service client for write operations (only available on server-side)
+export const createServiceClient = () => {
+  if (!supabaseServiceKey) {
+    throw new Error('Missing env.SUPABASE_SERVICE_KEY - service operations not available');
+  }
+  
+  return createClient<Database>(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      persistSession: false,
+    },
+  });
+};
 
 // Helper function to handle Supabase errors
 export function handleSupabaseError(error: any): string {
