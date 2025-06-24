@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { BarChart3, Users, Settings, FileText, TrendingUp } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -24,24 +24,6 @@ const navigation: NavigationItem[] = [
     href: '/',
     icon: BarChart3,
     description: 'Overview and key metrics',
-  },
-  {
-    name: 'Responses',
-    href: '/responses',
-    icon: Users,
-    description: 'Browse all survey responses',
-  },
-  {
-    name: 'Analysis',
-    href: '/analysis',
-    icon: TrendingUp,
-    description: 'Detailed analysis and charts',
-  },
-  {
-    name: 'Reports',
-    href: '/reports',
-    icon: FileText,
-    description: 'Generate custom reports',
   },
 ];
 

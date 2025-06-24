@@ -1,9 +1,8 @@
 import { Suspense } from 'react';
-import { Users, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Users, AlertCircle, CheckCircle2, BarChart3 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { formatPercentage, CHART_COLORS, SERVICE_RATING_ORDER, PREFERENCE_ORDER } from '@/lib/utils';
+import { formatPercentage, CHART_COLORS, SERVICE_RATING_ORDER } from '@/lib/utils';
 import ServiceRatingChart from '@/components/ServiceRatingChart';
-import PreferenceChart from '@/components/PreferenceChart';
 import IssuesOverview from '@/components/IssuesOverview';
 import MetricCard from '@/components/MetricCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -19,12 +18,6 @@ interface DashboardStats {
 
 interface ServiceRatingData {
   rating: string;
-  count: number;
-  percentage: number;
-}
-
-interface PreferenceData {
-  preference: string;
   count: number;
   percentage: number;
 }
@@ -117,40 +110,10 @@ async function getServiceRatingData(): Promise<ServiceRatingData[]> {
   }
 }
 
-async function getPreferenceData(): Promise<PreferenceData[]> {
-  try {
-    const { data, error } = await supabase
-      .from('q1_q2_preference_rating')
-      .select('q1_preference');
-    
-    if (error) throw error;
-    
-    const counts: Record<string, number> = {};
-    const total = data?.length || 0;
-    
-    data?.forEach(item => {
-      const preference = item.q1_preference || 'Not specified';
-      counts[preference] = (counts[preference] || 0) + 1;
-    });
-    
-    return Object.entries(counts)
-      .map(([preference, count]) => ({
-        preference,
-        count,
-        percentage: Math.round((count / total) * 100),
-      }))
-      .sort((a, b) => b.count - a.count);
-  } catch (error) {
-    console.error('Error fetching preference data:', error);
-    return [];
-  }
-}
-
 async function DashboardContent() {
-  const [stats, serviceRatingData, preferenceData] = await Promise.all([
+  const [stats, serviceRatingData] = await Promise.all([
     getDashboardStats(),
     getServiceRatingData(),
-    getPreferenceData(),
   ]);
   
   const alertMetrics = [
@@ -231,18 +194,9 @@ async function DashboardContent() {
         <div className="bg-white rounded-lg shadow-card border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">Service Ratings</h2>
-            <TrendingUp className="h-5 w-5 text-gray-400" />
+            <BarChart3 className="h-5 w-5 text-gray-400" />
           </div>
           <ServiceRatingChart data={serviceRatingData} />
-        </div>
-        
-        {/* Preference Chart */}
-        <div className="bg-white rounded-lg shadow-card border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Landscaping Preferences</h2>
-            <Users className="h-5 w-5 text-gray-400" />
-          </div>
-          <PreferenceChart data={preferenceData} />
         </div>
       </div>
       
@@ -255,51 +209,6 @@ async function DashboardContent() {
         <Suspense fallback={<LoadingSpinner />}>
           <IssuesOverview />
         </Suspense>
-      </div>
-      
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-card border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a
-            href="/responses?filter=poor-rating"
-            className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-          >
-            <div className="flex items-center space-x-3">
-              <AlertCircle className="h-6 w-6 text-red-500" />
-              <div>
-                <h3 className="font-medium text-gray-900">Contact Dissatisfied</h3>
-                <p className="text-sm text-gray-500">Follow up with poor ratings</p>
-              </div>
-            </div>
-          </a>
-          
-          <a
-            href="/responses?filter=irrigation-issues"
-            className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-          >
-            <div className="flex items-center space-x-3">
-              <AlertCircle className="h-6 w-6 text-blue-500" />
-              <div>
-                <h3 className="font-medium text-gray-900">Fix Irrigation</h3>
-                <p className="text-sm text-gray-500">Address water problems</p>
-              </div>
-            </div>
-          </a>
-          
-          <a
-            href="/analysis"
-            className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-          >
-            <div className="flex items-center space-x-3">
-              <TrendingUp className="h-6 w-6 text-green-500" />
-              <div>
-                <h3 className="font-medium text-gray-900">Detailed Analysis</h3>
-                <p className="text-sm text-gray-500">View comprehensive data</p>
-              </div>
-            </div>
-          </a>
-        </div>
       </div>
     </div>
   );
