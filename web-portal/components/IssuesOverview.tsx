@@ -73,7 +73,8 @@ export default async function IssuesOverview() {
     );
   }
   
-  const maxCount = Math.max(...issues.map(i => i.count));
+  // Use total responses (113) for consistent bar scaling
+  const TOTAL_RESPONSES = 113;
   
   return (
     <div className="space-y-4">
@@ -92,7 +93,7 @@ export default async function IssuesOverview() {
               <div
                 className="bg-primary-600 h-2 rounded-full transition-all duration-500"
                 style={{
-                  width: `${(issue.count / maxCount) * 100}%`,
+                  width: `${(issue.count / TOTAL_RESPONSES) * 100}%`,
                 }}
               />
             </div>

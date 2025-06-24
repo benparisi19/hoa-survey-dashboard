@@ -198,17 +198,17 @@ async function DashboardContent() {
           </div>
           <ServiceRatingChart data={serviceRatingData} />
         </div>
-      </div>
-      
-      {/* Issues Overview */}
-      <div className="bg-white rounded-lg shadow-card border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Common Issues</h2>
-          <AlertCircle className="h-5 w-5 text-gray-400" />
+        
+        {/* Issues Overview */}
+        <div className="bg-white rounded-lg shadow-card border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Common Issues</h2>
+            <AlertCircle className="h-5 w-5 text-gray-400" />
+          </div>
+          <Suspense fallback={<LoadingSpinner />}>
+            <IssuesOverview />
+          </Suspense>
         </div>
-        <Suspense fallback={<LoadingSpinner />}>
-          <IssuesOverview />
-        </Suspense>
       </div>
     </div>
   );
