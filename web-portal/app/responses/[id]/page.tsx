@@ -13,6 +13,10 @@ interface ResponseDetailData {
   name: string | null;
   email_contact: string | null;
   anonymous: string;
+  review_status: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  review_notes: string | null;
   
   // Q1/Q2: Preference and Rating
   q1_preference: string | null;
@@ -123,12 +127,31 @@ async function ResponseDetailContent({ id }: { id: string }) {
           </div>
         </div>
         
-        {/* Review Status (placeholder for future implementation) */}
+        {/* Review Status */}
         <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-2 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
-            <AlertCircle className="h-4 w-4" />
-            <span>Unreviewed</span>
+          <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
+            response.review_status === 'reviewed' ? 'bg-green-100 text-green-800' :
+            response.review_status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+            response.review_status === 'flagged' ? 'bg-red-100 text-red-800' :
+            'bg-yellow-100 text-yellow-800'
+          }`}>
+            {response.review_status === 'reviewed' ? <CheckCircle className="h-4 w-4" /> :
+             response.review_status === 'flagged' ? <AlertCircle className="h-4 w-4" /> :
+             <AlertCircle className="h-4 w-4" />}
+            <span>
+              {response.review_status.charAt(0).toUpperCase() + response.review_status.slice(1).replace('_', ' ')}
+            </span>
           </div>
+          {response.reviewed_by && (
+            <span className="text-sm text-gray-600">
+              by {response.reviewed_by}
+              {response.reviewed_at && (
+                <span className="ml-1">
+                  on {new Date(response.reviewed_at).toLocaleDateString()}
+                </span>
+              )}
+            </span>
+          )}
         </div>
       </div>
       

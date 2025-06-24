@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Save, Edit3, X, CheckCircle, AlertTriangle, User, Mail, Phone, Home } from 'lucide-react';
 import { parseContactInfo } from '@/lib/utils';
+import ReviewControls from './ReviewControls';
 
 interface ResponseData {
   response_id: string;
@@ -10,6 +11,10 @@ interface ResponseData {
   name: string | null;
   email_contact: string | null;
   anonymous: string;
+  review_status: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  review_notes: string | null;
   q1_preference: string | null;
   q2_service_rating: string | null;
   q1_q2_notes: string | null;
@@ -152,7 +157,22 @@ export default function ResponseEditor({ response }: ResponseEditorProps) {
     <div className="p-6">
       {/* Editor Controls */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">Survey Response Details</h2>
+        <div className="flex items-center space-x-4">
+          <h2 className="text-lg font-semibold text-gray-900">Survey Response Details</h2>
+          
+          {/* Review Controls */}
+          <ReviewControls
+            responseId={response.response_id}
+            currentStatus={response.review_status}
+            reviewedBy={response.reviewed_by}
+            reviewedAt={response.reviewed_at}
+            reviewNotes={response.review_notes}
+            onStatusChange={(newStatus) => {
+              // Update local state if needed
+              console.log(`Status changed to: ${newStatus}`);
+            }}
+          />
+        </div>
         <div className="flex items-center space-x-3">
           {isEditing ? (
             <>

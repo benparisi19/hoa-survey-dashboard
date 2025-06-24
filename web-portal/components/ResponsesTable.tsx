@@ -17,6 +17,7 @@ interface FilterState {
   anonymous: string;
   optOut: string;
   issues: string[];
+  reviewStatus: string;
 }
 
 const SERVICE_RATINGS = ['Excellent', 'Good', 'Fair', 'Poor', 'Very Poor', 'Not Specified'];
@@ -39,6 +40,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
     anonymous: '',
     optOut: '',
     issues: [],
+    reviewStatus: '',
   });
   
   const [sortField, setSortField] = useState<SortField>('response_id');
@@ -121,6 +123,12 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
           responseIssues.includes(issue.toLowerCase())
         );
         if (!hasSelectedIssue) return false;
+      }
+
+      // Review status filter
+      if (filters.reviewStatus) {
+        const reviewStatus = (response as any).review_status || 'unreviewed';
+        if (reviewStatus !== filters.reviewStatus) return false;
       }
 
       return true;
@@ -220,6 +228,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
       anonymous: '',
       optOut: '',
       issues: [],
+      reviewStatus: '',
     });
   };
 
@@ -265,7 +274,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
       {/* Filters Panel */}
       {showFilters && (
         <div className="bg-gray-50 p-4 rounded-lg mb-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Service Rating Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -331,6 +340,24 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                 <option value="">All</option>
                 <option value="yes">Wants Opt-out</option>
                 <option value="no">Keep HOA Service</option>
+              </select>
+            </div>
+
+            {/* Review Status Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Review Status
+              </label>
+              <select
+                value={filters.reviewStatus}
+                onChange={(e) => setFilters(prev => ({ ...prev, reviewStatus: e.target.value }))}
+                className="w-full p-2 border border-gray-300 rounded-md text-sm"
+              >
+                <option value="">All Statuses</option>
+                <option value="unreviewed">Unreviewed</option>
+                <option value="in_progress">In Progress</option>
+                <option value="reviewed">Reviewed</option>
+                <option value="flagged">Flagged</option>
               </select>
             </div>
           </div>
