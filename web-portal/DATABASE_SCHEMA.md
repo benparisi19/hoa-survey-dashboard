@@ -142,6 +142,31 @@ CREATE TABLE q12_involvement (
 );
 ```
 
+#### `survey_notes` (Marginal Notes and Annotations)
+```sql
+CREATE TABLE survey_notes (
+    note_id SERIAL PRIMARY KEY,
+    response_id TEXT NOT NULL REFERENCES responses(response_id) ON DELETE CASCADE,
+    section TEXT NOT NULL, -- 'q1_q2', 'q3', 'q4', 'q5_q6', 'q7', 'q8', 'q9', 'q10', 'q11', 'q12', 'general', 'contact_info'
+    question_context TEXT, -- 'margin', 'header', 'q4_irrigation', 'q10_budget', 'service_rating', 'other_issues', etc.
+    note_text TEXT NOT NULL,
+    note_type TEXT DEFAULT 'margin_note' CHECK (note_type IN ('margin_note', 'clarification', 'follow_up', 'concern', 'suggestion', 'correction')),
+    requires_follow_up BOOLEAN DEFAULT FALSE,
+    priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'critical')),
+    admin_notes TEXT, -- Internal HOA notes about this note
+    resolved BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_survey_notes_response_id ON survey_notes(response_id);
+CREATE INDEX idx_survey_notes_section ON survey_notes(section);
+CREATE INDEX idx_survey_notes_requires_follow_up ON survey_notes(requires_follow_up);
+CREATE INDEX idx_survey_notes_priority ON survey_notes(priority);
+CREATE INDEX idx_survey_notes_resolved ON survey_notes(resolved);
+CREATE INDEX idx_survey_notes_note_type ON survey_notes(note_type);
+```
+
 ## Views
 
 ### `complete_responses` (Comprehensive Join)
@@ -203,7 +228,12 @@ SELECT
     
     -- Q12: Involvement
     q12.involvement_preference,
-    q12.involvement_notes
+    q12.involvement_notes,
+    
+    -- Survey Notes Summary
+    COALESCE(notes_summary.total_notes, 0) as total_notes,
+    COALESCE(notes_summary.follow_up_notes, 0) as follow_up_notes,
+    COALESCE(notes_summary.critical_notes, 0) as critical_notes
 
 FROM responses r
 LEFT JOIN q1_q2_preference_rating q1q2 ON r.response_id = q1q2.response_id
@@ -216,7 +246,30 @@ LEFT JOIN q9_dues_preference q9 ON r.response_id = q9.response_id
 LEFT JOIN q10_biggest_concern q10 ON r.response_id = q10.response_id
 LEFT JOIN q11_cost_reduction q11 ON r.response_id = q11.response_id
 LEFT JOIN q12_involvement q12 ON r.response_id = q12.response_id
+LEFT JOIN (
+    SELECT 
+        response_id,
+        COUNT(*) as total_notes,
+        COUNT(*) FILTER (WHERE requires_follow_up = true) as follow_up_notes,
+        COUNT(*) FILTER (WHERE priority = 'critical') as critical_notes
+    FROM survey_notes 
+    GROUP BY response_id
+) notes_summary ON r.response_id = notes_summary.response_id
 ORDER BY r.response_id;
+```
+
+### `survey_notes_with_response_info` (Notes Management View)
+```sql
+CREATE VIEW survey_notes_with_response_info AS
+SELECT 
+    sn.*,
+    r.address,
+    r.name,
+    r.anonymous,
+    r.review_status
+FROM survey_notes sn
+JOIN responses r ON sn.response_id = r.response_id
+ORDER BY sn.priority DESC, sn.created_at DESC;
 ```
 
 ## Data Integrity Notes
@@ -226,11 +279,13 @@ ORDER BY r.response_id;
 - **Contact Information**: Stored as free text in `email_contact`, parsed by `parseContactInfo()` utility
 - **Service Ratings**: Normalized using `normalizeServiceRating()` for edge cases
 - **Yes/No Fields**: Stored as "Yes"/"No" strings, not booleans
-- **Anonymous Responses**: Identified by `anonymous = 'Yes'` and typically have "Not provided" for name/contact
+- **Anonymous Responses**: Identified by `anonymous = 'Yes'` and typically have NULL for name/contact
+- **Survey Notes**: Captured marginal annotations with follow-up workflow and priority tracking
 
 ## Current Status (as of latest update)
 
 - **Total Responses**: 113 
 - **Review Status**: All currently 'unreviewed' (ready for quality control)
 - **Data Completeness**: All survey responses fully imported and normalized
-- **Schema Version**: Includes review workflow columns added for quality control
+- **Marginal Notes**: Extracted from original transcriptions and ready for database import
+- **Schema Version**: Includes review workflow and survey notes system for comprehensive quality control

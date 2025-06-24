@@ -22,7 +22,6 @@ interface ResponseDetailData {
   // Q1/Q2: Preference and Rating
   q1_preference: string | null;
   q2_service_rating: string | null;
-  q1_q2_notes: string | null;
   
   // Q3: Opt-out reasons
   q3_maintain_self: string | null;
@@ -59,11 +58,9 @@ interface ResponseDetailData {
   blower: string | null;
   basic_tools: string | null;
   truck_trailer: string | null;
-  equipment_notes: string | null;
   
   // Q9: Dues preference
   dues_preference: string | null;
-  dues_notes: string | null;
   
   // Q10: Biggest concern
   biggest_concern: string | null;
@@ -73,46 +70,75 @@ interface ResponseDetailData {
   
   // Q12: Involvement
   involvement_preference: string | null;
-  involvement_notes: string | null;
+  
+  // Notes summary
+  total_notes: number;
+  follow_up_notes: number;
+  critical_notes: number;
+}
+
+interface SurveyNote {
+  note_id: number;
+  response_id: string;
+  section: string;
+  question_context: string | null;
+  note_text: string;
+  note_type: string;
+  requires_follow_up: boolean;
+  priority: string;
+  admin_notes: string | null;
+  resolved: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 async function getResponseDetail(id: string): Promise<ResponseDetailData | null> {
   try {
-    // Get response data and review data separately since complete_responses view 
-    // hasn't been updated with review columns yet
-    const [responseResult, reviewResult] = await Promise.all([
-      supabase.from('complete_responses').select('*').eq('response_id', id).single(),
-      supabase.from('responses').select('review_status, reviewed_by, reviewed_at, review_notes').eq('response_id', id).single()
-    ]);
+    // Get response data from the updated complete_responses view (now includes review data and notes summary)
+    const responseResult = await supabase
+      .from('complete_responses')
+      .select('*')
+      .eq('response_id', id)
+      .single();
 
     if (responseResult.error) {
       console.error('Error fetching response detail:', responseResult.error);
       return null;
     }
 
-    if (reviewResult.error) {
-      console.error('Error fetching review data:', reviewResult.error);
-      // Continue without review data if it fails
-    }
-
-    // Merge the data
-    const combinedData = {
-      ...responseResult.data,
-      review_status: reviewResult.data?.review_status || 'unreviewed',
-      reviewed_by: reviewResult.data?.reviewed_by || null,
-      reviewed_at: reviewResult.data?.reviewed_at || null,
-      review_notes: reviewResult.data?.review_notes || null,
-    };
-    
-    return combinedData;
+    return responseResult.data;
   } catch (error) {
     console.error('Error:', error);
     return null;
   }
 }
 
+async function getResponseNotes(id: string): Promise<SurveyNote[]> {
+  try {
+    const { data, error } = await supabase
+      .from('survey_notes')
+      .select('*')
+      .eq('response_id', id)
+      .order('priority', { ascending: false })
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching notes:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error:', error);
+    return [];
+  }
+}
+
 async function ResponseDetailContent({ id }: { id: string }) {
-  const response = await getResponseDetail(id);
+  const [response, notes] = await Promise.all([
+    getResponseDetail(id),
+    getResponseNotes(id)
+  ]);
   
   if (!response) {
     notFound();
@@ -173,7 +199,7 @@ async function ResponseDetailContent({ id }: { id: string }) {
       
       {/* Survey Form View */}
       <div className="bg-white rounded-lg shadow-card border border-gray-200">
-        <SurveyFormView response={response} />
+        <SurveyFormView response={response} notes={notes} />
       </div>
     </div>
   );

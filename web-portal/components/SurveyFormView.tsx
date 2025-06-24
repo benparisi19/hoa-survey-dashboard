@@ -4,6 +4,22 @@ import { useState } from 'react';
 import { Edit3, Save, X, FileText, User, MapPin, Mail, Phone } from 'lucide-react';
 import { parseContactInfo } from '@/lib/utils';
 import ReviewControls from './ReviewControls';
+import NotesSection from './NotesSection';
+
+interface SurveyNote {
+  note_id: number;
+  response_id: string;
+  section: string;
+  question_context: string | null;
+  note_text: string;
+  note_type: string;
+  requires_follow_up: boolean;
+  priority: string;
+  admin_notes: string | null;
+  resolved: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 interface ResponseData {
   response_id: string;
@@ -17,7 +33,6 @@ interface ResponseData {
   review_notes: string | null;
   q1_preference: string | null;
   q2_service_rating: string | null;
-  q1_q2_notes: string | null;
   q3_maintain_self: string | null;
   q3_quality: string | null;
   q3_pet_safety: string | null;
@@ -44,20 +59,21 @@ interface ResponseData {
   blower: string | null;
   basic_tools: string | null;
   truck_trailer: string | null;
-  equipment_notes: string | null;
   dues_preference: string | null;
-  dues_notes: string | null;
   biggest_concern: string | null;
   cost_reduction_ideas: string | null;
   involvement_preference: string | null;
-  involvement_notes: string | null;
+  total_notes: number;
+  follow_up_notes: number;
+  critical_notes: number;
 }
 
 interface SurveyFormViewProps {
   response: ResponseData;
+  notes?: SurveyNote[];
 }
 
-export default function SurveyFormView({ response }: SurveyFormViewProps) {
+export default function SurveyFormView({ response, notes = [] }: SurveyFormViewProps) {
   // Auto-enable editing for unreviewed responses
   const [isEditing, setIsEditing] = useState(response.review_status === 'unreviewed');
   const [editedResponse, setEditedResponse] = useState(response);
@@ -406,24 +422,6 @@ export default function SurveyFormView({ response }: SurveyFormViewProps) {
                 field="q1_preference"
               />
             </div>
-            {(editedResponse.q1_q2_notes || isEditing) && (
-              <div className="mt-2 ml-4">
-                {isEditing ? (
-                  <div>
-                    <label className="text-sm font-medium">Notes for Q1-Q2:</label>
-                    <textarea
-                      value={editedResponse.q1_q2_notes || ''}
-                      onChange={(e) => updateField('q1_q2_notes', e.target.value)}
-                      placeholder="Additional notes..."
-                      rows={2}
-                      className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                ) : (
-                  <span className="text-sm text-gray-600"><strong>Notes:</strong> {editedResponse.q1_q2_notes}</span>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Question 2 */}
@@ -611,21 +609,6 @@ export default function SurveyFormView({ response }: SurveyFormViewProps) {
               <CheckBox checked={editedResponse.blower === 'Yes'} label="Leaf blower" field="blower" />
               <CheckBox checked={editedResponse.basic_tools === 'Yes'} label="Basic landscaping tools" field="basic_tools" />
               <CheckBox checked={editedResponse.truck_trailer === 'Yes'} label="Truck/trailer for hauling" field="truck_trailer" />
-              {(editedResponse.equipment_notes || isEditing) && (
-                <div className="mt-2">
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editedResponse.equipment_notes || ''}
-                      onChange={(e) => updateField('equipment_notes', e.target.value)}
-                      placeholder="Equipment notes..."
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
-                    />
-                  ) : (
-                    <span className="text-sm"><strong>Notes:</strong> {editedResponse.equipment_notes}</span>
-                  )}
-                </div>
-              )}
             </div>
           </div>
 
@@ -642,21 +625,6 @@ export default function SurveyFormView({ response }: SurveyFormViewProps) {
               {editedResponse.dues_preference && !editedResponse.dues_preference.match(/(maintain it myself|hire my own landscaper|participate in cooperative|stay with HOA)/i) && (
                 <div className="mt-2">
                   <span className="text-sm"><strong>Other response:</strong> {editedResponse.dues_preference}</span>
-                </div>
-              )}
-              {(editedResponse.dues_notes || isEditing) && (
-                <div className="mt-2">
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editedResponse.dues_notes || ''}
-                      onChange={(e) => updateField('dues_notes', e.target.value)}
-                      placeholder="Additional notes..."
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
-                    />
-                  ) : (
-                    <span className="text-sm text-gray-600"><strong>Notes:</strong> {editedResponse.dues_notes}</span>
-                  )}
                 </div>
               )}
             </div>
@@ -697,23 +665,17 @@ export default function SurveyFormView({ response }: SurveyFormViewProps) {
             <div className="ml-4 space-y-2">
               <RadioButton selected={editedResponse.involvement_preference === 'Yes'} label="Yes - contact me" value="Yes" field="involvement_preference" />
               <RadioButton selected={editedResponse.involvement_preference === 'No'} label="No - just keep me informed" value="No" field="involvement_preference" />
-              {(editedResponse.involvement_notes || isEditing) && (
-                <div className="mt-2">
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editedResponse.involvement_notes || ''}
-                      onChange={(e) => updateField('involvement_notes', e.target.value)}
-                      placeholder="Additional notes..."
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
-                    />
-                  ) : (
-                    <span className="text-sm text-gray-600"><strong>Notes:</strong> {editedResponse.involvement_notes}</span>
-                  )}
-                </div>
-              )}
             </div>
           </div>
+        </div>
+
+        {/* Notes Section */}
+        <div className="pt-6 border-t">
+          <NotesSection 
+            notes={notes} 
+            responseId={response.response_id}
+            editable={true}
+          />
         </div>
 
         {/* Survey Footer */}

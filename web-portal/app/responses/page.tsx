@@ -15,7 +15,6 @@ export interface ResponseData {
   reviewed_at: string | null;
   q1_preference: string | null;
   q2_service_rating: string | null;
-  q1_q2_notes: string | null;
   
   // Opt-out reasons
   q3_maintain_self: string | null;
@@ -52,15 +51,32 @@ export interface ResponseData {
   blower: string | null;
   basic_tools: string | null;
   truck_trailer: string | null;
-  equipment_notes: string | null;
   
   // Dues and involvement
   dues_preference: string | null;
-  dues_notes: string | null;
   biggest_concern: string | null;
   cost_reduction_ideas: string | null;
   involvement_preference: string | null;
-  involvement_notes: string | null;
+  
+  // Notes summary
+  total_notes: number;
+  follow_up_notes: number;
+  critical_notes: number;
+}
+
+export interface SurveyNote {
+  note_id: number;
+  response_id: string;
+  section: string;
+  question_context: string | null;
+  note_text: string;
+  note_type: string;
+  requires_follow_up: boolean;
+  priority: string;
+  admin_notes: string | null;
+  resolved: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 async function getResponsesData(): Promise<ResponseData[]> {

@@ -35,21 +35,18 @@ export interface Database {
           response_id: string;
           q1_preference: string | null;
           q2_service_rating: string | null;
-          notes: string | null;
           created_at: string;
         };
         Insert: {
           response_id: string;
           q1_preference?: string | null;
           q2_service_rating?: string | null;
-          notes?: string | null;
           created_at?: string;
         };
         Update: {
           response_id?: string;
           q1_preference?: string | null;
           q2_service_rating?: string | null;
-          notes?: string | null;
           created_at?: string;
         };
       };
@@ -187,7 +184,6 @@ export interface Database {
           blower: string | null;
           basic_tools: string | null;
           truck_trailer: string | null;
-          notes: string | null;
           created_at: string;
         };
         Insert: {
@@ -198,7 +194,6 @@ export interface Database {
           blower?: string | null;
           basic_tools?: string | null;
           truck_trailer?: string | null;
-          notes?: string | null;
           created_at?: string;
         };
         Update: {
@@ -209,7 +204,6 @@ export interface Database {
           blower?: string | null;
           basic_tools?: string | null;
           truck_trailer?: string | null;
-          notes?: string | null;
           created_at?: string;
         };
       };
@@ -217,19 +211,16 @@ export interface Database {
         Row: {
           response_id: string;
           q9_response: string | null;
-          notes: string | null;
           created_at: string;
         };
         Insert: {
           response_id: string;
           q9_response?: string | null;
-          notes?: string | null;
           created_at?: string;
         };
         Update: {
           response_id?: string;
           q9_response?: string | null;
-          notes?: string | null;
           created_at?: string;
         };
       };
@@ -271,20 +262,59 @@ export interface Database {
         Row: {
           response_id: string;
           q12_response: string | null;
-          q12_notes: string | null;
           created_at: string;
         };
         Insert: {
           response_id: string;
           q12_response?: string | null;
-          q12_notes?: string | null;
           created_at?: string;
         };
         Update: {
           response_id?: string;
           q12_response?: string | null;
-          q12_notes?: string | null;
           created_at?: string;
+        };
+      };
+      survey_notes: {
+        Row: {
+          note_id: number;
+          response_id: string;
+          section: string;
+          question_context: string | null;
+          note_text: string;
+          note_type: string;
+          requires_follow_up: boolean;
+          priority: string;
+          admin_notes: string | null;
+          resolved: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          response_id: string;
+          section: string;
+          question_context?: string | null;
+          note_text: string;
+          note_type?: string;
+          requires_follow_up?: boolean;
+          priority?: string;
+          admin_notes?: string | null;
+          resolved?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          response_id?: string;
+          section?: string;
+          question_context?: string | null;
+          note_text?: string;
+          note_type?: string;
+          requires_follow_up?: boolean;
+          priority?: string;
+          admin_notes?: string | null;
+          resolved?: boolean;
+          created_at?: string;
+          updated_at?: string;
         };
       };
     };
@@ -298,7 +328,6 @@ export interface Database {
           anonymous: string | null;
           q1_preference: string | null;
           q2_service_rating: string | null;
-          q1_q2_notes: string | null;
           q3_maintain_self: string | null;
           q3_quality: string | null;
           q3_pet_safety: string | null;
@@ -325,13 +354,13 @@ export interface Database {
           blower: string | null;
           basic_tools: string | null;
           truck_trailer: string | null;
-          equipment_notes: string | null;
           dues_preference: string | null;
-          dues_notes: string | null;
           biggest_concern: string | null;
           cost_reduction_ideas: string | null;
           involvement_preference: string | null;
-          involvement_notes: string | null;
+          total_notes: number;
+          follow_up_notes: number;
+          critical_notes: number;
         };
       };
       survey_summary: {

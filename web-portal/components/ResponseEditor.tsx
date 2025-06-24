@@ -17,7 +17,6 @@ interface ResponseData {
   review_notes: string | null;
   q1_preference: string | null;
   q2_service_rating: string | null;
-  q1_q2_notes: string | null;
   q3_maintain_self: string | null;
   q3_quality: string | null;
   q3_pet_safety: string | null;
@@ -44,13 +43,13 @@ interface ResponseData {
   blower: string | null;
   basic_tools: string | null;
   truck_trailer: string | null;
-  equipment_notes: string | null;
   dues_preference: string | null;
-  dues_notes: string | null;
   biggest_concern: string | null;
   cost_reduction_ideas: string | null;
   involvement_preference: string | null;
-  involvement_notes: string | null;
+  total_notes: number;
+  follow_up_notes: number;
+  critical_notes: number;
 }
 
 interface ResponseEditorProps {
@@ -263,7 +262,6 @@ export default function ResponseEditor({ response }: ResponseEditorProps) {
               {renderField('Q2: Service Rating', 'q2_service_rating', 'select', [
                 'Excellent', 'Good', 'Fair', 'Poor', 'Very Poor'
               ])}
-              {renderField('Notes', 'q1_q2_notes', 'textarea')}
             </div>
           </div>
 
@@ -341,9 +339,6 @@ export default function ResponseEditor({ response }: ResponseEditorProps) {
               {renderYesNoField('Basic tools', 'basic_tools')}
               {renderYesNoField('Truck/trailer', 'truck_trailer')}
             </div>
-            <div className="mt-4">
-              {renderField('Equipment notes', 'equipment_notes', 'textarea')}
-            </div>
           </div>
 
           {/* Q9: Dues Preference */}
@@ -351,7 +346,6 @@ export default function ResponseEditor({ response }: ResponseEditorProps) {
             <h3 className="text-lg font-medium text-gray-900 mb-4">Q9: Dues Preference</h3>
             <div className="space-y-4">
               {renderField('Dues preference', 'dues_preference', 'textarea')}
-              {renderField('Dues notes', 'dues_notes', 'textarea')}
             </div>
           </div>
 
@@ -364,7 +358,6 @@ export default function ResponseEditor({ response }: ResponseEditorProps) {
               {renderField('Q12: Involvement preference', 'involvement_preference', 'select', [
                 'Yes', 'No', 'Just keep me informed'
               ])}
-              {renderField('Q12: Involvement notes', 'involvement_notes', 'textarea')}
             </div>
           </div>
         </div>
