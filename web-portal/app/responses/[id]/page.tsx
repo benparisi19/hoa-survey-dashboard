@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { parseContactInfo } from '@/lib/utils';
 import ResponseEditor from '@/components/ResponseEditor';
+import SurveyFormView from '@/components/SurveyFormView';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface ResponseDetailData {
@@ -170,9 +171,9 @@ async function ResponseDetailContent({ id }: { id: string }) {
         </div>
       </div>
       
-      {/* Response Editor */}
+      {/* Survey Form View */}
       <div className="bg-white rounded-lg shadow-card border border-gray-200">
-        <ResponseEditor response={response} />
+        <SurveyFormView response={response} />
       </div>
     </div>
   );
