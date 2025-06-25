@@ -9,6 +9,8 @@ interface PDFViewerProps {
   isVisible: boolean;
   onToggle: () => void;
   height?: string;
+  onFileUpload?: (file: File) => void;
+  isEditing?: boolean;
 }
 
 export default function PDFViewer({ 
@@ -16,23 +18,69 @@ export default function PDFViewer({
   responseId, 
   isVisible, 
   onToggle,
-  height = 'h-[800px]' 
+  height = 'h-[800px]',
+  onFileUpload,
+  isEditing = false
 }: PDFViewerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Reset error state when URL changes
   useEffect(() => {
     setLoadError(false);
   }, [pdfUrl]);
 
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!isEditing || !onFileUpload) return;
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    if (!isEditing || !onFileUpload) return;
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    const pdfFile = files.find(file => file.type === 'application/pdf');
+    if (pdfFile) {
+      onFileUpload(pdfFile);
+    }
+  };
+
   if (!pdfUrl) {
     return (
-      <div className={`${height} bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center`}>
+      <div 
+        className={`${height} rounded-lg border-2 flex items-center justify-center transition-all ${
+          isEditing && onFileUpload
+            ? `border-dashed cursor-pointer ${
+                isDragging 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
+              }`
+            : 'border-gray-200 bg-gray-50'
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         <div className="text-center space-y-2">
-          <FileText className="h-12 w-12 text-gray-300 mx-auto" />
+          <FileText className={`h-12 w-12 mx-auto ${
+            isEditing && onFileUpload ? 'text-gray-400' : 'text-gray-300'
+          }`} />
           <p className="text-gray-500">No PDF uploaded for this response</p>
-          <p className="text-sm text-gray-400">Upload a PDF to view it here</p>
+          <p className="text-sm text-gray-400">
+            {isEditing && onFileUpload 
+              ? 'Drag and drop a PDF here to upload' 
+              : 'Upload a PDF to view it here'
+            }
+          </p>
         </div>
       </div>
     );

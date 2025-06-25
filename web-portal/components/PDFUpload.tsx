@@ -17,6 +17,27 @@ export default function PDFUpload({
   onUploadComplete,
   onUploadError 
 }: PDFUploadProps) {
+  // Hide upload area if PDF already exists
+  if (currentPdfUrl) {
+    return (
+      <div className="bg-gray-50 px-4 py-3 rounded-lg border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <FileText className="h-4 w-4 text-gray-500" />
+            <span className="text-sm text-gray-700">PDF uploaded: {responseId}.pdf</span>
+          </div>
+          <a
+            href={currentPdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-blue-600 hover:text-blue-800"
+          >
+            View
+          </a>
+        </div>
+      </div>
+    );
+  }
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -205,23 +226,7 @@ export default function PDFUpload({
         )}
       </div>
 
-      {/* Current File Info */}
-      {currentPdfUrl && uploadStatus === 'idle' && (
-        <div className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-lg">
-          <div className="flex items-center space-x-2">
-            <FileText className="h-4 w-4 text-gray-500" />
-            <span className="text-sm text-gray-700">Current PDF: response_{responseId}.pdf</span>
-          </div>
-          <a
-            href={currentPdfUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-blue-600 hover:text-blue-800"
-          >
-            View
-          </a>
-        </div>
-      )}
+      {/* This section is now handled above - no current file info needed here */}
     </div>
   );
 }
