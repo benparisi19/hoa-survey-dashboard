@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { CheckCircle, Flag } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { updateReviewStatus } from '@/app/actions/updateReviewStatus';
 
 interface ReviewControlsProps {
   responseId: string;
@@ -24,27 +24,20 @@ export default function ReviewControls({
   const [status, setStatus] = useState(currentStatus);
   const [isSaving, setIsSaving] = useState(false);
 
-  const updateReviewStatus = async (newStatus: string) => {
+  const handleUpdateReviewStatus = async (newStatus: string) => {
     setIsSaving(true);
     try {
-      const updateData: any = {
-        review_status: newStatus,
-        reviewed_by: 'Admin', // TODO: Replace with actual user when auth is implemented
-        reviewed_at: new Date().toISOString(),
-      };
+      const result = await updateReviewStatus(responseId, newStatus);
 
-      const { error } = await supabase
-        .from('responses')
-        .update(updateData)
-        .eq('response_id', responseId);
-
-      if (error) {
-        console.error('Error updating review status:', error);
-        alert('Error updating review status');
-      } else {
+      if (result.success) {
         setStatus(newStatus);
         onStatusChange?.(newStatus);
         console.log(`Response ${responseId} marked as ${newStatus}`);
+        // Refresh the page to show updated status
+        window.location.reload();
+      } else {
+        console.error('Error updating review status:', result.error);
+        alert(`Error updating review status: ${result.error}`);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -59,7 +52,7 @@ export default function ReviewControls({
       {/* Only show buttons if not already in that status */}
       {status !== 'reviewed' && (
         <button
-          onClick={() => updateReviewStatus('reviewed')}
+          onClick={() => handleUpdateReviewStatus('reviewed')}
           disabled={isSaving}
           className="flex items-center space-x-1 text-sm bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition-colors"
         >
@@ -70,7 +63,7 @@ export default function ReviewControls({
 
       {status !== 'flagged' && (
         <button
-          onClick={() => updateReviewStatus('flagged')}
+          onClick={() => handleUpdateReviewStatus('flagged')}
           disabled={isSaving}
           className="flex items-center space-x-1 text-sm bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition-colors"
         >
