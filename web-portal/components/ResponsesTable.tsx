@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, Filter, Download, ChevronUp, ChevronDown, User, UserX, Mail, MailX, Phone, ExternalLink } from 'lucide-react';
+import { Search, Filter, Download, ChevronUp, ChevronDown, User, UserX, Mail, MailX, Phone, ExternalLink, MessageSquare, AlertTriangle, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { ResponseData } from '@/app/responses/page';
 import { parseContactInfo } from '@/lib/utils';
@@ -18,6 +18,7 @@ interface FilterState {
   optOut: string;
   issues: string[];
   reviewStatus: string;
+  hasNotes: string;
 }
 
 const SERVICE_RATINGS = ['Excellent', 'Good', 'Fair', 'Poor', 'Very Poor', 'Not Specified'];
@@ -41,6 +42,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
     optOut: '',
     issues: [],
     reviewStatus: '',
+    hasNotes: '',
   });
   
   const [sortField, setSortField] = useState<SortField>('response_id');
@@ -131,6 +133,18 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
         if (reviewStatus !== filters.reviewStatus) return false;
       }
 
+      // Notes filter
+      if (filters.hasNotes) {
+        const totalNotes = response.total_notes || 0;
+        const criticalNotes = response.critical_notes || 0;
+        const followUpNotes = response.follow_up_notes || 0;
+        
+        if (filters.hasNotes === 'any' && totalNotes === 0) return false;
+        if (filters.hasNotes === 'critical' && criticalNotes === 0) return false;
+        if (filters.hasNotes === 'follow_up' && followUpNotes === 0) return false;
+        if (filters.hasNotes === 'none' && totalNotes > 0) return false;
+      }
+
       return true;
     });
 
@@ -188,6 +202,9 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
       'Contact Preferences',
       'Issues Count',
       'Issues',
+      'Total Notes',
+      'Critical Notes',
+      'Follow-up Notes',
       'Review Status',
       'Reviewed By',
       'Reviewed At',
@@ -206,6 +223,9 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
         contactInfo.preferences.join('; '),
         getIssueCount(response),
         getIssues(response).join('; '),
+        response.total_notes || 0,
+        response.critical_notes || 0,
+        response.follow_up_notes || 0,
         response.review_status || 'unreviewed',
         response.reviewed_by || '',
         response.reviewed_at || '',
@@ -235,6 +255,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
       optOut: '',
       issues: [],
       reviewStatus: '',
+      hasNotes: '',
     });
   };
 
@@ -280,7 +301,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
       {/* Filters Panel */}
       {showFilters && (
         <div className="bg-gray-50 p-4 rounded-lg mb-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             {/* Service Rating Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -366,6 +387,24 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                 <option value="flagged">Flagged</option>
               </select>
             </div>
+
+            {/* Notes Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Notes
+              </label>
+              <select
+                value={filters.hasNotes}
+                onChange={(e) => setFilters(prev => ({ ...prev, hasNotes: e.target.value }))}
+                className="w-full p-2 border border-gray-300 rounded-md text-sm"
+              >
+                <option value="">All</option>
+                <option value="any">Has Notes</option>
+                <option value="critical">Has Critical</option>
+                <option value="follow_up">Has Follow-up</option>
+                <option value="none">No Notes</option>
+              </select>
+            </div>
           </div>
 
           {/* Issues Filter */}
@@ -403,6 +442,29 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
           </div>
         </div>
       )}
+
+      {/* Priority Legend */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+        <h3 className="text-sm font-medium text-gray-900 mb-2">Priority Indicators</h3>
+        <div className="flex flex-wrap gap-4 text-xs">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-500 rounded"></div>
+            <span>Critical Notes or Flagged</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-orange-500 rounded"></div>
+            <span>Very Poor Service Rating</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+            <span>Has Follow-up Notes</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gray-300 rounded"></div>
+            <span>Normal</span>
+          </div>
+        </div>
+      </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
@@ -448,6 +510,9 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                 Issues
               </th>
               <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                Notes
+              </th>
+              <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
                 Review Status
               </th>
               <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
@@ -459,9 +524,28 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
             {filteredData.map((response) => {
               const issues = getIssues(response);
               const hasContact = hasContactInfo(response);
+              const criticalNotes = response.critical_notes || 0;
+              const isFlagged = response.review_status === 'flagged';
+              const isVeryPoor = response.q2_service_rating === 'Very Poor';
+              const hasFollowUp = (response.follow_up_notes || 0) > 0;
+              
+              // Determine priority styling
+              let rowClasses = "hover:bg-gray-50";
+              let leftBorder = "";
+              
+              if (criticalNotes > 0 || isFlagged) {
+                rowClasses = "bg-red-50 hover:bg-red-100";
+                leftBorder = "border-l-4 border-red-500";
+              } else if (isVeryPoor) {
+                rowClasses = "bg-orange-50 hover:bg-orange-100"; 
+                leftBorder = "border-l-4 border-orange-500";
+              } else if (hasFollowUp) {
+                rowClasses = "bg-yellow-50 hover:bg-yellow-100";
+                leftBorder = "border-l-4 border-yellow-500";
+              }
               
               return (
-                <tr key={response.response_id} className="hover:bg-gray-50">
+                <tr key={response.response_id} className={`${rowClasses} ${leftBorder}`}>
                   <td className="border border-gray-200 px-4 py-3 text-sm">
                     <Link
                       href={`/responses/${response.response_id}`}
@@ -564,6 +648,38 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                     ) : (
                       <span className="text-gray-400 text-xs">None</span>
                     )}
+                  </td>
+                  <td className="border border-gray-200 px-4 py-3 text-sm">
+                    {(() => {
+                      const totalNotes = response.total_notes || 0;
+                      const criticalNotes = response.critical_notes || 0;
+                      const followUpNotes = response.follow_up_notes || 0;
+                      
+                      if (totalNotes === 0) {
+                        return <span className="text-gray-400 text-xs">None</span>;
+                      }
+                      
+                      return (
+                        <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1">
+                            <MessageSquare className="h-3 w-3 text-blue-600" />
+                            <span className="text-xs font-medium">{totalNotes}</span>
+                          </div>
+                          {criticalNotes > 0 && (
+                            <span className="bg-red-100 text-red-800 text-xs px-1 py-0.5 rounded flex items-center gap-1">
+                              <AlertTriangle className="h-3 w-3" />
+                              {criticalNotes}
+                            </span>
+                          )}
+                          {followUpNotes > 0 && (
+                            <span className="bg-yellow-100 text-yellow-800 text-xs px-1 py-0.5 rounded flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {followUpNotes}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="border border-gray-200 px-4 py-3 text-sm">
                     {(() => {
