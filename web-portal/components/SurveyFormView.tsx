@@ -1,11 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Edit3, Save, X, FileText, User, MapPin, Mail, Phone } from 'lucide-react';
+import { Edit3, Save, X, FileText, User, MapPin, Mail, Phone, Eye, EyeOff } from 'lucide-react';
 import { parseContactInfo } from '@/lib/utils';
 import ReviewControls from './ReviewControls';
 import NotesSection from './NotesSection';
+import PDFViewer from './PDFViewer';
+import PDFUpload from './PDFUpload';
 import { saveResponse } from '@/app/actions/saveResponse';
+import { updateResponsePDF } from '@/app/actions/updatePDF';
 
 interface SurveyNote {
   note_id: number;
@@ -67,6 +70,9 @@ interface ResponseData {
   total_notes: number;
   follow_up_notes: number;
   critical_notes: number;
+  pdf_file_path?: string | null;
+  pdf_storage_url?: string | null;
+  pdf_uploaded_at?: string | null;
 }
 
 interface SurveyFormViewProps {
@@ -81,6 +87,8 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
   const [isSaving, setIsSaving] = useState(false);
   const [showQ3Other, setShowQ3Other] = useState(!!response.q3_other_text);
   const [showQ4Other, setShowQ4Other] = useState(!!response.other_issues);
+  const [showPDF, setShowPDF] = useState(isEditing); // Auto-show PDF when editing
+  const [pdfUrl, setPdfUrl] = useState(response.pdf_storage_url || null);
   
   const contactInfo = parseContactInfo(isEditing ? editedResponse.email_contact : response.email_contact);
 
@@ -145,6 +153,26 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
   const handleCancel = () => {
     setEditedResponse(response);
     setIsEditing(false);
+    setShowPDF(false); // Hide PDF when done editing
+  };
+
+  const handlePDFUpload = async (url: string) => {
+    setPdfUrl(url);
+    // Update database with PDF info
+    const result = await updateResponsePDF(response.response_id, url);
+    if (!result.success) {
+      console.error('Failed to update PDF in database:', result.error);
+    }
+  };
+
+  const togglePDF = () => {
+    setShowPDF(!showPDF);
+  };
+
+  // Update PDF visibility when editing state changes
+  const startEditing = () => {
+    setIsEditing(true);
+    setShowPDF(true); // Auto-show PDF when editing
   };
 
   const updateField = (field: keyof ResponseData | string, value: string | null) => {
@@ -284,6 +312,9 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
 
   return (
     <div className="bg-white">
+      <div className={`${showPDF ? 'lg:grid lg:grid-cols-2 lg:gap-6' : ''}`}>
+        {/* Main Form Content */}
+        <div className="lg:col-span-1">
       {/* Review Controls Header */}
       <div className="bg-gray-50 p-4 border-b border-gray-200 mb-6">
         <div className="flex items-center justify-between">
@@ -330,7 +361,7 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
                 </>
               ) : (
                 <button
-                  onClick={() => setIsEditing(true)}
+                  onClick={startEditing}
                   className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 >
                   <Edit3 className="h-4 w-4" />
@@ -354,6 +385,20 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
                 }
               }}
             />
+            
+            {/* PDF Toggle Button */}
+            <button
+              onClick={togglePDF}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                showPDF 
+                  ? 'bg-gray-200 hover:bg-gray-300 text-gray-700' 
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+              }`}
+              title={showPDF ? 'Hide PDF' : 'Show PDF'}
+            >
+              {showPDF ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              <span>{showPDF ? 'Hide PDF' : 'View PDF'}</span>
+            </button>
           </div>
         </div>
       </div>
@@ -767,5 +812,34 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
         </div>
       </div>
     </div>
+    
+    {/* PDF Viewer Column */}
+    {showPDF && (
+      <div className="lg:col-span-1 mt-6 lg:mt-0">
+        <div className="sticky top-6">
+          {/* PDF Upload Section (only show when editing) */}
+          {isEditing && (
+            <div className="mb-4">
+              <PDFUpload
+                responseId={response.response_id}
+                currentPdfUrl={pdfUrl}
+                onUploadComplete={handlePDFUpload}
+              />
+            </div>
+          )}
+          
+          {/* PDF Viewer */}
+          <PDFViewer
+            pdfUrl={pdfUrl}
+            responseId={response.response_id}
+            isVisible={showPDF}
+            onToggle={togglePDF}
+            height="h-[700px]"
+          />
+        </div>
+      </div>
+    )}
+  </div>
+  </div>
   );
 }
