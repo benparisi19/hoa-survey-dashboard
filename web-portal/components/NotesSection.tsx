@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { MessageSquare, AlertTriangle, Clock, CheckCircle, Plus, Edit, Trash2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { addNote, updateNote, deleteNote } from '@/app/actions/notesActions';
 
 interface SurveyNote {
   note_id: number;
@@ -66,24 +66,18 @@ export default function NotesSection({ notes, responseId, editable = true }: Not
 
   const handleAddNote = async () => {
     try {
-      const { data, error } = await supabase
-        .from('survey_notes')
-        .insert({
-          response_id: responseId,
-          section: newNote.section,
-          question_context: null,
-          note_text: newNote.note_text,
-          note_type: newNote.note_type,
-          requires_follow_up: newNote.requires_follow_up,
-          priority: newNote.priority,
-          resolved: false
-        })
-        .select()
-        .single();
+      const result = await addNote({
+        response_id: responseId,
+        section: newNote.section,
+        note_text: newNote.note_text,
+        note_type: newNote.note_type,
+        requires_follow_up: newNote.requires_follow_up,
+        priority: newNote.priority
+      });
 
-      if (error) {
-        console.error('Error adding note:', error);
-        alert('Failed to add note. Please try again.');
+      if (!result.success) {
+        console.error('Error adding note:', result.error);
+        alert(`Failed to add note: ${result.error}`);
         return;
       }
 
@@ -109,14 +103,11 @@ export default function NotesSection({ notes, responseId, editable = true }: Not
     }
 
     try {
-      const { error } = await supabase
-        .from('survey_notes')
-        .delete()
-        .eq('note_id', noteId);
+      const result = await deleteNote(noteId, responseId);
 
-      if (error) {
-        console.error('Error deleting note:', error);
-        alert('Failed to delete note. Please try again.');
+      if (!result.success) {
+        console.error('Error deleting note:', result.error);
+        alert(`Failed to delete note: ${result.error}`);
         return;
       }
 
@@ -132,17 +123,11 @@ export default function NotesSection({ notes, responseId, editable = true }: Not
     if (newText === null || newText.trim() === '') return;
 
     try {
-      const { error } = await supabase
-        .from('survey_notes')
-        .update({
-          note_text: newText.trim(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('note_id', note.note_id);
+      const result = await updateNote(note.note_id, newText.trim());
 
-      if (error) {
-        console.error('Error updating note:', error);
-        alert('Failed to update note. Please try again.');
+      if (!result.success) {
+        console.error('Error updating note:', result.error);
+        alert(`Failed to update note: ${result.error}`);
         return;
       }
 
