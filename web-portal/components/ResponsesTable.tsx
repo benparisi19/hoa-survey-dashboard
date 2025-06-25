@@ -88,7 +88,6 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
           response.name,
           response.q2_service_rating,
           response.q1_preference,
-          response.biggest_concern,
           ...getIssues(response)
         ].join(' ').toLowerCase();
         
@@ -194,12 +193,14 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
   const exportToCSV = () => {
     const headers = [
       'Response ID',
-      'Service Rating',
-      'Preference',
+      'Address',
+      'Name',
       'Anonymous',
       'Contact Type',
       'Contact Methods',
       'Contact Preferences',
+      'Service Rating',
+      'Preference',
       'Issues Count',
       'Issues',
       'Total Notes',
@@ -207,20 +208,21 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
       'Follow-up Notes',
       'Review Status',
       'Reviewed By',
-      'Reviewed At',
-      'Biggest Concern'
+      'Reviewed At'
     ];
 
     const csvData = filteredData.map(response => {
       const contactInfo = getContactInfo(response);
       return [
         response.response_id,
-        response.q2_service_rating || '',
-        response.q1_preference || '',
+        response.address || '',
+        response.name || '',
         response.anonymous,
         contactInfo.type,
         [...contactInfo.emails, ...contactInfo.phones].join('; '),
         contactInfo.preferences.join('; '),
+        response.q2_service_rating || '',
+        response.q1_preference || '',
         getIssueCount(response),
         getIssues(response).join('; '),
         response.total_notes || 0,
@@ -228,8 +230,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
         response.follow_up_notes || 0,
         response.review_status || 'unreviewed',
         response.reviewed_by || '',
-        response.reviewed_at || '',
-        response.biggest_concern || ''
+        response.reviewed_at || ''
       ];
     });
 
@@ -479,12 +480,21 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                   ID <SortIcon field="response_id" />
                 </div>
               </th>
+              <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                Address
+              </th>
+              <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                Name
+              </th>
+              <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                Contact
+              </th>
               <th
                 onClick={() => handleSort('q2_service_rating')}
                 className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900 cursor-pointer hover:bg-gray-100"
               >
                 <div className="flex items-center gap-1">
-                  Service Rating <SortIcon field="q2_service_rating" />
+                  Rating <SortIcon field="q2_service_rating" />
                 </div>
               </th>
               <th
@@ -496,17 +506,6 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                 </div>
               </th>
               <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                Contact
-              </th>
-              <th
-                onClick={() => handleSort('anonymous')}
-                className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900 cursor-pointer hover:bg-gray-100"
-              >
-                <div className="flex items-center gap-1">
-                  Anonymous <SortIcon field="anonymous" />
-                </div>
-              </th>
-              <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
                 Issues
               </th>
               <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
@@ -514,9 +513,6 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
               </th>
               <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
                 Review Status
-              </th>
-              <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                Biggest Concern
               </th>
             </tr>
           </thead>
@@ -555,6 +551,49 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                       <ExternalLink className="h-3 w-3" />
                     </Link>
                   </td>
+                  <td className="border border-gray-200 px-4 py-3 text-sm max-w-xs">
+                    <div className="truncate" title={response.address || ''}>
+                      {response.address || <span className="text-gray-400 italic">No address</span>}
+                    </div>
+                  </td>
+                  <td className="border border-gray-200 px-4 py-3 text-sm max-w-xs">
+                    <div className="truncate" title={response.name || ''}>
+                      {response.name || <span className="text-gray-400 italic">No name</span>}
+                    </div>
+                  </td>
+                  <td className="border border-gray-200 px-4 py-3 text-sm">
+                    {(() => {
+                      const contactInfo = getContactInfo(response);
+                      const isAnonymous = response.anonymous === 'Yes';
+                      
+                      if (isAnonymous) {
+                        return (
+                          <div title="Anonymous">
+                            <UserX className="h-4 w-4 text-orange-600" />
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <div className="flex items-center gap-1">
+                          {contactInfo.type === 'both' ? (
+                            <>
+                              <div title="Email"><Mail className="h-4 w-4 text-green-600" /></div>
+                              <div title="Phone"><Phone className="h-4 w-4 text-green-600" /></div>
+                            </>
+                          ) : contactInfo.type === 'email' ? (
+                            <div title="Email"><Mail className="h-4 w-4 text-blue-600" /></div>
+                          ) : contactInfo.type === 'phone' ? (
+                            <div title="Phone"><Phone className="h-4 w-4 text-purple-600" /></div>
+                          ) : contactInfo.type === 'other' ? (
+                            <div title="Other contact method"><Mail className="h-4 w-4 text-orange-600" /></div>
+                          ) : (
+                            <div title="No contact info"><MailX className="h-4 w-4 text-gray-400" /></div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </td>
                   <td className="border border-gray-200 px-4 py-3 text-sm">
                     {response.q2_service_rating && (
                       <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
@@ -570,84 +609,69 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                       </span>
                     )}
                   </td>
-                  <td className="border border-gray-200 px-4 py-3 text-sm max-w-xs">
-                    <div className="truncate" title={response.q1_preference || ''}>
-                      {response.q1_preference}
-                    </div>
-                  </td>
                   <td className="border border-gray-200 px-4 py-3 text-sm">
                     {(() => {
-                      const contactInfo = getContactInfo(response);
+                      if (!response.q1_preference) return null;
                       
-                      return (
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-1">
-                            {contactInfo.type === 'both' ? (
-                              <>
-                                <Mail className="h-3 w-3 text-green-600" />
-                                <Phone className="h-3 w-3 text-green-600" />
-                                <span className="text-green-700 text-xs font-medium">Both</span>
-                              </>
-                            ) : contactInfo.type === 'email' ? (
-                              <>
-                                <Mail className="h-4 w-4 text-blue-600" />
-                                <span className="text-blue-700 text-xs">Email</span>
-                              </>
-                            ) : contactInfo.type === 'phone' ? (
-                              <>
-                                <Phone className="h-4 w-4 text-purple-600" />
-                                <span className="text-purple-700 text-xs">Phone</span>
-                              </>
-                            ) : contactInfo.type === 'other' ? (
-                              <>
-                                <Mail className="h-4 w-4 text-orange-600" />
-                                <span className="text-orange-700 text-xs">Other</span>
-                              </>
-                            ) : (
-                              <>
-                                <MailX className="h-4 w-4 text-gray-400" />
-                                <span className="text-gray-500 text-xs">None</span>
-                              </>
-                            )}
-                          </div>
-                          {contactInfo.preferences.length > 0 && (
-                            <div className="text-xs text-gray-500">
-                              {contactInfo.preferences.join(', ')}
-                            </div>
-                          )}
-                        </div>
-                      );
+                      const pref = response.q1_preference.toLowerCase();
+                      if (pref.includes('keep current') || pref.includes('keep hoa')) {
+                        return (
+                          <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Keep HOA
+                          </span>
+                        );
+                      } else if (pref.includes('hire my own') || pref.includes('hire own')) {
+                        return (
+                          <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Hire Own
+                          </span>
+                        );
+                      } else if (pref.includes('maintain it myself') || pref.includes('opt out')) {
+                        return (
+                          <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            Opt Out
+                          </span>
+                        );
+                      } else {
+                        return (
+                          <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            Other
+                          </span>
+                        );
+                      }
                     })()}
                   </td>
                   <td className="border border-gray-200 px-4 py-3 text-sm">
-                    <div className="flex items-center gap-1">
-                      {response.anonymous === 'Yes' ? (
-                        <>
-                          <UserX className="h-4 w-4 text-orange-600" />
-                          <span className="text-orange-700 text-xs">Yes</span>
-                        </>
-                      ) : (
-                        <>
-                          <User className="h-4 w-4 text-blue-600" />
-                          <span className="text-blue-700 text-xs">No</span>
-                        </>
+                    <div className="flex flex-wrap gap-1">
+                      {response.irrigation === 'Yes' && (
+                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full" title="Irrigation/sprinkler problems">
+                          💧
+                        </span>
+                      )}
+                      {response.poor_mowing === 'Yes' && (
+                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full" title="Poor mowing quality">
+                          🌱
+                        </span>
+                      )}
+                      {response.property_damage === 'Yes' && (
+                        <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full" title="Property damage">
+                          🏠
+                        </span>
+                      )}
+                      {response.missed_service === 'Yes' && (
+                        <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full" title="Missed service dates">
+                          📅
+                        </span>
+                      )}
+                      {response.inadequate_weeds === 'Yes' && (
+                        <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full" title="Inadequate weed control">
+                          🌿
+                        </span>
+                      )}
+                      {issues.length === 0 && (
+                        <span className="text-gray-400 text-xs">None</span>
                       )}
                     </div>
-                  </td>
-                  <td className="border border-gray-200 px-4 py-3 text-sm">
-                    {issues.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">
-                          {issues.length} issue{issues.length > 1 ? 's' : ''}
-                        </span>
-                        <div className="text-xs text-gray-600 mt-1">
-                          {issues.slice(0, 2).join(', ')}
-                          {issues.length > 2 && ` +${issues.length - 2} more`}
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-gray-400 text-xs">None</span>
-                    )}
                   </td>
                   <td className="border border-gray-200 px-4 py-3 text-sm">
                     {(() => {
@@ -707,13 +731,6 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                         </div>
                       );
                     })()} 
-                  </td>
-                  <td className="border border-gray-200 px-4 py-3 text-sm max-w-xs">
-                    <div className="truncate" title={response.biggest_concern || ''}>
-                      {response.biggest_concern || (
-                        <span className="text-gray-400"></span>
-                      )}
-                    </div>
                   </td>
                 </tr>
               );
