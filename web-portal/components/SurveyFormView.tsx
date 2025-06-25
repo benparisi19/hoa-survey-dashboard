@@ -6,9 +6,9 @@ import { parseContactInfo } from '@/lib/utils';
 import ReviewControls from './ReviewControls';
 import NotesSection from './NotesSection';
 import PDFViewer from './PDFViewer';
-import PDFUpload from './PDFUpload';
 import { saveResponse } from '@/app/actions/saveResponse';
 import { updateResponsePDF } from '@/app/actions/updatePDF';
+import { supabase } from '@/lib/supabase';
 
 interface SurveyNote {
   note_id: number;
@@ -312,10 +312,7 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
 
   return (
     <div className="bg-white">
-      <div className={`${showPDF ? 'lg:grid lg:grid-cols-2 lg:gap-6' : ''}`}>
-        {/* Main Form Content */}
-        <div className="lg:col-span-1">
-      {/* Review Controls Header */}
+      {/* Review Controls Header - Full Width */}
       <div className="bg-gray-50 p-4 border-b border-gray-200 mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -403,8 +400,11 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
         </div>
       </div>
 
-      {/* Survey Form */}
-      <div className="p-8 space-y-8">
+      {/* Main Content Area - Grid Layout */}
+      <div className={`${showPDF ? 'lg:grid lg:grid-cols-2 lg:gap-6' : ''}`}>
+        {/* Survey Form Column */}
+        <div className="lg:col-span-1">
+          <div className="p-8 space-y-8">
         {/* Survey Header */}
         <div className="text-center border-b pb-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Movado Greens</h1>
@@ -810,24 +810,13 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
           <p className="text-lg font-semibold text-gray-900">Thank you for your input!</p>
           <p className="text-base text-gray-800 mt-2">- Ben</p>
         </div>
-      </div>
-    </div>
+          </div>
+        </div>
     
     {/* PDF Viewer Column */}
     {showPDF && (
       <div className="lg:col-span-1 mt-6 lg:mt-0">
         <div className="sticky top-6">
-          {/* PDF Upload Section (only show when editing) */}
-          {isEditing && (
-            <div className="mb-4">
-              <PDFUpload
-                responseId={response.response_id}
-                currentPdfUrl={pdfUrl}
-                onUploadComplete={handlePDFUpload}
-              />
-            </div>
-          )}
-          
           {/* PDF Viewer */}
           <PDFViewer
             pdfUrl={pdfUrl}
@@ -835,11 +824,34 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
             isVisible={showPDF}
             onToggle={togglePDF}
             height="h-[700px]"
+            onFileUpload={isEditing ? async (file: File) => {
+              // Upload file to Supabase storage
+              const filePath = `${response.response_id}.pdf`;
+              const { data, error } = await supabase.storage
+                .from('survey-pdfs')
+                .upload(filePath, file, {
+                  cacheControl: '3600',
+                  upsert: true
+                });
+
+              if (error) {
+                console.error('Upload error:', error);
+                return;
+              }
+
+              // Get public URL
+              const { data: { publicUrl } } = supabase.storage
+                .from('survey-pdfs')
+                .getPublicUrl(filePath);
+
+              handlePDFUpload(publicUrl);
+            } : undefined}
+            isEditing={isEditing}
           />
         </div>
       </div>
     )}
-  </div>
-  </div>
+      </div>
+    </div>
   );
 }
