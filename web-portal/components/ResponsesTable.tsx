@@ -530,7 +530,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                   Name <SortIcon field="name" />
                 </div>
               </th>
-              <th className="border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-900" title="Contact information availability">
+              <th className="border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-900 cursor-help" title="Contact information availability">
                 Contact
               </th>
               <th
@@ -551,7 +551,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                   Preference <SortIcon field="q1_preference" />
                 </div>
               </th>
-              <th className="border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-900" title="Landscaping issues experienced">
+              <th className="border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-900 cursor-help" title="Landscaping issues experienced">
                 Issues
               </th>
               <th
@@ -626,7 +626,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                       
                       if (isAnonymous) {
                         return (
-                          <div title="Anonymous" className="flex justify-center">
+                          <div title="Anonymous" className="flex justify-center cursor-help">
                             <UserX className="h-4 w-4 text-orange-600" />
                           </div>
                         );
@@ -636,17 +636,17 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                         <div className="flex items-center justify-center gap-1">
                           {contactInfo.type === 'both' ? (
                             <>
-                              <div title="Email"><Mail className="h-4 w-4 text-green-600" /></div>
-                              <div title="Phone"><Phone className="h-4 w-4 text-green-600" /></div>
+                              <div title="Email" className="cursor-help"><Mail className="h-4 w-4 text-green-600" /></div>
+                              <div title="Phone" className="cursor-help"><Phone className="h-4 w-4 text-green-600" /></div>
                             </>
                           ) : contactInfo.type === 'email' ? (
-                            <div title="Email"><Mail className="h-4 w-4 text-blue-600" /></div>
+                            <div title="Email" className="cursor-help"><Mail className="h-4 w-4 text-blue-600" /></div>
                           ) : contactInfo.type === 'phone' ? (
-                            <div title="Phone"><Phone className="h-4 w-4 text-purple-600" /></div>
+                            <div title="Phone" className="cursor-help"><Phone className="h-4 w-4 text-purple-600" /></div>
                           ) : contactInfo.type === 'other' ? (
-                            <div title="Other contact method"><Mail className="h-4 w-4 text-orange-600" /></div>
+                            <div title="Other contact method" className="cursor-help"><Mail className="h-4 w-4 text-orange-600" /></div>
                           ) : (
-                            <div title="No contact info"><MailX className="h-4 w-4 text-gray-400" /></div>
+                            <div title="No contact info" className="cursor-help"><MailX className="h-4 w-4 text-gray-400" /></div>
                           )}
                         </div>
                       );
@@ -704,29 +704,29 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                     </div>
                   </td>
                   <td className="border border-gray-200 px-4 py-3 text-sm text-center">
-                    <div className="flex justify-center items-center gap-1 flex-wrap">
+                    <div className="flex justify-center items-center gap-1 whitespace-nowrap">
                       {response.irrigation === 'Yes' && (
-                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full" title="Irrigation/sprinkler problems">
+                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full cursor-help" title="Irrigation/sprinkler problems">
                           💧
                         </span>
                       )}
                       {response.poor_mowing === 'Yes' && (
-                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full" title="Poor mowing quality">
+                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full cursor-help" title="Poor mowing quality">
                           🌱
                         </span>
                       )}
                       {response.property_damage === 'Yes' && (
-                        <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full" title="Property damage">
+                        <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full cursor-help" title="Property damage">
                           🏠
                         </span>
                       )}
                       {response.missed_service === 'Yes' && (
-                        <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full" title="Missed service dates">
+                        <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full cursor-help" title="Missed service dates">
                           📅
                         </span>
                       )}
                       {response.inadequate_weeds === 'Yes' && (
-                        <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full" title="Inadequate weed control">
+                        <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full cursor-help" title="Inadequate weed control">
                           🌿
                         </span>
                       )}
@@ -789,7 +789,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                                status === 'flagged' ? 'Flagged' : status}
                             </span>
                             {isFlagged && (
-                              <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800" title="Flagged for attention">
+                              <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 cursor-help" title="Flagged for attention">
                                 🚩
                               </span>
                             )}
