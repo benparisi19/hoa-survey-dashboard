@@ -30,7 +30,7 @@ const ISSUES = [
   { key: 'inadequate_weeds', label: 'Inadequate Weeds' },
 ];
 
-type SortField = 'response_id' | 'q2_service_rating' | 'q1_preference' | 'anonymous';
+type SortField = 'response_id' | 'address' | 'name' | 'q2_service_rating' | 'q1_preference' | 'review_status' | 'total_notes';
 type SortDirection = 'asc' | 'desc';
 
 export default function ResponsesTable({ responses }: ResponsesTableProps) {
@@ -161,6 +161,40 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
         const ratingOrder = ['Very Poor', 'Poor', 'Fair', 'Good', 'Excellent', 'Not Specified'];
         aValue = ratingOrder.indexOf(aValue) !== -1 ? ratingOrder.indexOf(aValue) : 999;
         bValue = ratingOrder.indexOf(bValue) !== -1 ? ratingOrder.indexOf(bValue) : 999;
+      }
+
+      // Special handling for review status
+      if (sortField === 'review_status') {
+        const statusOrder = ['flagged', 'unreviewed', 'in_progress', 'reviewed'];
+        aValue = statusOrder.indexOf(aValue || 'unreviewed');
+        bValue = statusOrder.indexOf(bValue || 'unreviewed');
+      }
+
+      // Special handling for preferences
+      if (sortField === 'q1_preference') {
+        const prefOrder = ['Keep current', 'Opt out', 'hire my own'];
+        const aPref = (aValue || '').toLowerCase();
+        const bPref = (bValue || '').toLowerCase();
+        
+        let aIndex = 999;
+        let bIndex = 999;
+        
+        if (aPref.includes('keep current') || aPref.includes('keep hoa')) aIndex = 0;
+        else if (aPref.includes('opt out') || aPref.includes('maintain it myself')) aIndex = 1;
+        else if (aPref.includes('hire my own') || aPref.includes('hire own')) aIndex = 2;
+        
+        if (bPref.includes('keep current') || bPref.includes('keep hoa')) bIndex = 0;
+        else if (bPref.includes('opt out') || bPref.includes('maintain it myself')) bIndex = 1;
+        else if (bPref.includes('hire my own') || bPref.includes('hire own')) bIndex = 2;
+        
+        aValue = aIndex;
+        bValue = bIndex;
+      }
+
+      // Numeric sorting for notes
+      if (sortField === 'total_notes') {
+        aValue = Number(aValue) || 0;
+        bValue = Number(bValue) || 0;
       }
 
       if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
@@ -480,39 +514,63 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                   ID <SortIcon field="response_id" />
                 </div>
               </th>
-              <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                Address
+              <th
+                onClick={() => handleSort('address')}
+                className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900 cursor-pointer hover:bg-gray-100"
+              >
+                <div className="flex items-center gap-1">
+                  Address <SortIcon field="address" />
+                </div>
               </th>
-              <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                Name
+              <th
+                onClick={() => handleSort('name')}
+                className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900 cursor-pointer hover:bg-gray-100"
+              >
+                <div className="flex items-center gap-1">
+                  Name <SortIcon field="name" />
+                </div>
               </th>
-              <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+              <th className="border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-900" title="Contact information availability">
                 Contact
               </th>
               <th
                 onClick={() => handleSort('q2_service_rating')}
-                className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900 cursor-pointer hover:bg-gray-100"
+                className="border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-900 cursor-pointer hover:bg-gray-100"
+                title="Service quality rating"
               >
-                <div className="flex items-center gap-1">
+                <div className="flex items-center justify-center gap-1">
                   Rating <SortIcon field="q2_service_rating" />
                 </div>
               </th>
               <th
                 onClick={() => handleSort('q1_preference')}
-                className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900 cursor-pointer hover:bg-gray-100"
+                className="border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-900 cursor-pointer hover:bg-gray-100"
+                title="Landscaping service preference"
               >
-                <div className="flex items-center gap-1">
+                <div className="flex items-center justify-center gap-1">
                   Preference <SortIcon field="q1_preference" />
                 </div>
               </th>
-              <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+              <th className="border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-900" title="Landscaping issues experienced">
                 Issues
               </th>
-              <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                Notes
+              <th
+                onClick={() => handleSort('total_notes')}
+                className="border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-900 cursor-pointer hover:bg-gray-100"
+                title="Notes and follow-up items"
+              >
+                <div className="flex items-center justify-center gap-1">
+                  Notes <SortIcon field="total_notes" />
+                </div>
               </th>
-              <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                Review Status
+              <th
+                onClick={() => handleSort('review_status')}
+                className="border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-900 cursor-pointer hover:bg-gray-100"
+                title="Review workflow status"
+              >
+                <div className="flex items-center justify-center gap-1">
+                  Review Status <SortIcon field="review_status" />
+                </div>
               </th>
             </tr>
           </thead>
@@ -561,21 +619,21 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                       {response.name || <span className="text-gray-400 italic">No name</span>}
                     </div>
                   </td>
-                  <td className="border border-gray-200 px-4 py-3 text-sm">
+                  <td className="border border-gray-200 px-4 py-3 text-sm text-center">
                     {(() => {
                       const contactInfo = getContactInfo(response);
                       const isAnonymous = response.anonymous === 'Yes';
                       
                       if (isAnonymous) {
                         return (
-                          <div title="Anonymous">
+                          <div title="Anonymous" className="flex justify-center">
                             <UserX className="h-4 w-4 text-orange-600" />
                           </div>
                         );
                       }
                       
                       return (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center justify-center gap-1">
                           {contactInfo.type === 'both' ? (
                             <>
                               <div title="Email"><Mail className="h-4 w-4 text-green-600" /></div>
@@ -594,55 +652,59 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                       );
                     })()}
                   </td>
-                  <td className="border border-gray-200 px-4 py-3 text-sm">
-                    {response.q2_service_rating && (
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                        response.q2_service_rating === 'Excellent' ? 'bg-green-100 text-green-800' :
-                        response.q2_service_rating === 'Good' ? 'bg-blue-100 text-blue-800' :
-                        response.q2_service_rating === 'Fair' ? 'bg-yellow-100 text-yellow-800' :
-                        response.q2_service_rating === 'Poor' ? 'bg-orange-100 text-orange-800' :
-                        response.q2_service_rating === 'Very Poor' ? 'bg-red-100 text-red-800' :
-                        response.q2_service_rating === 'Not Specified' ? 'bg-gray-100 text-gray-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {response.q2_service_rating}
-                      </span>
-                    )}
+                  <td className="border border-gray-200 px-4 py-3 text-sm text-center">
+                    <div className="flex justify-center">
+                      {response.q2_service_rating && (
+                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                          response.q2_service_rating === 'Excellent' ? 'bg-green-100 text-green-800' :
+                          response.q2_service_rating === 'Good' ? 'bg-blue-100 text-blue-800' :
+                          response.q2_service_rating === 'Fair' ? 'bg-yellow-100 text-yellow-800' :
+                          response.q2_service_rating === 'Poor' ? 'bg-orange-100 text-orange-800' :
+                          response.q2_service_rating === 'Very Poor' ? 'bg-red-100 text-red-800' :
+                          response.q2_service_rating === 'Not Specified' ? 'bg-gray-100 text-gray-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {response.q2_service_rating}
+                        </span>
+                      )}
+                    </div>
                   </td>
-                  <td className="border border-gray-200 px-4 py-3 text-sm">
-                    {(() => {
-                      if (!response.q1_preference) return null;
-                      
-                      const pref = response.q1_preference.toLowerCase();
-                      if (pref.includes('keep current') || pref.includes('keep hoa')) {
-                        return (
-                          <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Keep HOA
-                          </span>
-                        );
-                      } else if (pref.includes('hire my own') || pref.includes('hire own')) {
-                        return (
-                          <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            Hire Own
-                          </span>
-                        );
-                      } else if (pref.includes('maintain it myself') || pref.includes('opt out')) {
-                        return (
-                          <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                            Opt Out
-                          </span>
-                        );
-                      } else {
-                        return (
-                          <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            Other
-                          </span>
-                        );
-                      }
-                    })()}
+                  <td className="border border-gray-200 px-4 py-3 text-sm text-center">
+                    <div className="flex justify-center">
+                      {(() => {
+                        if (!response.q1_preference) return null;
+                        
+                        const pref = response.q1_preference.toLowerCase();
+                        if (pref.includes('keep current') || pref.includes('keep hoa')) {
+                          return (
+                            <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 whitespace-nowrap">
+                              Keep HOA
+                            </span>
+                          );
+                        } else if (pref.includes('hire my own') || pref.includes('hire own')) {
+                          return (
+                            <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 whitespace-nowrap">
+                              Hire Own
+                            </span>
+                          );
+                        } else if (pref.includes('maintain it myself') || pref.includes('opt out')) {
+                          return (
+                            <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 whitespace-nowrap">
+                              Opt Out
+                            </span>
+                          );
+                        } else {
+                          return (
+                            <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 whitespace-nowrap">
+                              Other
+                            </span>
+                          );
+                        }
+                      })()}
+                    </div>
                   </td>
-                  <td className="border border-gray-200 px-4 py-3 text-sm">
-                    <div className="flex flex-wrap gap-1">
+                  <td className="border border-gray-200 px-4 py-3 text-sm text-center">
+                    <div className="flex justify-center items-center gap-1 flex-wrap">
                       {response.irrigation === 'Yes' && (
                         <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full" title="Irrigation/sprinkler problems">
                           💧
@@ -673,64 +735,68 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
                       )}
                     </div>
                   </td>
-                  <td className="border border-gray-200 px-4 py-3 text-sm">
-                    {(() => {
-                      const totalNotes = response.total_notes || 0;
-                      const criticalNotes = response.critical_notes || 0;
-                      const followUpNotes = response.follow_up_notes || 0;
-                      
-                      if (totalNotes === 0) {
-                        return <span className="text-gray-400 text-xs">None</span>;
-                      }
-                      
-                      return (
-                        <div className="flex items-center gap-1">
+                  <td className="border border-gray-200 px-4 py-3 text-sm text-center">
+                    <div className="flex justify-center">
+                      {(() => {
+                        const totalNotes = response.total_notes || 0;
+                        const criticalNotes = response.critical_notes || 0;
+                        const followUpNotes = response.follow_up_notes || 0;
+                        
+                        if (totalNotes === 0) {
+                          return <span className="text-gray-400 text-xs">None</span>;
+                        }
+                        
+                        return (
                           <div className="flex items-center gap-1">
-                            <MessageSquare className="h-3 w-3 text-blue-600" />
-                            <span className="text-xs font-medium">{totalNotes}</span>
+                            <div className="flex items-center gap-1">
+                              <MessageSquare className="h-3 w-3 text-blue-600" />
+                              <span className="text-xs font-medium">{totalNotes}</span>
+                            </div>
+                            {criticalNotes > 0 && (
+                              <span className="bg-red-100 text-red-800 text-xs px-1 py-0.5 rounded flex items-center gap-1">
+                                <AlertTriangle className="h-3 w-3" />
+                                {criticalNotes}
+                              </span>
+                            )}
+                            {followUpNotes > 0 && (
+                              <span className="bg-yellow-100 text-yellow-800 text-xs px-1 py-0.5 rounded flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {followUpNotes}
+                              </span>
+                            )}
                           </div>
-                          {criticalNotes > 0 && (
-                            <span className="bg-red-100 text-red-800 text-xs px-1 py-0.5 rounded flex items-center gap-1">
-                              <AlertTriangle className="h-3 w-3" />
-                              {criticalNotes}
-                            </span>
-                          )}
-                          {followUpNotes > 0 && (
-                            <span className="bg-yellow-100 text-yellow-800 text-xs px-1 py-0.5 rounded flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {followUpNotes}
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })()}
+                        );
+                      })()}
+                    </div>
                   </td>
-                  <td className="border border-gray-200 px-4 py-3 text-sm">
-                    {(() => {
-                      const status = response.review_status || 'unreviewed';
-                      const isFlagged = status === 'flagged';
-                      
-                      return (
-                        <div className="flex items-center gap-2">
-                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                            status === 'reviewed' ? 'bg-green-100 text-green-800' :
-                            status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                            status === 'flagged' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {status === 'unreviewed' ? 'Unreviewed' :
-                             status === 'in_progress' ? 'In Progress' :
-                             status === 'reviewed' ? 'Reviewed' :
-                             status === 'flagged' ? 'Flagged' : status}
-                          </span>
-                          {isFlagged && (
-                            <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              🚩
+                  <td className="border border-gray-200 px-4 py-3 text-sm text-center">
+                    <div className="flex justify-center">
+                      {(() => {
+                        const status = response.review_status || 'unreviewed';
+                        const isFlagged = status === 'flagged';
+                        
+                        return (
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                              status === 'reviewed' ? 'bg-green-100 text-green-800' :
+                              status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                              status === 'flagged' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {status === 'unreviewed' ? 'Unreviewed' :
+                               status === 'in_progress' ? 'In Progress' :
+                               status === 'reviewed' ? 'Reviewed' :
+                               status === 'flagged' ? 'Flagged' : status}
                             </span>
-                          )}
-                        </div>
-                      );
-                    })()} 
+                            {isFlagged && (
+                              <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800" title="Flagged for attention">
+                                🚩
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()} 
+                    </div>
                   </td>
                 </tr>
               );
