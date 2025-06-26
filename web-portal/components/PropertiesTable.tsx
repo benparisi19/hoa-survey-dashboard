@@ -4,6 +4,12 @@ import { useState, useMemo } from 'react';
 import { Search, Filter, Download, ChevronUp, ChevronDown, Building2, Users, MapPin, Phone, Mail, ExternalLink, Settings2 } from 'lucide-react';
 import Link from 'next/link';
 import { PropertyData } from '@/app/properties/page';
+import AdvancedFilterBuilder from './AdvancedFilterBuilder';
+import {
+  AdvancedFilterSet,
+  createEmptyFilterSet,
+  applyAdvancedFilters
+} from '@/lib/advanced-filters';
 
 interface PropertiesTableProps {
   properties: PropertyData[];
@@ -30,6 +36,7 @@ type SortField = 'address' | 'lot_number' | 'hoa_zone' | 'street_group' | 'curre
 type SortDirection = 'asc' | 'desc';
 
 export default function PropertiesTable({ properties }: PropertiesTableProps) {
+  // Simple filters state
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     zone: '',
@@ -40,9 +47,14 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
     status: '',
   });
   
+  // Advanced filters state
+  const [advancedFilterSet, setAdvancedFilterSet] = useState<AdvancedFilterSet>(createEmptyFilterSet());
+  const [useAdvancedFilters, setUseAdvancedFilters] = useState(false);
+  
   const [sortField, setSortField] = useState<SortField>('address');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [showFilters, setShowFilters] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Helper functions
   const getResidencyStatus = (property: PropertyData): 'owner_occupied' | 'rental' | 'vacant' | 'unknown' => {
@@ -63,40 +75,84 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
     };
   };
 
+  // Advanced filter handlers
+  const handleAdvancedFilterChange = (newFilterSet: AdvancedFilterSet) => {
+    setAdvancedFilterSet(newFilterSet);
+  };
+
+  const applyAdvancedFilterSet = () => {
+    setUseAdvancedFilters(true);
+  };
+
+  const switchToSimpleFilters = () => {
+    setUseAdvancedFilters(false);
+    setShowAdvancedFilters(false);
+    // TODO: Implement property-specific filter conversion
+    // For now, just switch to simple mode without conversion
+  };
+
   // Filtered and sorted data
   const filteredData = useMemo(() => {
-    let filtered = properties.filter(property => {
-      // Search filter
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        const matchesSearch = 
-          property.address.toLowerCase().includes(searchLower) ||
-          property.lot_number?.toLowerCase().includes(searchLower) ||
-          property.owner_name?.toLowerCase().includes(searchLower) ||
-          property.primary_contact_name?.toLowerCase().includes(searchLower);
-        if (!matchesSearch) return false;
+    let filtered: PropertyData[];
+    
+    // Choose filtering method
+    if (useAdvancedFilters) {
+      // Check if there are any actual filter conditions
+      const hasActiveConditions = advancedFilterSet.groups.some(group => 
+        group.conditions.some(condition => {
+          // Some operators don't require values
+          const noValueOperators = ['exists', 'not_exists', 'is_empty', 'is_not_empty'];
+          const isActive = noValueOperators.includes(condition.operator) || 
+            (condition.value !== null && condition.value !== undefined && condition.value !== '');
+          
+          return isActive;
+        })
+      );
+      
+      if (hasActiveConditions) {
+        // TODO: Implement property-specific advanced filters
+        // For now, fall back to simple filters when advanced mode is active
+        console.warn('Advanced filters not yet implemented for properties');
+        filtered = properties;
+      } else {
+        // No active conditions, show all properties
+        filtered = properties;
       }
+    } else {
+      // Use simple filters
+      filtered = properties.filter(property => {
+        // Search filter
+        if (filters.search) {
+          const searchLower = filters.search.toLowerCase();
+          const matchesSearch = 
+            property.address.toLowerCase().includes(searchLower) ||
+            property.lot_number?.toLowerCase().includes(searchLower) ||
+            property.owner_name?.toLowerCase().includes(searchLower) ||
+            property.primary_contact_name?.toLowerCase().includes(searchLower);
+          if (!matchesSearch) return false;
+        }
 
-      // Zone filter
-      if (filters.zone && property.hoa_zone !== filters.zone) return false;
+        // Zone filter
+        if (filters.zone && property.hoa_zone !== filters.zone) return false;
 
-      // Street group filter
-      if (filters.streetGroup && property.street_group !== filters.streetGroup) return false;
+        // Street group filter
+        if (filters.streetGroup && property.street_group !== filters.streetGroup) return false;
 
-      // Property type filter
-      if (filters.propertyType && property.property_type !== filters.propertyType) return false;
+        // Property type filter
+        if (filters.propertyType && property.property_type !== filters.propertyType) return false;
 
-      // Residency status filter
-      if (filters.residencyStatus && getResidencyStatus(property) !== filters.residencyStatus) return false;
+        // Residency status filter
+        if (filters.residencyStatus && getResidencyStatus(property) !== filters.residencyStatus) return false;
 
-      // Survey participation filter
-      if (filters.surveyParticipation && getSurveyParticipation(property) !== filters.surveyParticipation) return false;
+        // Survey participation filter
+        if (filters.surveyParticipation && getSurveyParticipation(property) !== filters.surveyParticipation) return false;
 
-      // Status filter
-      if (filters.status && property.status !== filters.status) return false;
+        // Status filter
+        if (filters.status && property.status !== filters.status) return false;
 
-      return true;
-    });
+        return true;
+      });
+    }
 
     // Sort data
     filtered.sort((a, b) => {
@@ -135,18 +191,29 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
   };
 
   const clearFilters = () => {
-    setFilters({
-      search: '',
-      zone: '',
-      streetGroup: '',
-      propertyType: '',
-      residencyStatus: '',
-      surveyParticipation: '',
-      status: '',
-    });
+    if (useAdvancedFilters) {
+      setAdvancedFilterSet(createEmptyFilterSet());
+    } else {
+      setFilters({
+        search: '',
+        zone: '',
+        streetGroup: '',
+        propertyType: '',
+        residencyStatus: '',
+        surveyParticipation: '',
+        status: '',
+      });
+    }
   };
 
-  const hasActiveFilters = Object.values(filters).some(value => value !== '');
+  const hasActiveFilters = useAdvancedFilters 
+    ? advancedFilterSet.groups.some(group => group.conditions.length > 0)
+    : Object.values(filters).some(value => value !== '');
+
+  const exportToCSV = () => {
+    // TODO: Implement property export functionality
+    console.log('Exporting properties to CSV...');
+  };
 
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <button
@@ -181,35 +248,59 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
             </div>
           </div>
 
-          {/* Filter Toggle */}
-          <div className="flex items-center space-x-2">
+          {/* Filter Controls */}
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`inline-flex items-center px-3 py-2 border rounded-lg text-sm font-medium transition-colors ${
-                showFilters || hasActiveFilters
-                  ? 'border-primary-300 bg-primary-50 text-primary-700'
-                  : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+              onClick={() => {
+                if (!showFilters) {
+                  setShowFilters(true);
+                  setUseAdvancedFilters(false);
+                  setShowAdvancedFilters(false);
+                } else {
+                  setShowFilters(false);
+                }
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                showFilters && !useAdvancedFilters
+                  ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                  : 'bg-gray-100 hover:bg-gray-200'
               }`}
             >
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-              {hasActiveFilters && (
-                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                  Active
-                </span>
-              )}
+              <Filter className="h-4 w-4" />
+              Simple Filters
             </button>
-
             <button
-              className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              onClick={() => {
+                if (!showAdvancedFilters) {
+                  // When opening advanced filters, switch to advanced mode
+                  setShowAdvancedFilters(true);
+                  setUseAdvancedFilters(true);
+                  setShowFilters(false);
+                } else {
+                  // When closing, just hide the panel but keep the mode
+                  setShowAdvancedFilters(false);
+                }
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                showAdvancedFilters && useAdvancedFilters
+                  ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                  : 'bg-gray-100 hover:bg-gray-200'
+              }`}
             >
-              <Download className="h-4 w-4 mr-2" />
-              Export
+              <Settings2 className="h-4 w-4" />
+              Advanced Filters
+            </button>
+            <button
+              onClick={exportToCSV}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
             </button>
           </div>
         </div>
 
-        {/* Advanced Filters */}
+        {/* Simple Filters */}
         {showFilters && (
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Zone Filter */}
@@ -288,6 +379,36 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
           </div>
         )}
       </div>
+
+      {/* Advanced Filters Panel */}
+      {showAdvancedFilters && (
+        <div className="mb-6">
+          <AdvancedFilterBuilder
+            filterSet={advancedFilterSet}
+            onChange={handleAdvancedFilterChange}
+            onApply={applyAdvancedFilterSet}
+          />
+          <div className="mt-4 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                Using advanced filters • Filters apply automatically as you build them
+              </span>
+              <button
+                onClick={switchToSimpleFilters}
+                className="text-sm text-blue-600 hover:text-blue-800 underline"
+              >
+                Switch to simple filters
+              </button>
+            </div>
+            <button
+              onClick={clearFilters}
+              className="text-sm text-red-600 hover:text-red-800 underline"
+            >
+              Clear all filters
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Results Summary */}
       <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
