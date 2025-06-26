@@ -42,6 +42,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
+        console.log('Initial session check:', {
+          hasSession: !!session,
+          hasUser: !!session?.user,
+          userId: session?.user?.id,
+          email: session?.user?.email,
+          error: error?.message
+        });
+        
         if (error) {
           console.error('Error getting session:', error);
           setUser(null);
@@ -53,8 +61,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          console.log('Fetching profile for user:', session.user.id);
           await fetchUserProfile(session.user.id);
         } else {
+          console.log('No user in session, setting profile to null');
           setProfile(null);
         }
         
@@ -91,6 +101,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user ID:', userId);
+      
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -98,16 +110,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error) {
-        console.error('Error fetching user profile:', error);
+        console.error('Error fetching user profile:', {
+          error: error.message,
+          code: error.code,
+          userId
+        });
+        
         // If we can't fetch the profile, the user might not have access
         // or there might be an auth issue - sign them out
-        if (error.code === 'PGRST116' || error.message.includes('JWT')) {
-          console.log('Profile fetch failed, signing out user');
+        if (error.code === 'PGRST116' || error.message.includes('JWT') || error.message.includes('permission')) {
+          console.log('Profile fetch failed due to auth/permission issue, signing out user');
           await supabase.auth.signOut();
         }
         setProfile(null);
         return;
       }
+      
+      console.log('Profile fetched successfully:', {
+        userId: data.id,
+        email: data.email,
+        role: data.role
+      });
       
       setProfile(data);
     } catch (error) {
