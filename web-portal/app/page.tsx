@@ -1,12 +1,15 @@
 import { Suspense } from 'react';
 import { Users, AlertCircle, CheckCircle2, BarChart3, Mail, Phone } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-server';
 import { formatPercentage, CHART_COLORS, SERVICE_RATING_ORDER, parseContactInfo } from '@/lib/utils';
 import ServiceRatingChart from '@/components/ServiceRatingChart';
 import IssuesOverview from '@/components/IssuesOverview';
 import ContactOverview from '@/components/ContactOverview';
 import MetricCard from '@/components/MetricCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import AdminGate from '@/components/AdminGate';
+
+export const dynamic = 'force-dynamic';
 
 interface DashboardStats {
   totalResponses: number;
@@ -35,6 +38,8 @@ interface ServiceRatingData {
 
 async function getDashboardStats(): Promise<DashboardStats> {
   try {
+    const supabase = createClient();
+    
     // Get total responses with review status
     const { data: responses, error: responsesError } = await supabase
       .from('responses')
@@ -112,6 +117,8 @@ async function getDashboardStats(): Promise<DashboardStats> {
 
 async function getServiceRatingData(): Promise<ServiceRatingData[]> {
   try {
+    const supabase = createClient();
+    
     const { data, error } = await supabase
       .from('q1_q2_preference_rating')
       .select('q2_service_rating');
@@ -249,8 +256,10 @@ async function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <DashboardContent />
-    </Suspense>
+    <AdminGate>
+      <Suspense fallback={<LoadingSpinner />}>
+        <DashboardContent />
+      </Suspense>
+    </AdminGate>
   );
 }

@@ -2,11 +2,14 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Edit3, Save, X, CheckCircle, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-server';
 import { parseContactInfo } from '@/lib/utils';
 import ResponseEditor from '@/components/ResponseEditor';
 import SurveyFormView from '@/components/SurveyFormView';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import AdminGate from '@/components/AdminGate';
+
+export const dynamic = 'force-dynamic';
 
 interface ResponseDetailData {
   response_id: string;
@@ -94,6 +97,8 @@ interface SurveyNote {
 
 async function getResponseDetail(id: string): Promise<ResponseDetailData | null> {
   try {
+    const supabase = createClient();
+    
     // Get response data from the updated complete_responses view (now includes review data and notes summary)
     const responseResult = await supabase
       .from('complete_responses')
@@ -115,6 +120,8 @@ async function getResponseDetail(id: string): Promise<ResponseDetailData | null>
 
 async function getResponseNotes(id: string): Promise<SurveyNote[]> {
   try {
+    const supabase = createClient();
+    
     const { data, error } = await supabase
       .from('survey_notes')
       .select('*')
@@ -211,8 +218,10 @@ export default function ResponseDetailPage({
   params: { id: string } 
 }) {
   return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <ResponseDetailContent id={params.id} />
-    </Suspense>
+    <AdminGate>
+      <Suspense fallback={<LoadingSpinner />}>
+        <ResponseDetailContent id={params.id} />
+      </Suspense>
+    </AdminGate>
   );
 }

@@ -1,9 +1,12 @@
 import { Suspense } from 'react';
 import { Users, Download } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-server';
 import ResponsesTable from '@/components/ResponsesTable';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ResponsesPageClient from '@/components/ResponsesPageClient';
+import AdminGate from '@/components/AdminGate';
+
+export const dynamic = 'force-dynamic';
 
 export interface ResponseData {
   response_id: string;
@@ -85,6 +88,8 @@ export interface SurveyNote {
 
 async function getResponsesData(): Promise<ResponseData[]> {
   try {
+    const supabase = createClient();
+    
     // Fetch from complete_responses view and add review status from responses table
     const { data: responsesData, error: responsesError } = await supabase
       .from('complete_responses')
@@ -149,8 +154,10 @@ async function ResponsesContent() {
 
 export default function ResponsesPage() {
   return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <ResponsesContent />
-    </Suspense>
+    <AdminGate>
+      <Suspense fallback={<LoadingSpinner />}>
+        <ResponsesContent />
+      </Suspense>
+    </AdminGate>
   );
 }

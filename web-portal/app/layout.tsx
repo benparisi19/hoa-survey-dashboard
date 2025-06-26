@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BarChart3, Users } from 'lucide-react';
+import { AuthProvider } from '@/lib/auth-context';
+import UserMenu from '@/components/UserMenu';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -61,10 +63,11 @@ function Navigation() {
               })}
             </div>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
             <div className="text-sm text-gray-500">
               113 Survey Responses
             </div>
+            <UserMenu />
           </div>
         </div>
       </div>
@@ -121,11 +124,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body className="h-full flex flex-col">
-        <Navigation />
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {children}
-        </main>
-        <Footer />
+        <AuthProvider>
+          <Navigation />
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {children}
+          </main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );
