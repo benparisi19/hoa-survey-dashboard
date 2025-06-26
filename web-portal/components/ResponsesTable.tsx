@@ -366,6 +366,10 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
 
   const handleAdvancedFilterChange = (newFilterSet: AdvancedFilterSet) => {
     setAdvancedFilterSet(newFilterSet);
+    // Ensure we're in advanced filter mode when filters are being built
+    if (!useAdvancedFilters) {
+      setUseAdvancedFilters(true);
+    }
   };
 
   const applyAdvancedFilterSet = () => {
@@ -444,7 +448,17 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
             Simple Filters
           </button>
           <button
-            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            onClick={() => {
+              if (!showAdvancedFilters) {
+                // When opening advanced filters, switch to advanced mode
+                setShowAdvancedFilters(true);
+                setUseAdvancedFilters(true);
+                setShowFilters(false);
+              } else {
+                // When closing, just hide the panel but keep the mode
+                setShowAdvancedFilters(false);
+              }
+            }}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               showAdvancedFilters && useAdvancedFilters
                 ? 'bg-blue-100 text-blue-700 border border-blue-300'
