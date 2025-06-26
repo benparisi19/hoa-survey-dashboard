@@ -4,12 +4,12 @@ import { useState, useMemo } from 'react';
 import { Search, Filter, Download, ChevronUp, ChevronDown, Building2, Users, MapPin, Phone, Mail, ExternalLink, Settings2 } from 'lucide-react';
 import Link from 'next/link';
 import { PropertyData } from '@/app/properties/page';
-import AdvancedFilterBuilder from './AdvancedFilterBuilder';
+import PropertyAdvancedFilterBuilder from './PropertyAdvancedFilterBuilder';
 import {
-  AdvancedFilterSet,
-  createEmptyFilterSet,
-  applyAdvancedFilters
-} from '@/lib/advanced-filters';
+  PropertyAdvancedFilterSet,
+  createEmptyPropertyFilterSet,
+  applyPropertyAdvancedFilters
+} from '@/lib/property-filters';
 
 interface PropertiesTableProps {
   properties: PropertyData[];
@@ -48,7 +48,7 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
   });
   
   // Advanced filters state
-  const [advancedFilterSet, setAdvancedFilterSet] = useState<AdvancedFilterSet>(createEmptyFilterSet());
+  const [advancedFilterSet, setAdvancedFilterSet] = useState<PropertyAdvancedFilterSet>(createEmptyPropertyFilterSet());
   const [useAdvancedFilters, setUseAdvancedFilters] = useState(false);
   
   const [sortField, setSortField] = useState<SortField>('address');
@@ -76,7 +76,7 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
   };
 
   // Advanced filter handlers
-  const handleAdvancedFilterChange = (newFilterSet: AdvancedFilterSet) => {
+  const handleAdvancedFilterChange = (newFilterSet: PropertyAdvancedFilterSet) => {
     setAdvancedFilterSet(newFilterSet);
   };
 
@@ -110,10 +110,8 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
       );
       
       if (hasActiveConditions) {
-        // TODO: Implement property-specific advanced filters
-        // For now, fall back to simple filters when advanced mode is active
-        console.warn('Advanced filters not yet implemented for properties');
-        filtered = properties;
+        // Use property-specific advanced filters
+        filtered = applyPropertyAdvancedFilters(properties, advancedFilterSet);
       } else {
         // No active conditions, show all properties
         filtered = properties;
@@ -192,7 +190,7 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
 
   const clearFilters = () => {
     if (useAdvancedFilters) {
-      setAdvancedFilterSet(createEmptyFilterSet());
+      setAdvancedFilterSet(createEmptyPropertyFilterSet());
     } else {
       setFilters({
         search: '',
@@ -230,26 +228,23 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="p-6">
       {/* Search and Filter Controls */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 min-w-0">
-            <div className="relative">
-              <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by address, lot number, or resident name..."
-                value={filters.search}
-                onChange={(e) => updateFilter('search', e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-            </div>
-          </div>
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        {/* Search */}
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by address, lot number, or resident name..."
+            value={filters.search}
+            onChange={(e) => updateFilter('search', e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          />
+        </div>
 
-          {/* Filter Controls */}
-          <div className="flex items-center gap-2">
+        {/* Filter Controls */}
+        <div className="flex gap-2">
             <button
               onClick={() => {
                 if (!showFilters) {
@@ -300,9 +295,10 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
           </div>
         </div>
 
-        {/* Simple Filters */}
-        {showFilters && (
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Simple Filters */}
+      {showFilters && (
+        <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Zone Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Zone</label>
@@ -377,13 +373,13 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
               </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Advanced Filters Panel */}
       {showAdvancedFilters && (
         <div className="mb-6">
-          <AdvancedFilterBuilder
+          <PropertyAdvancedFilterBuilder
             filterSet={advancedFilterSet}
             onChange={handleAdvancedFilterChange}
             onApply={applyAdvancedFilterSet}
@@ -411,15 +407,13 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
       )}
 
       {/* Results Summary */}
-      <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
-        <p className="text-sm text-gray-600">
-          Showing {filteredData.length} of {properties.length} properties
-          {hasActiveFilters && (
-            <span className="ml-2 text-primary-600">
-              (filtered)
-            </span>
-          )}
-        </p>
+      <div className="mb-4 text-sm text-gray-600">
+        Showing <span className="font-medium">{filteredData.length}</span> of <span className="font-medium">{properties.length}</span> properties
+        {hasActiveFilters && (
+          <span className="ml-2 text-primary-600">
+            (filtered)
+          </span>
+        )}
       </div>
 
       {/* Properties Table */}
@@ -461,7 +455,7 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
               return (
                 <tr key={property.property_id} className="hover:bg-gray-50">
                   {/* Address */}
-                  <td className="px-4 py-4 whitespace-nowrap">
+                  <td className="border border-gray-200 px-4 py-3">
                     <div className="flex items-center">
                       <Building2 className="h-4 w-4 text-gray-400 mr-2" />
                       <div>
@@ -478,19 +472,19 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
                   </td>
 
                   {/* Lot Number */}
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="border border-gray-200 px-4 py-3 text-sm">
                     {property.lot_number || '-'}
                   </td>
 
                   {/* Zone */}
-                  <td className="px-4 py-4 whitespace-nowrap">
+                  <td className="border border-gray-200 px-4 py-3 text-center">
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                       Zone {property.hoa_zone}
                     </span>
                   </td>
 
                   {/* Residents */}
-                  <td className="px-4 py-4 whitespace-nowrap">
+                  <td className="border border-gray-200 px-4 py-3">
                     <div className="flex items-center">
                       <Users className="h-4 w-4 text-gray-400 mr-1" />
                       <span className="text-sm text-gray-900">{property.current_residents}</span>
@@ -508,7 +502,7 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
                   </td>
 
                   {/* Primary Contact */}
-                  <td className="px-4 py-4 whitespace-nowrap">
+                  <td className="border border-gray-200 px-4 py-3">
                     <div className="text-sm text-gray-900">{contact.name}</div>
                     <div className="flex items-center space-x-2 text-xs text-gray-500">
                       {contact.email && (
@@ -527,7 +521,7 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
                   </td>
 
                   {/* Surveys */}
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="border border-gray-200 px-4 py-3 text-sm text-center">
                     <div className="flex items-center">
                       <span className="font-medium">{property.total_surveys}</span>
                       {property.total_surveys > 0 && (
@@ -539,7 +533,7 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
                   </td>
 
                   {/* Status */}
-                  <td className="px-4 py-4 whitespace-nowrap">
+                  <td className="border border-gray-200 px-4 py-3 text-center">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                       property.status === 'active' ? 'bg-green-100 text-green-800' :
                       property.status === 'vacant' ? 'bg-gray-100 text-gray-800' :
@@ -551,7 +545,7 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
                   </td>
 
                   {/* Actions */}
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="border border-gray-200 px-4 py-3 text-sm text-center">
                     <div className="flex items-center space-x-2">
                       <Link
                         href={`/properties/${property.property_id}`}
