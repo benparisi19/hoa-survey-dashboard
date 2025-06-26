@@ -3,6 +3,7 @@ import { MapPin, Building2, Users, BarChart3, TrendingUp, AlertTriangle, CheckCi
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AdminGate from '@/components/AdminGate';
+import ZonesPageClient from '@/components/ZonesPageClient';
 import { createServiceClient } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -123,107 +124,47 @@ async function getZonesData(): Promise<ZoneData[]> {
   return Array.from(zoneMap.values()).sort((a, b) => a.zone.localeCompare(b.zone));
 }
 
-function ZoneCard({ zone }: { zone: ZoneData }) {
-  const getStatusColor = () => {
-    if (zone.alerts.some(a => a.type === 'error')) return 'border-red-300 bg-red-50';
-    if (zone.alerts.some(a => a.type === 'warning')) return 'border-yellow-300 bg-yellow-50';
-    return 'border-green-300 bg-green-50';
-  };
+async function getPropertiesForMap() {
+  const supabase = createServiceClient();
 
-  return (
-    <Link href={`/zones/${zone.zone}`}>
-      <div className={`p-6 rounded-lg border-2 hover:shadow-lg transition-all ${getStatusColor()}`}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-primary-100 rounded-lg">
-              <MapPin className="h-6 w-6 text-primary-600" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-gray-900">Zone {zone.zone}</h3>
-              <p className="text-sm text-gray-600">
-                {zone.streetGroups.length} street groups
-              </p>
-            </div>
-          </div>
-          {zone.alerts.length > 0 && (
-            <div className="flex items-center space-x-1">
-              <AlertTriangle className="h-5 w-5 text-orange-500" />
-              <span className="text-sm font-medium text-orange-600">
-                {zone.alerts.length} alert{zone.alerts.length !== 1 ? 's' : ''}
-              </span>
-            </div>
-          )}
-        </div>
+  // Get properties with coordinates and residents for map display
+  const { data: properties } = await supabase
+    .from('properties')
+    .select(`
+      property_id,
+      address,
+      latitude,
+      longitude,
+      hoa_zone,
+      property_residents(resident_id, end_date, relationship_type)
+    `)
+    .order('address');
 
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="flex items-center space-x-2">
-            <Building2 className="h-4 w-4 text-gray-500" />
-            <span className="text-sm text-gray-600">
-              {zone.propertyCount} Properties
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Users className="h-4 w-4 text-gray-500" />
-            <span className="text-sm text-gray-600">
-              {zone.residentCount} Residents
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <BarChart3 className="h-4 w-4 text-gray-500" />
-            <span className="text-sm text-gray-600">
-              {zone.surveyCount} Surveys
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <TrendingUp className="h-4 w-4 text-gray-500" />
-            <span className="text-sm text-gray-600">
-              {zone.occupancyRate.toFixed(1)}% Occupied
-            </span>
-          </div>
-        </div>
+  // Transform data for map component
+  return (properties || []).map(property => {
+    const currentResidents = property.property_residents?.filter((r: any) => !r.end_date) || [];
+    const ownerResidents = currentResidents.filter((r: any) => r.relationship_type === 'owner');
+    
+    let status: 'occupied' | 'vacant' | 'owner_occupied' = 'vacant';
+    if (ownerResidents.length > 0) {
+      status = 'owner_occupied';
+    } else if (currentResidents.length > 0) {
+      status = 'occupied';
+    }
 
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Survey Completion</span>
-            <span className={`font-medium ${
-              zone.completionRate >= 70 ? 'text-green-600' : 
-              zone.completionRate >= 50 ? 'text-yellow-600' : 'text-red-600'
-            }`}>
-              {zone.completionRate.toFixed(1)}%
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className={`h-2 rounded-full ${
-                zone.completionRate >= 70 ? 'bg-green-500' : 
-                zone.completionRate >= 50 ? 'bg-yellow-500' : 'bg-red-500'
-              }`}
-              style={{ width: `${Math.min(zone.completionRate, 100)}%` }}
-            />
-          </div>
-        </div>
-
-        {zone.streetGroups.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <p className="text-xs text-gray-500 mb-2">Street Groups:</p>
-            <div className="flex flex-wrap gap-1">
-              {zone.streetGroups.slice(0, 3).map(group => (
-                <span key={group} className="px-2 py-1 bg-gray-100 text-xs rounded-full">
-                  {group}
-                </span>
-              ))}
-              {zone.streetGroups.length > 3 && (
-                <span className="px-2 py-1 bg-gray-100 text-xs rounded-full">
-                  +{zone.streetGroups.length - 3} more
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </Link>
-  );
+    return {
+      property_id: property.property_id,
+      address: property.address,
+      latitude: property.latitude,
+      longitude: property.longitude,
+      hoa_zone: property.hoa_zone,
+      current_residents: currentResidents.length,
+      status,
+      survey_count: 0 // TODO: Match with actual survey responses
+    };
+  });
 }
+
 
 function ZonesSummary({ zones }: { zones: ZoneData[] }) {
   const totalProperties = zones.reduce((sum, zone) => sum + zone.propertyCount, 0);
@@ -278,6 +219,7 @@ function ZonesSummary({ zones }: { zones: ZoneData[] }) {
 
 async function ZonesContent() {
   const zones = await getZonesData();
+  const properties = await getPropertiesForMap();
 
   return (
     <div className="space-y-6">
@@ -303,23 +245,8 @@ async function ZonesContent() {
       {/* Summary Cards */}
       <ZonesSummary zones={zones} />
 
-      {/* Zone Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {zones.map(zone => (
-          <ZoneCard key={zone.zone} zone={zone} />
-        ))}
-      </div>
-
-      {/* No zones message */}
-      {zones.length === 0 && (
-        <div className="text-center py-12">
-          <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No zones found</h3>
-          <p className="text-gray-600">
-            Properties need to be assigned to zones to appear here.
-          </p>
-        </div>
-      )}
+      {/* Interactive Zone View */}
+      <ZonesPageClient zones={zones} properties={properties} />
     </div>
   );
 }

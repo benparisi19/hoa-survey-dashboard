@@ -16,8 +16,9 @@ npm run bulk-update-pdfs  # Bulk link PDFs in storage to database records
 ### Environment Setup
 ```bash
 cp .env.example .env # Copy environment template
-# Edit .env with Supabase credentials:
+# Edit .env with credentials:
 # NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY
+# NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN (for map integration)
 ```
 
 ### Database Management
@@ -32,6 +33,8 @@ cd ../scripts && python test_connection.py
 node scripts/check-response-ids.js       # Check response ID formats
 node scripts/check-specific-response.js  # Debug specific response data
 node scripts/verify_notes_import.js      # Verify notes extraction results
+node scripts/geocode-properties.js       # Geocode property addresses for map display
+node scripts/geocode-properties.js stats # Show geocoding statistics
 ```
 
 ### Database Interaction Pattern
