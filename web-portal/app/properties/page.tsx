@@ -42,9 +42,11 @@ async function getPropertiesData(): Promise<PropertyData[]> {
   try {
     const supabase = createServiceClient();
     
-    // Use the property_directory view which provides aggregated data
+    console.log('Fetching properties data...');
+    
+    // Start with direct properties table since we know it works
     const { data: propertiesData, error: propertiesError } = await supabase
-      .from('property_directory')
+      .from('properties')
       .select(`
         property_id,
         address,
@@ -58,14 +60,15 @@ async function getPropertiesData(): Promise<PropertyData[]> {
         special_features,
         notes,
         created_at,
-        updated_at,
-        current_resident_count,
-        total_surveys,
-        owner_name,
-        owner_email,
-        owner_phone
+        updated_at
       `)
       .order('address');
+    
+    console.log('Properties query result:', { 
+      error: propertiesError, 
+      dataLength: propertiesData?.length,
+      sampleData: propertiesData?.[0] 
+    });
     
     if (propertiesError) throw propertiesError;
     
@@ -86,19 +89,21 @@ async function getPropertiesData(): Promise<PropertyData[]> {
       created_at: property.created_at,
       updated_at: property.updated_at,
       
-      // Aggregated data
-      current_residents: property.current_resident_count || 0,
-      total_surveys: property.total_surveys || 0,
-      owner_name: property.owner_name,
-      owner_email: property.owner_email,
-      owner_phone: property.owner_phone,
-      primary_contact_name: property.owner_name, // For now, owner is primary contact
-      primary_contact_email: property.owner_email,
-      primary_contact_phone: property.owner_phone,
-      last_survey_date: null, // Will be calculated
-      issues_count: 0, // Will be calculated when we have issues system
-      status: property.current_resident_count > 0 ? 'active' : 'vacant'
+      // Placeholder aggregated data - will be enhanced in Phase 2B
+      current_residents: 0, // TODO: Calculate from property_residents
+      total_surveys: 0, // TODO: Calculate from property_surveys  
+      owner_name: null, // TODO: Get from people/property_residents
+      owner_email: null,
+      owner_phone: null,
+      primary_contact_name: null,
+      primary_contact_email: null,
+      primary_contact_phone: null,
+      last_survey_date: null,
+      issues_count: 0,
+      status: 'active' as const
     }));
+    
+    console.log('Transformed data length:', transformedData.length);
     
     return transformedData;
   } catch (error) {

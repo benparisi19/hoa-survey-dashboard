@@ -46,24 +46,20 @@ export default function PropertiesTable({ properties }: PropertiesTableProps) {
 
   // Helper functions
   const getResidencyStatus = (property: PropertyData): 'owner_occupied' | 'rental' | 'vacant' | 'unknown' => {
-    if (property.current_residents === 0) return 'vacant';
-    if (property.owner_name && property.current_residents > 0) return 'owner_occupied';
-    // TODO: Determine rental properties when we have resident relationship data
+    // For Phase 2A, we'll show all as unknown until we have resident data
     return 'unknown';
   };
 
   const getSurveyParticipation = (property: PropertyData) => {
-    if (property.total_surveys === 0) return 'none';
-    // For now, assume complete if has any surveys
-    // This will be enhanced when we have survey definitions
-    return 'complete';
+    // For Phase 2A, we'll show all as none until we link survey data
+    return 'none';
   };
 
   const getPrimaryContact = (property: PropertyData) => {
     return {
-      name: property.primary_contact_name || property.owner_name || 'No contact',
-      email: property.primary_contact_email || property.owner_email || '',
-      phone: property.primary_contact_phone || property.owner_phone || ''
+      name: 'Contact TBD', // Will be enhanced in Phase 2B
+      email: '',
+      phone: ''
     };
   };
 

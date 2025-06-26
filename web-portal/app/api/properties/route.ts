@@ -13,9 +13,9 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit');
     const offset = searchParams.get('offset');
     
-    // Base query - using property_directory view for aggregated data
+    // Base query - using direct properties table for now
     let query = supabase
-      .from('property_directory')
+      .from('properties')
       .select(`
         property_id,
         address,
@@ -29,12 +29,7 @@ export async function GET(request: NextRequest) {
         special_features,
         notes,
         created_at,
-        updated_at,
-        current_resident_count,
-        total_surveys,
-        owner_name,
-        owner_email,
-        owner_phone
+        updated_at
       `);
     
     // Apply filters
