@@ -43,15 +43,22 @@ export async function GET(
     const residents = [
       {
         resident_id: 'placeholder-1',
-        person_id: 'placeholder-person-1',
-        first_name: 'Contact',
-        last_name: 'TBD',
-        email: '',
-        phone: '',
-        relationship_type: 'unknown',
+        relationship_type: 'unknown' as const,
         is_primary_contact: true,
-        start_date: new Date().toISOString(),
-        end_date: null
+        is_hoa_responsible: true,
+        start_date: new Date().toISOString().split('T')[0],
+        end_date: null,
+        notes: 'Contact information to be determined',
+        people: {
+          person_id: 'placeholder-person-1',
+          first_name: 'Contact',
+          last_name: 'TBD',
+          email: '',
+          phone: '',
+          emergency_contact_name: '',
+          emergency_contact_phone: '',
+          preferred_contact_method: 'email' as const
+        }
       }
     ];
 

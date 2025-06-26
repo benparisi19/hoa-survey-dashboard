@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { Building2, Users, MapPin, Phone, Mail, Calendar, AlertTriangle, CheckCircle, Settings, MessageSquare, Plus } from 'lucide-react';
 import Link from 'next/link';
+import PropertyDetailClient from '@/components/PropertyDetailClient';
 
 interface PropertyDetailsData {
   property_id: string;
@@ -17,13 +18,22 @@ interface PropertyDetailsData {
   notes: string;
   current_residents: Array<{
     resident_id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
-    relationship_type: string;
+    relationship_type: 'owner' | 'renter' | 'family_member' | 'unknown';
     is_primary_contact: boolean;
+    is_hoa_responsible: boolean;
     start_date: string;
+    end_date: string | null;
+    notes: string;
+    people: {
+      person_id: string;
+      first_name: string;
+      last_name: string;
+      email: string;
+      phone: string;
+      emergency_contact_name: string;
+      emergency_contact_phone: string;
+      preferred_contact_method: 'email' | 'phone' | 'text' | 'mail';
+    };
   }>;
   survey_history: Array<{
     survey_id: string;
@@ -102,73 +112,6 @@ function PropertyHeader({ property }: { property: PropertyDetailsData }) {
   );
 }
 
-function ResidentsSection({ residents }: { residents: PropertyDetailsData['current_residents'] }) {
-  return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-900 flex items-center">
-          <Users className="h-5 w-5 mr-2" />
-          Current Residents
-        </h3>
-      </div>
-      <div className="px-6 py-4">
-        {residents.length > 0 ? (
-          <div className="space-y-4">
-            {residents.map((resident) => (
-              <div key={resident.resident_id} className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                      <Users className="h-5 w-5 text-gray-500" />
-                    </div>
-                  </div>
-                  <div className="ml-4">
-                    <div className="text-sm font-medium text-gray-900">
-                      {resident.first_name} {resident.last_name}
-                      {resident.is_primary_contact && (
-                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                          Primary Contact
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-500 capitalize">
-                      {resident.relationship_type.replace('_', ' ')}
-                    </div>
-                    <div className="flex items-center space-x-4 text-xs text-gray-500 mt-1">
-                      {resident.email && (
-                        <div className="flex items-center">
-                          <Mail className="h-3 w-3 mr-1" />
-                          <span className="truncate max-w-[150px]">{resident.email}</span>
-                        </div>
-                      )}
-                      {resident.phone && (
-                        <div className="flex items-center">
-                          <Phone className="h-3 w-3 mr-1" />
-                          <span>{resident.phone}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-xs text-gray-500">
-                  Since {new Date(resident.start_date).toLocaleDateString()}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-4">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-            <p className="text-gray-500">No resident information available</p>
-            <button className="mt-2 text-primary-600 hover:text-primary-700 text-sm font-medium">
-              Add Resident
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 function PropertyInfoSection({ property }: { property: PropertyDetailsData }) {
   return (
@@ -352,7 +295,12 @@ async function PropertyDetailsContent({ id }: { id: string }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-6">
-            <ResidentsSection residents={property.current_residents} />
+            <div className="bg-white shadow rounded-lg p-6">
+              <PropertyDetailClient 
+                propertyId={property.property_id}
+                initialResidents={property.current_residents}
+              />
+            </div>
             <SurveyHistorySection surveys={property.survey_history} />
           </div>
           
