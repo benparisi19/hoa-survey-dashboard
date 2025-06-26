@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Plus, Edit, Trash2, User, Mail, Phone, Calendar, Star } from 'lucide-react';
+import PersonNameInput from './PersonNameInput';
 
 interface Person {
   person_id: string;
@@ -33,7 +34,20 @@ interface ResidentManagerProps {
   onResidentsChange?: (residents: Resident[]) => void;
 }
 
+interface SelectedPerson {
+  person_id: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  preferred_contact_method: 'email' | 'phone' | 'text' | 'mail';
+  is_official_owner: boolean;
+  source?: string;
+}
+
 interface ResidentFormData {
+  full_name: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -58,6 +72,7 @@ function ResidentForm({
   onCancel: () => void; 
 }) {
   const [formData, setFormData] = useState<ResidentFormData>({
+    full_name: resident ? `${resident.people.first_name} ${resident.people.last_name}`.trim() : '',
     first_name: resident?.people.first_name || '',
     last_name: resident?.people.last_name || '',
     email: resident?.people.email || '',
@@ -81,6 +96,33 @@ function ResidentForm({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handlePersonSelect = (person: SelectedPerson) => {
+    // Auto-fill form fields when a person is selected
+    setFormData(prev => ({
+      ...prev,
+      first_name: person.first_name,
+      last_name: person.last_name,
+      email: person.email,
+      phone: person.phone,
+      preferred_contact_method: person.preferred_contact_method,
+      relationship_type: person.is_official_owner ? 'owner' : prev.relationship_type
+    }));
+  };
+
+  const handleNameChange = (fullName: string) => {
+    // Parse name when manually entered
+    const nameParts = fullName.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+    
+    setFormData(prev => ({
+      ...prev,
+      full_name: fullName,
+      first_name: firstName,
+      last_name: lastName
+    }));
+  };
+
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
       <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
@@ -91,31 +133,20 @@ function ResidentForm({
           
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Personal Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.first_name}
-                  onChange={(e) => updateField('first_name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.last_name}
-                  onChange={(e) => updateField('last_name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  required
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Full Name
+              </label>
+              <PersonNameInput
+                value={formData.full_name}
+                onChange={handleNameChange}
+                onPersonSelect={handlePersonSelect}
+                placeholder="Start typing a name..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Start typing to see existing residents, or enter a new name to create a new person.
+              </p>
             </div>
 
             {/* Contact Information */}
