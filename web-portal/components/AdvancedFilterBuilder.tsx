@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { 
   Plus, 
   Trash2, 
@@ -29,6 +29,10 @@ import {
   validateCondition
 } from '@/lib/advanced-filters';
 import { ResponseData } from '@/app/responses/page';
+import FilterPresetModal from './FilterPresetModal';
+import FilterPresetSelector from './FilterPresetSelector';
+import { getDefaultFilterPreset } from '@/app/actions/filterPresets';
+import type { FilterPresetWithUser } from '@/app/actions/filterPresets';
 
 interface AdvancedFilterBuilderProps {
   filterSet: AdvancedFilterSet;
@@ -493,8 +497,30 @@ export default function AdvancedFilterBuilder({
   className = ''
 }: AdvancedFilterBuilderProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [editingPreset, setEditingPreset] = useState<FilterPresetWithUser | null>(null);
+  const [currentPresetId, setCurrentPresetId] = useState<string | null>(null);
+  const [presetSelectorKey, setPresetSelectorKey] = useState(0); // For forcing refresh
   const errors = validateFilterSet(filterSet);
   const hasErrors = errors.length > 0;
+
+  // Load default preset on mount
+  useEffect(() => {
+    loadDefaultPreset();
+  }, []);
+
+  const loadDefaultPreset = async () => {
+    try {
+      const { data: preset } = await getDefaultFilterPreset();
+      if (preset) {
+        onChange(preset.filter_data as AdvancedFilterSet);
+        setCurrentPresetId(preset.preset_id);
+        onApply(); // Apply the default filter
+      }
+    } catch (error) {
+      console.error('Error loading default preset:', error);
+    }
+  };
 
   const addGroup = useCallback(() => {
     onChange({
@@ -533,7 +559,24 @@ export default function AdvancedFilterBuilder({
 
   const clearAll = useCallback(() => {
     onChange(createEmptyFilterSet());
+    setCurrentPresetId(null); // Clear current preset tracking
   }, [onChange]);
+
+  const handleLoadPreset = useCallback((filterSet: AdvancedFilterSet) => {
+    onChange(filterSet);
+    onApply(); // Apply the loaded filter immediately
+  }, [onChange, onApply]);
+
+  const handleEditPreset = useCallback((preset: FilterPresetWithUser) => {
+    setEditingPreset(preset);
+    setShowSaveModal(true);
+  }, []);
+
+  const handleSaveSuccess = useCallback(() => {
+    // Refresh the preset selector to show updated list
+    setPresetSelectorKey(prev => prev + 1);
+    setEditingPreset(null);
+  }, []);
 
   return (
     <div className={`bg-white border border-gray-200 rounded-xl shadow-sm ${className}`}>
@@ -556,6 +599,14 @@ export default function AdvancedFilterBuilder({
             )}
           </button>
           <div className="flex items-center space-x-2">
+            {/* Filter Preset Selector */}
+            <FilterPresetSelector
+              key={presetSelectorKey}
+              onLoad={handleLoadPreset}
+              onEdit={handleEditPreset}
+              currentPresetId={currentPresetId}
+            />
+            
             {/* Group Operator Toggle */}
             {filterSet.groups.length > 1 && (
               <div className="flex bg-gray-100 border border-gray-300 rounded-lg p-1">
@@ -582,25 +633,15 @@ export default function AdvancedFilterBuilder({
               </div>
             )}
             {/* Action Buttons */}
-            {onLoad && (
-              <button
-                onClick={onLoad}
-                className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg border border-gray-300"
-              >
-                <Settings className="w-4 h-4 inline mr-1" />
-                Load
-              </button>
-            )}
-            {onSave && (
-              <button
-                onClick={() => onSave(filterSet)}
-                disabled={hasErrors}
-                className="px-3 py-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg border border-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Save className="w-4 h-4 inline mr-1" />
-                Save
-              </button>
-            )}
+            <button
+              onClick={() => setShowSaveModal(true)}
+              disabled={hasErrors}
+              className="px-3 py-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg border border-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Save current filter configuration"
+            >
+              <Save className="w-4 h-4 inline mr-1" />
+              Save
+            </button>
             <button
               onClick={clearAll}
               className="px-3 py-2 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg border border-red-300"
@@ -657,6 +698,18 @@ export default function AdvancedFilterBuilder({
           )}
         </div>
       )}
+      
+      {/* Save Preset Modal */}
+      <FilterPresetModal
+        isOpen={showSaveModal}
+        onClose={() => {
+          setShowSaveModal(false);
+          setEditingPreset(null);
+        }}
+        filterSet={filterSet}
+        existingPreset={editingPreset}
+        onSuccess={handleSaveSuccess}
+      />
     </div>
   );
 }

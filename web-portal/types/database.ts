@@ -272,6 +272,44 @@ export interface Database {
           created_at?: string;
         };
       };
+      user_filter_presets: {
+        Row: {
+          preset_id: string;
+          user_id: string;
+          preset_name: string;
+          preset_description: string | null;
+          filter_data: any; // JSONB storing AdvancedFilterSet
+          is_shared: boolean;
+          is_default: boolean;
+          usage_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          preset_id?: string;
+          user_id: string;
+          preset_name: string;
+          preset_description?: string | null;
+          filter_data: any;
+          is_shared?: boolean;
+          is_default?: boolean;
+          usage_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          preset_id?: string;
+          user_id?: string;
+          preset_name?: string;
+          preset_description?: string | null;
+          filter_data?: any;
+          is_shared?: boolean;
+          is_default?: boolean;
+          usage_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       survey_notes: {
         Row: {
           note_id: number;
