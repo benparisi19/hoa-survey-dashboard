@@ -3,6 +3,7 @@ import { Users, Download } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import ResponsesTable from '@/components/ResponsesTable';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import ResponsesPageClient from '@/components/ResponsesPageClient';
 
 export interface ResponseData {
   response_id: string;
@@ -13,6 +14,9 @@ export interface ResponseData {
   review_status: string;
   reviewed_by: string | null;
   reviewed_at: string | null;
+  pdf_file_path: string | null;
+  pdf_storage_url: string | null;
+  pdf_uploaded_at: string | null;
   q1_preference: string | null;
   q2_service_rating: string | null;
   
@@ -118,19 +122,6 @@ async function getResponsesData(): Promise<ResponseData[]> {
 async function ResponsesContent() {
   const responses = await getResponsesData();
   
-  // Calculate summary statistics
-  const stats = {
-    total: responses.length,
-    unreviewed: responses.filter(r => (r.review_status || 'unreviewed') === 'unreviewed').length,
-    reviewed: responses.filter(r => r.review_status === 'reviewed').length,
-    flagged: responses.filter(r => r.review_status === 'flagged').length,
-    withNotes: responses.filter(r => (r.total_notes || 0) > 0).length,
-    criticalNotes: responses.filter(r => (r.critical_notes || 0) > 0).length,
-    followUpNotes: responses.filter(r => (r.follow_up_notes || 0) > 0).length,
-    veryPoor: responses.filter(r => r.q2_service_rating === 'Very Poor').length,
-    wantsOptOut: responses.filter(r => r.q1_preference?.toLowerCase().includes('opt out')).length,
-  };
-  
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -144,42 +135,8 @@ async function ResponsesContent() {
             </p>
           </div>
         </div>
-      </div>
-      
-      {/* Summary Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-          <div className="text-sm text-gray-600">Total</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-2xl font-bold text-orange-600">{stats.unreviewed}</div>
-          <div className="text-sm text-gray-600">Unreviewed</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-2xl font-bold text-red-600">{stats.flagged}</div>
-          <div className="text-sm text-gray-600">Flagged</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-2xl font-bold text-blue-600">{stats.withNotes}</div>
-          <div className="text-sm text-gray-600">With Notes</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-2xl font-bold text-red-600">{stats.criticalNotes}</div>
-          <div className="text-sm text-gray-600">Critical</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-2xl font-bold text-yellow-600">{stats.followUpNotes}</div>
-          <div className="text-sm text-gray-600">Follow-up</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-2xl font-bold text-red-600">{stats.veryPoor}</div>
-          <div className="text-sm text-gray-600">Very Poor</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-2xl font-bold text-purple-600">{stats.wantsOptOut}</div>
-          <div className="text-sm text-gray-600">Want Opt-out</div>
-        </div>
+        {/* Create Response Actions - handled by client component */}
+        <ResponsesPageClient />
       </div>
       
       {/* Responses Table */}

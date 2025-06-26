@@ -94,8 +94,6 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
     let filtered: ResponseData[];
     
     // Choose filtering method
-    console.log('Filter mode:', { useAdvancedFilters, advancedFilterSet });
-    
     if (useAdvancedFilters) {
       // Check if there are any actual filter conditions
       const hasActiveConditions = advancedFilterSet.groups.some(group => 
@@ -105,28 +103,16 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
           const isActive = noValueOperators.includes(condition.operator) || 
             (condition.value !== null && condition.value !== undefined && condition.value !== '');
           
-          console.log('Checking condition:', {
-            field: condition.field,
-            operator: condition.operator,
-            value: condition.value,
-            isActive
-          });
-          
           return isActive;
         })
       );
       
-      console.log('Has active conditions:', hasActiveConditions);
-      
       if (hasActiveConditions) {
         // Use advanced filters
-        console.log('Applying advanced filters:', advancedFilterSet);
         filtered = applyAdvancedFilters(responses, advancedFilterSet);
-        console.log(`Advanced filtering: ${responses.length} -> ${filtered.length} responses`);
       } else {
         // No active conditions, show all responses
         filtered = responses;
-        console.log('Advanced filters active but no conditions set, showing all responses');
       }
     } else {
       // Use simple filters
