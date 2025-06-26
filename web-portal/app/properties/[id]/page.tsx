@@ -114,6 +114,12 @@ async function getPropertyDetails(id: string): Promise<PropertyDetailsData> {
     console.error('Error fetching residents:', residentsError);
   }
 
+  // Transform residents to ensure people is a single object
+  const transformedResidents = residents?.map(resident => ({
+    ...resident,
+    people: Array.isArray(resident.people) ? resident.people[0] : resident.people
+  })) || [];
+
   // Get survey history (using existing responses table for now)
   const { data: surveys, error: surveysError } = await supabase
     .from('responses')
@@ -154,7 +160,7 @@ async function getPropertyDetails(id: string): Promise<PropertyDetailsData> {
 
   return {
     ...property,
-    current_residents: residents || [],
+    current_residents: transformedResidents,
     survey_history: surveyHistory,
     recent_activity: recentActivity,
     issues_count: 0, // Placeholder
