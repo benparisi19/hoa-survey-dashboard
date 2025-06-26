@@ -94,19 +94,29 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
     let filtered: ResponseData[];
     
     // Choose filtering method
+    console.log('Filter mode:', { useAdvancedFilters, advancedFilterSet });
+    
     if (useAdvancedFilters) {
       // Check if there are any actual filter conditions
       const hasActiveConditions = advancedFilterSet.groups.some(group => 
         group.conditions.some(condition => {
           // Some operators don't require values
           const noValueOperators = ['exists', 'not_exists', 'is_empty', 'is_not_empty'];
-          if (noValueOperators.includes(condition.operator)) {
-            return true; // These operators are always active when set
-          }
-          // For other operators, check if value is provided
-          return condition.value !== null && condition.value !== undefined && condition.value !== '';
+          const isActive = noValueOperators.includes(condition.operator) || 
+            (condition.value !== null && condition.value !== undefined && condition.value !== '');
+          
+          console.log('Checking condition:', {
+            field: condition.field,
+            operator: condition.operator,
+            value: condition.value,
+            isActive
+          });
+          
+          return isActive;
         })
       );
+      
+      console.log('Has active conditions:', hasActiveConditions);
       
       if (hasActiveConditions) {
         // Use advanced filters

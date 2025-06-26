@@ -253,6 +253,13 @@ export const FILTER_FIELDS: FilterField[] = [
 export function evaluateCondition(condition: FilterCondition, response: ResponseData): boolean {
   const fieldValue = response[condition.field];
   const { operator, value } = condition;
+  
+  console.log(`Evaluating condition: ${condition.field} ${operator} ${value}`, {
+    fieldValue,
+    operator,
+    value,
+    responseId: response.response_id
+  });
 
   // Handle null/undefined field values
   if (fieldValue === null || fieldValue === undefined) {
@@ -340,16 +347,23 @@ export function evaluateCondition(condition: FilterCondition, response: Response
  */
 export function evaluateGroup(group: FilterGroup, response: ResponseData): boolean {
   if (group.conditions.length === 0) {
+    console.log('Empty group - returning true');
     return true; // Empty group matches everything
   }
 
   const results = group.conditions.map(condition => evaluateCondition(condition, response));
+  const finalResult = group.internalOperator === 'AND' 
+    ? results.every(result => result)
+    : results.some(result => result);
+    
+  console.log(`Group evaluation (${group.internalOperator}):`, {
+    conditions: group.conditions.length,
+    results,
+    finalResult,
+    responseId: response.response_id
+  });
 
-  if (group.internalOperator === 'AND') {
-    return results.every(result => result);
-  } else {
-    return results.some(result => result);
-  }
+  return finalResult;
 }
 
 /**
@@ -357,16 +371,23 @@ export function evaluateGroup(group: FilterGroup, response: ResponseData): boole
  */
 export function evaluateFilterSet(filterSet: AdvancedFilterSet, response: ResponseData): boolean {
   if (filterSet.groups.length === 0) {
+    console.log('Empty filter set - returning true');
     return true; // Empty filter set matches everything
   }
 
   const results = filterSet.groups.map(group => evaluateGroup(group, response));
+  const finalResult = filterSet.groupOperator === 'AND'
+    ? results.every(result => result)
+    : results.some(result => result);
+    
+  console.log(`Filter set evaluation (${filterSet.groupOperator}):`, {
+    groups: filterSet.groups.length,
+    results,
+    finalResult,
+    responseId: response.response_id
+  });
 
-  if (filterSet.groupOperator === 'AND') {
-    return results.every(result => result);
-  } else {
-    return results.some(result => result);
-  }
+  return finalResult;
 }
 
 /**
