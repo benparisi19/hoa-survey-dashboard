@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { BarChart3, Users } from 'lucide-react';
 import { useAuth, useProfile } from '@/lib/auth-context';
 import UserMenu from './UserMenu';
+import ResponseCount from './ResponseCount';
 
 interface NavigationItem {
   name: string;
@@ -67,9 +68,7 @@ export default function Navigation() {
           <div className="flex items-center space-x-4">
             {/* Only show response count for authenticated admins */}
             {user && userIsAdmin && !profileLoading && (
-              <div className="text-sm text-gray-500">
-                113 Survey Responses
-              </div>
+              <ResponseCount />
             )}
             
             {/* Always show UserMenu - it handles its own auth state */}

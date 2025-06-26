@@ -1,15 +1,36 @@
 'use server';
 
 import { createServiceClient } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-server';
 import { revalidatePath } from 'next/cache';
 
 export async function updateReviewStatus(responseId: string, newStatus: string) {
   try {
     const supabaseService = createServiceClient();
+    const supabase = createClient();
+    
+    // Get current user from session
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      return { 
+        success: false, 
+        error: 'Authentication required' 
+      };
+    }
+    
+    // Get user profile for display name
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('full_name, email')
+      .eq('id', user.id)
+      .single();
+    
+    const reviewedBy = profile?.full_name || profile?.email || user.email || 'Admin';
 
     const updateData = {
       review_status: newStatus,
-      reviewed_by: 'Admin', // TODO: Replace with actual user when auth is implemented
+      reviewed_by: reviewedBy,
       reviewed_at: new Date().toISOString(),
     };
 

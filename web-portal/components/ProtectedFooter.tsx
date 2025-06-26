@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth, useProfile } from '@/lib/auth-context';
+import ResponseCount from './ResponseCount';
 
 export default function ProtectedFooter() {
   const { user } = useAuth();
@@ -21,7 +22,7 @@ export default function ProtectedFooter() {
             <div className="flex space-x-6 text-sm text-gray-500">
               <span>Last updated: {new Date().toLocaleDateString()}</span>
               <span>•</span>
-              <span>113 Total Responses</span>
+              <ResponseCount />
             </div>
           )}
         </div>
