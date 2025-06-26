@@ -20,6 +20,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  refreshAuth: () => Promise<void>;
   isAdmin: () => boolean;
 }
 
@@ -38,14 +39,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await fetchUserProfile(session.user.id);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await fetchUserProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        setUser(null);
+        setProfile(null);
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     getInitialSession();
@@ -53,6 +72,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email || 'no user');
+        
         setUser(session?.user ?? null);
         
         if (session?.user) {
@@ -76,7 +97,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        // If we can't fetch the profile, the user might not have access
+        // or there might be an auth issue - sign them out
+        if (error.code === 'PGRST116' || error.message.includes('JWT')) {
+          console.log('Profile fetch failed, signing out user');
+          await supabase.auth.signOut();
+        }
+        setProfile(null);
+        return;
+      }
+      
       setProfile(data);
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -97,6 +129,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const refreshAuth = async () => {
+    setLoading(true);
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session) {
+        setUser(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      setUser(session.user);
+      await fetchUserProfile(session.user.id);
+    } catch (error) {
+      console.error('Error refreshing auth:', error);
+      setUser(null);
+      setProfile(null);
+    }
+    setLoading(false);
+  };
+
   const isAdmin = () => {
     return profile?.role === 'admin';
   };
@@ -107,6 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signIn,
     signOut,
+    refreshAuth,
     isAdmin,
   };
 
