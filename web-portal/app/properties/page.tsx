@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
 import { Building2, Download } from 'lucide-react';
-import { createServiceClient } from '@/lib/supabase';
 import PropertiesTable from '@/components/PropertiesTable';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import PropertiesPageClient from '@/components/PropertiesPageClient';
@@ -40,40 +39,28 @@ export interface PropertyData {
 
 async function getPropertiesData(): Promise<PropertyData[]> {
   try {
-    const supabase = createServiceClient();
+    // Fetch from our API endpoint which now includes residents count
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/properties`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store'
+    });
     
-    console.log('Fetching properties data...');
+    if (!response.ok) {
+      throw new Error('Failed to fetch properties');
+    }
     
-    // Start with direct properties table since we know it works
-    const { data: propertiesData, error: propertiesError } = await supabase
-      .from('properties')
-      .select(`
-        property_id,
-        address,
-        lot_number,
-        hoa_zone,
-        street_group,
-        property_type,
-        square_footage,
-        lot_size_sqft,
-        year_built,
-        special_features,
-        notes,
-        created_at,
-        updated_at
-      `)
-      .order('address');
+    const propertiesData = await response.json();
     
-    console.log('Properties query result:', { 
-      error: propertiesError, 
+    console.log('Properties API result:', { 
       dataLength: propertiesData?.length,
       sampleData: propertiesData?.[0] 
     });
     
-    if (propertiesError) throw propertiesError;
-    
     // Transform the data to match our interface
-    const transformedData: PropertyData[] = (propertiesData || []).map(property => ({
+    const transformedData: PropertyData[] = (propertiesData || []).map((property: any) => ({
       property_id: property.property_id || '',
       address: property.address || '',
       lot_number: property.lot_number,
@@ -89,8 +76,8 @@ async function getPropertiesData(): Promise<PropertyData[]> {
       created_at: property.created_at,
       updated_at: property.updated_at,
       
-      // Placeholder aggregated data - will be enhanced in Phase 2B
-      current_residents: 0, // TODO: Calculate from property_residents
+      // Use the actual residents count from API
+      current_residents: property.current_residents || 0,
       total_surveys: 0, // TODO: Calculate from property_surveys  
       owner_name: null, // TODO: Get from people/property_residents
       owner_email: null,

@@ -84,28 +84,35 @@ async function getPropertyDetails(id: string): Promise<PropertyDetailsData> {
     notFound();
   }
 
-  // Get current residents (placeholder data for now)
-  const residents = [
-    {
-      resident_id: 'placeholder-1',
-      relationship_type: 'unknown' as const,
-      is_primary_contact: true,
-      is_hoa_responsible: true,
-      start_date: new Date().toISOString().split('T')[0],
-      end_date: null,
-      notes: 'Contact information to be determined',
-      people: {
-        person_id: 'placeholder-person-1',
-        first_name: 'Contact',
-        last_name: 'TBD',
-        email: '',
-        phone: '',
-        emergency_contact_name: '',
-        emergency_contact_phone: '',
-        preferred_contact_method: 'email' as const
-      }
-    }
-  ];
+  // Get current residents from property_residents table
+  const { data: residents, error: residentsError } = await supabase
+    .from('property_residents')
+    .select(`
+      resident_id,
+      relationship_type,
+      is_primary_contact,
+      is_hoa_responsible,
+      start_date,
+      end_date,
+      notes,
+      people (
+        person_id,
+        first_name,
+        last_name,
+        email,
+        phone,
+        emergency_contact_name,
+        emergency_contact_phone,
+        preferred_contact_method
+      )
+    `)
+    .eq('property_id', id)
+    .is('end_date', null) // Only current residents
+    .order('is_primary_contact', { ascending: false });
+
+  if (residentsError) {
+    console.error('Error fetching residents:', residentsError);
+  }
 
   // Get survey history (using existing responses table for now)
   const { data: surveys, error: surveysError } = await supabase
@@ -147,7 +154,7 @@ async function getPropertyDetails(id: string): Promise<PropertyDetailsData> {
 
   return {
     ...property,
-    current_residents: residents,
+    current_residents: residents || [],
     survey_history: surveyHistory,
     recent_activity: recentActivity,
     issues_count: 0, // Placeholder

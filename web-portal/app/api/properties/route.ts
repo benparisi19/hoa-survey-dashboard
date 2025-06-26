@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit');
     const offset = searchParams.get('offset');
     
-    // Base query - using direct properties table for now
+    // Base query with residents
     let query = supabase
       .from('properties')
       .select(`
@@ -29,7 +29,11 @@ export async function GET(request: NextRequest) {
         special_features,
         notes,
         created_at,
-        updated_at
+        updated_at,
+        property_residents (
+          resident_id,
+          end_date
+        )
       `);
     
     // Apply filters
@@ -73,7 +77,30 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(data);
+    // Transform data to include current_residents count
+    const transformedData = (data || []).map(property => {
+      // Debug: Log all property_residents data
+      console.log(`\n🏠 Property: ${property.address}`);
+      console.log(`   property_residents:`, property.property_residents);
+      
+      // Count current residents (those without end_date)
+      const currentResidents = property.property_residents
+        ? property.property_residents.filter((r: any) => r.end_date === null || r.end_date === undefined).length
+        : 0;
+
+      console.log(`   Current residents calculated: ${currentResidents}`);
+
+      // Remove the property_residents array and add the count
+      const { property_residents, ...propertyData } = property;
+      return {
+        ...propertyData,
+        current_residents: currentResidents
+      };
+    });
+
+    console.log(`\n📊 Returning ${transformedData.length} properties, ${transformedData.filter(p => p.current_residents > 0).length} with residents`);
+
+    return NextResponse.json(transformedData);
   } catch (error) {
     console.error('Unexpected error fetching properties:', error);
     return NextResponse.json(
