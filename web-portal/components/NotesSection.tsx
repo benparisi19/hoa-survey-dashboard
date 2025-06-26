@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { MessageSquare, AlertTriangle, Clock, CheckCircle, Plus, Edit, Trash2 } from 'lucide-react';
 import { addNote, updateNote, deleteNote } from '@/app/actions/notesActions';
 
@@ -35,6 +36,8 @@ export default function NotesSection({ notes, responseId, editable = true }: Not
     priority: 'medium',
     requires_follow_up: false
   });
+  
+  const router = useRouter();
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -90,7 +93,7 @@ export default function NotesSection({ notes, responseId, editable = true }: Not
         priority: 'medium',
         requires_follow_up: false
       });
-      window.location.reload();
+      router.refresh();
     } catch (error) {
       console.error('Error adding note:', error);
       alert('Failed to add note. Please try again.');
@@ -111,7 +114,7 @@ export default function NotesSection({ notes, responseId, editable = true }: Not
         return;
       }
 
-      window.location.reload();
+      router.refresh();
     } catch (error) {
       console.error('Error deleting note:', error);
       alert('Failed to delete note. Please try again.');
@@ -131,7 +134,7 @@ export default function NotesSection({ notes, responseId, editable = true }: Not
         return;
       }
 
-      window.location.reload();
+      router.refresh();
     } catch (error) {
       console.error('Error updating note:', error);
       alert('Failed to update note. Please try again.');
