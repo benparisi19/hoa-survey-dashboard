@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { BarChart3, Users, Building2 } from 'lucide-react';
+import { BarChart3, Users, Building2, UserCheck } from 'lucide-react';
 import { useAuth, useProfile } from '@/lib/auth-context';
 import UserMenu from './UserMenu';
 import ResponseCount from './ResponseCount';
@@ -31,6 +31,12 @@ const navigation: NavigationItem[] = [
     href: '/properties',
     icon: Building2,
     description: 'Manage community properties and residents',
+  },
+  {
+    name: 'People',
+    href: '/people',
+    icon: UserCheck,
+    description: 'Manage residents and contact information',
   },
 ];
 
