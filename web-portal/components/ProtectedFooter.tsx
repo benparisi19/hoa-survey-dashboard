@@ -1,10 +1,11 @@
 'use client';
 
-import { useAuth } from '@/lib/auth-context';
+import { useAuth, useProfile } from '@/lib/auth-context';
 
 export default function ProtectedFooter() {
-  const { user, profile, loading, hydrated } = useAuth();
-  const isAdmin = profile?.role === 'admin';
+  const { user } = useAuth();
+  const { profile, loading: profileLoading, isAdmin } = useProfile();
+  const userIsAdmin = isAdmin();
 
   return (
     <footer className="bg-white border-t border-gray-200 mt-auto">
@@ -15,8 +16,8 @@ export default function ProtectedFooter() {
             <p>Data collected and analyzed for community decision making</p>
           </div>
           
-          {/* Only show sensitive data for authenticated admins after hydration */}
-          {hydrated && user && isAdmin && !loading && (
+          {/* Only show sensitive data for authenticated admins */}
+          {user && userIsAdmin && !profileLoading && (
             <div className="flex space-x-6 text-sm text-gray-500">
               <span>Last updated: {new Date().toLocaleDateString()}</span>
               <span>•</span>

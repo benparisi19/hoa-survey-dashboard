@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '@/lib/auth-context';
+import { useAuth, useProfile } from '@/lib/auth-context';
 import { Shield, AlertTriangle, UserX } from 'lucide-react';
 
 interface AdminGateProps {
@@ -9,16 +9,17 @@ interface AdminGateProps {
 }
 
 export default function AdminGate({ children, fallback }: AdminGateProps) {
-  const { user, profile, loading, hydrated } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   
-  if (loading || !hydrated) {
+  const loading = authLoading || profileLoading;
+  
+  if (loading) {
     return (
       <div className="min-h-[400px] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">
-            {!hydrated ? 'Initializing...' : 'Loading...'}
-          </p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
