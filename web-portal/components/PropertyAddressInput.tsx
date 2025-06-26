@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { MapPin, Check } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 
 interface Property {
   property_id: string;
@@ -38,16 +37,14 @@ export default function PropertyAddressInput({
     async function loadProperties() {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('properties')
-          .select('property_id, address, lot_number, hoa_zone, street_group')
-          .order('address');
-
-        if (error) {
-          console.error('Error loading properties:', error);
-        } else {
-          setProperties(data || []);
+        const response = await fetch('/api/properties');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
+        const data = await response.json();
+        setProperties(data || []);
       } catch (error) {
         console.error('Error loading properties:', error);
       } finally {
