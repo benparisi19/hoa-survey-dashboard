@@ -42,6 +42,13 @@ export default function UserMenu() {
     window.location.reload();
   };
 
+  const handleSignOutAndRedirect = async () => {
+    console.log('Signing out and redirecting to login page');
+    await signOut();
+    setIsOpen(false);
+    window.location.href = '/login';
+  };
+
   // Detect corrupted state: stuck loading after hydration, or user without profile
   const isCorrupted = (loading && hydrated) || (user && !profile && !loading);
 
@@ -81,19 +88,19 @@ export default function UserMenu() {
                 </button>
                 
                 <button
+                  onClick={handleSignOutAndRedirect}
+                  className="flex items-center w-full px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 hover:text-blue-900 transition-colors"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out & Return to Login
+                </button>
+                
+                <button
                   onClick={handleHardRefresh}
                   className="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50 hover:text-red-900 transition-colors"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Hard Refresh Page
-                </button>
-
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors border-t border-gray-100"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
                 </button>
               </div>
             </div>
@@ -189,7 +196,7 @@ export default function UserMenu() {
             )}
             
             <button
-              onClick={handleSignOut}
+              onClick={handleSignOutAndRedirect}
               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
             >
               <LogOut className="h-4 w-4 mr-2" />

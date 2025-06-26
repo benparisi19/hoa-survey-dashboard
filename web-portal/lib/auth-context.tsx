@@ -76,7 +76,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (session?.user) {
           console.log('Fetching profile for user:', session.user.id);
-          await fetchUserProfile(session.user.id);
+          try {
+            await fetchUserProfile(session.user.id);
+          } catch (profileError) {
+            console.error('Profile fetch failed during initialization:', profileError);
+            // If profile fetch fails, still set loading to false
+            setProfile(null);
+          }
         } else {
           console.log('No user in session, setting profile to null');
           setProfile(null);
@@ -107,7 +113,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await fetchUserProfile(session.user.id);
+          try {
+            await fetchUserProfile(session.user.id);
+          } catch (profileError) {
+            console.error('Profile fetch failed during auth state change:', profileError);
+            setProfile(null);
+          }
         } else {
           setProfile(null);
         }
@@ -124,15 +135,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [hydrated, supabase.auth]);
 
-  const fetchUserProfile = async (userId: string) => {
-    // Prevent duplicate profile fetches
-    if (fetchingProfile) {
+  const fetchUserProfile = async (userId: string, force = false) => {
+    // Prevent duplicate profile fetches unless forced
+    if (!force && fetchingProfile) {
       console.log('Profile fetch already in progress, skipping:', userId);
       return;
     }
     
-    // Don't fetch if we already have the profile for this user
-    if (profile && profile.id === userId) {
+    // Don't fetch if we already have the profile for this user unless forced
+    if (!force && profile && profile.id === userId) {
       console.log('Profile already exists for user, skipping fetch:', userId);
       return;
     }
@@ -142,11 +153,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Fetching profile for user ID:', userId);
       
-      const { data, error } = await supabase
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000); // 10 second timeout
+      });
+      
+      const fetchPromise = supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .single();
+      
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
 
       if (error) {
         console.error('Error fetching user profile:', {
@@ -175,6 +193,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(data);
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      
+      // Handle timeout errors specifically
+      if (error instanceof Error && error.message === 'Profile fetch timeout') {
+        console.log('Profile fetch timed out, clearing auth state');
+        await supabase.auth.signOut();
+      }
+      
       setProfile(null);
     } finally {
       setFetchingProfile(false);
@@ -195,11 +220,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshAuth = async () => {
+    console.log('Starting auth refresh - clearing all state first');
+    
+    // Reset all state first
     setLoading(true);
+    setUser(null);
+    setProfile(null);
+    setFetchingProfile(false);
+    
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
+      // Force a fresh session check
+      const { data: { session }, error } = await supabase.auth.refreshSession();
+      
+      console.log('Refresh session result:', {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        error: error?.message
+      });
       
       if (error || !session) {
+        console.log('No valid session after refresh, signing out');
+        await supabase.auth.signOut();
         setUser(null);
         setProfile(null);
         setLoading(false);
@@ -207,7 +248,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setUser(session.user);
-      await fetchUserProfile(session.user.id);
+      
+      // Force fresh profile fetch
+      console.log('Forcing fresh profile fetch after auth refresh');
+      await fetchUserProfile(session.user.id, true);
     } catch (error) {
       console.error('Error refreshing auth:', error);
       setUser(null);
