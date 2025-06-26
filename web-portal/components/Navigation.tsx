@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { BarChart3, Users, Building2, UserCheck } from 'lucide-react';
+import { BarChart3, Users, Building2, UserCheck, Star, MapPin } from 'lucide-react';
 import { useAuth, useProfile } from '@/lib/auth-context';
 import UserMenu from './UserMenu';
 import ResponseCount from './ResponseCount';
@@ -15,16 +15,16 @@ interface NavigationItem {
 
 const navigation: NavigationItem[] = [
   {
-    name: 'Dashboard',
-    href: '/',
-    icon: BarChart3,
-    description: 'Overview and key metrics',
+    name: 'Neighborhood',
+    href: '/neighborhood',
+    icon: Star,
+    description: 'Community-wide executive overview',
   },
   {
-    name: 'Responses',
-    href: '/responses',
-    icon: Users,
-    description: 'View and filter individual responses',
+    name: 'Zones',
+    href: '/zones',
+    icon: MapPin,
+    description: 'Zone-based analytics and management',
   },
   {
     name: 'Properties',
@@ -37,6 +37,18 @@ const navigation: NavigationItem[] = [
     href: '/people',
     icon: UserCheck,
     description: 'Manage residents and contact information',
+  },
+  {
+    name: 'Responses',
+    href: '/responses',
+    icon: Users,
+    description: 'View and filter individual responses',
+  },
+  {
+    name: 'Dashboard',
+    href: '/',
+    icon: BarChart3,
+    description: 'Overview and key metrics',
   },
 ];
 
