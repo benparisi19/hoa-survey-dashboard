@@ -32,6 +32,18 @@ A production web dashboard for analyzing HOA landscaping survey responses with r
 - Edit/correct transcribed data
 - Review workflow: Unreviewed → Reviewed/Flagged
 
+### **📄 PDF Management**
+- View original survey PDFs side-by-side with digital responses
+- Drag-and-drop PDF upload when editing responses
+- All 113 PDFs stored in Supabase storage
+- Automatic PDF display when editing responses
+
+### **📝 Notes System**
+- Extract and manage marginal notes from surveys
+- Priority levels and follow-up tracking
+- Admin notes for internal communication
+- Integration with response review workflow
+
 ### **🔍 Quality Control**
 - Auto-editing for unreviewed responses
 - Mark responses as reviewed when validated
@@ -49,12 +61,17 @@ A production web dashboard for analyzing HOA landscaping survey responses with r
 ## 📁 **Project Structure**
 
 ```
-├── web-portal/          # Next.js dashboard (production ready)
-├── database/           # SQL schema and data import files
-├── scripts/            # Python tools for analysis and testing
-├── exports/            # Clean data exports (CSV, JSON)
-├── data-archive/       # All original survey files
-├── docs/              # Setup and deployment guides
+├── web-portal/         # Next.js dashboard (production ready)
+│   ├── app/           # Next.js 14 app router pages
+│   ├── components/    # React components (PDFViewer, NotesSection, etc.)
+│   ├── scripts/       # Utility scripts for data management
+│   └── lib/           # Utilities and Supabase client
+├── data-archive/       # Original survey data and PDFs
+│   ├── pdf/           # All 113 survey PDFs organized by response ID
+│   ├── md/            # Survey data in markdown format
+│   └── SURVEY_CONTENT.md  # Original survey questions
+├── database/          # SQL schema and query examples
+├── scripts/           # Python analysis tools
 └── README.md          # This file
 ```
 

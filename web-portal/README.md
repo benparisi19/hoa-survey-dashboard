@@ -6,8 +6,12 @@ A modern web dashboard for analyzing HOA landscaping survey responses, built wit
 
 - **Interactive Dashboard** - Key metrics and visualizations
 - **Response Browser** - Search and filter survey responses  
+- **PDF Viewer** - View original survey PDFs side-by-side with responses
+- **PDF Upload** - Drag-and-drop PDF uploads when editing
+- **Notes Management** - Track and manage marginal notes from surveys
 - **Analysis Tools** - Charts and detailed breakdowns
 - **Export Capabilities** - Download data as CSV
+- **Review Workflow** - Quality control system for data validation
 - **Mobile Responsive** - Works on all devices
 - **Real-time Data** - Connected to Supabase database
 
@@ -15,6 +19,7 @@ A modern web dashboard for analyzing HOA landscaping survey responses, built wit
 
 - **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS
 - **Database**: Supabase (PostgreSQL)
+- **Storage**: Supabase Storage for PDF files
 - **Charts**: Recharts
 - **Deployment**: Vercel
 - **Domain**: Custom domain via Porkbun
@@ -51,6 +56,22 @@ A modern web dashboard for analyzing HOA landscaping survey responses, built wit
    ```
 
 5. **Open** [http://localhost:3000](http://localhost:3000)
+
+## 📝 Available Scripts
+
+```bash
+npm run dev              # Start development server
+npm run build            # Build for production
+npm run type-check       # Validate TypeScript
+npm run lint             # Check code quality
+npm run bulk-update-pdfs # Bulk link PDFs to database records
+```
+
+### Utility Scripts (in scripts/ directory):
+- `check-response-ids.js` - Verify response ID formats
+- `check-specific-response.js` - Debug specific response data
+- `verify_notes_import.js` - Verify notes extraction results
+- `extract_and_import_notes.js` - Import marginal notes to database
 
 ## 🌐 Deployment to Vercel
 

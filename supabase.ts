@@ -434,6 +434,9 @@ export type Database = {
           created_at: string | null
           email_contact: string | null
           name: string | null
+          pdf_file_path: string | null
+          pdf_storage_url: string | null
+          pdf_uploaded_at: string | null
           response_id: string
           review_notes: string | null
           review_status: string | null
@@ -447,6 +450,9 @@ export type Database = {
           created_at?: string | null
           email_contact?: string | null
           name?: string | null
+          pdf_file_path?: string | null
+          pdf_storage_url?: string | null
+          pdf_uploaded_at?: string | null
           response_id: string
           review_notes?: string | null
           review_status?: string | null
@@ -460,6 +466,9 @@ export type Database = {
           created_at?: string | null
           email_contact?: string | null
           name?: string | null
+          pdf_file_path?: string | null
+          pdf_storage_url?: string | null
+          pdf_uploaded_at?: string | null
           response_id?: string
           review_notes?: string | null
           review_status?: string | null
@@ -542,18 +551,22 @@ export type Database = {
           critical_notes: number | null
           dues_preference: string | null
           email_contact: string | null
-          fertilizing_pest: string | null
+          equipment_coop: string | null
           follow_up_notes: number | null
           inadequate_weeds: string | null
           involvement_preference: string | null
           irrigation: string | null
           irrigation_detail: string | null
-          lawn_maintenance: string | null
           lawn_mower: string | null
+          manage_area: string | null
+          mentorship: string | null
           missed_service: string | null
           name: string | null
           other_issues: string | null
-          plant_selection: string | null
+          paid_work: string | null
+          pdf_file_path: string | null
+          pdf_storage_url: string | null
+          pdf_uploaded_at: string | null
           poor_mowing: string | null
           property_damage: string | null
           q1_preference: string | null
@@ -571,11 +584,10 @@ export type Database = {
           review_status: string | null
           reviewed_at: string | null
           reviewed_by: string | null
-          seasonal_planning: string | null
           total_notes: number | null
           trimmer: string | null
           truck_trailer: string | null
-          watering_irrigation: string | null
+          volunteering: string | null
         }
         Relationships: []
       }

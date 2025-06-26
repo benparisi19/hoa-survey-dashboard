@@ -10,13 +10,14 @@ npm run dev          # Start development server on localhost:3000
 npm run build        # Build for production (always run before commits)
 npm run type-check   # TypeScript validation without building
 npm run lint         # ESLint validation
+npm run bulk-update-pdfs  # Bulk link PDFs in storage to database records
 ```
 
 ### Environment Setup
 ```bash
 cp .env.example .env # Copy environment template
 # Edit .env with Supabase credentials:
-# NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
+# NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY
 ```
 
 ### Database Management
@@ -26,6 +27,11 @@ cd ../scripts && python test_connection.py
 
 # Run schema setup (if needed)
 # Execute ../database/supabase_schema.sql in Supabase dashboard
+
+# Utility scripts for data management
+node scripts/check-response-ids.js       # Check response ID formats
+node scripts/check-specific-response.js  # Debug specific response data
+node scripts/verify_notes_import.js      # Verify notes extraction results
 ```
 
 ### Database Interaction Pattern
@@ -84,15 +90,28 @@ Implements a quality control system for survey transcription validation:
 - `app/responses/[id]/page.tsx` - Individual response detail view
 
 #### Data Presentation
-- `SurveyFormView` - Displays responses in original paper survey format with editing capabilities
+- `SurveyFormView` - Displays responses in original paper survey format with editing capabilities and PDF viewer integration
 - `ResponsesTable` - Filterable table with export functionality and review status management
 - `MetricCard` - Reusable metric display with color coding by type (success/warning/error/info)
 - Charts: `ServiceRatingChart`, `IssuesOverview`, `ContactOverview`
+
+#### PDF Management System
+- `PDFViewer` - Integrated PDF display with drag-and-drop upload functionality when editing
+- `PDFUpload` - Standalone upload component (deprecated in favor of integrated PDFViewer upload)
+- Supabase storage integration with public bucket "survey-pdfs"
+- Database tracking via `pdf_file_path`, `pdf_storage_url`, `pdf_uploaded_at` columns
+- Side-by-side layout: survey form and PDF viewer with full-width header
 
 #### Review System
 - `ReviewControls` - Simplified workflow with Mark Reviewed and Flag buttons
 - Auto-editing for unreviewed responses, manual editing for reviewed responses
 - Status tracking with database persistence
+
+#### Notes Management System  
+- `NotesSection` - Advanced marginal notes extraction and management
+- Database tables: `survey_notes` with priority levels, follow-up tracking, admin notes
+- Automated extraction from handwritten survey margins using structured analysis
+- Priority classification: low/medium/high/critical with color-coded display
 
 ### Data Processing Utilities
 
@@ -161,12 +180,16 @@ export default function Page() {
 - Environment variables must be configured in both local `.env` and Vercel deployment
 - **Service key** required for direct database writes - read from `.env` file when needed
 - **Anonymous key** used for frontend read operations only
+- **Storage bucket** "survey-pdfs" configured for public access with 50MB file limit (free tier)
+- PDF files named with 3-digit response IDs (001.pdf, 002.pdf, etc.)
 
 ### Review Workflow Rules
 - Unreviewed responses = auto-edit mode enabled
-- Reviewed responses = locked but can be unlocked with "Edit Response"
+- Reviewed responses = locked but can be unlocked with "Edit Response"  
 - Flagged responses = need attention (data quality, follow-up required)
 - Only one person should review responses to avoid conflicts
+- PDF viewer auto-shows when editing responses, hides when viewing read-only
+- Drag-and-drop PDF upload only available when in editing mode
 
 ### Performance Considerations
 - Dashboard metrics calculated server-side for speed
