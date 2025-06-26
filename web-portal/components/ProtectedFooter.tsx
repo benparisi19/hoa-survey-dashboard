@@ -3,7 +3,7 @@
 import { useAuth } from '@/lib/auth-context';
 
 export default function ProtectedFooter() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, hydrated } = useAuth();
   const isAdmin = profile?.role === 'admin';
 
   return (
@@ -15,8 +15,8 @@ export default function ProtectedFooter() {
             <p>Data collected and analyzed for community decision making</p>
           </div>
           
-          {/* Only show sensitive data for authenticated admins */}
-          {user && isAdmin && !loading && (
+          {/* Only show sensitive data for authenticated admins after hydration */}
+          {hydrated && user && isAdmin && !loading && (
             <div className="flex space-x-6 text-sm text-gray-500">
               <span>Last updated: {new Date().toLocaleDateString()}</span>
               <span>•</span>

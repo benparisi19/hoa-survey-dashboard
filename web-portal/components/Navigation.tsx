@@ -28,7 +28,7 @@ const navigation: NavigationItem[] = [
 ];
 
 export default function Navigation() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, hydrated } = useAuth();
   const isAdmin = profile?.role === 'admin';
 
   return (
@@ -43,8 +43,8 @@ export default function Navigation() {
               </span>
             </div>
             
-            {/* Only show navigation links for authenticated admins */}
-            {user && isAdmin && (
+            {/* Only show navigation links for authenticated admins after hydration */}
+            {hydrated && user && isAdmin && (
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 {navigation.map((item) => {
                   const Icon = item.icon;
@@ -64,8 +64,8 @@ export default function Navigation() {
           </div>
           
           <div className="flex items-center space-x-4">
-            {/* Only show response count for authenticated admins */}
-            {user && isAdmin && !loading && (
+            {/* Only show response count for authenticated admins after hydration */}
+            {hydrated && user && isAdmin && !loading && (
               <div className="text-sm text-gray-500">
                 113 Survey Responses
               </div>
@@ -77,8 +77,8 @@ export default function Navigation() {
         </div>
       </div>
       
-      {/* Mobile navigation - only for authenticated admins */}
-      {user && isAdmin && (
+      {/* Mobile navigation - only for authenticated admins after hydration */}
+      {hydrated && user && isAdmin && (
         <div className="sm:hidden">
           <div className="pt-2 pb-3 space-y-1">
             {navigation.map((item) => {

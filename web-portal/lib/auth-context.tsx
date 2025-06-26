@@ -18,6 +18,7 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
+  hydrated: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshAuth: () => Promise<void>;
@@ -30,19 +31,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
+  const [fetchingProfile, setFetchingProfile] = useState(false);
   
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
+  // Handle hydration first
   useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return; // Wait for hydration
+    
     // Get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        console.log('Initial session check:', {
+        console.log('Initial session check (post-hydration):', {
           hasSession: !!session,
           hasUser: !!session?.user,
           userId: session?.user?.id,
@@ -97,9 +107,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     return () => subscription?.unsubscribe();
-  }, [supabase.auth]);
+  }, [hydrated, supabase.auth]);
 
   const fetchUserProfile = async (userId: string) => {
+    // Prevent duplicate profile fetches
+    if (fetchingProfile) {
+      console.log('Profile fetch already in progress, skipping:', userId);
+      return;
+    }
+    
+    // Don't fetch if we already have the profile for this user
+    if (profile && profile.id === userId) {
+      console.log('Profile already exists for user, skipping fetch:', userId);
+      return;
+    }
+    
+    setFetchingProfile(true);
+    
     try {
       console.log('Fetching profile for user ID:', userId);
       
@@ -123,6 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await supabase.auth.signOut();
         }
         setProfile(null);
+        setFetchingProfile(false);
         return;
       }
       
@@ -136,6 +161,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error fetching user profile:', error);
       setProfile(null);
+    } finally {
+      setFetchingProfile(false);
     }
   };
 
@@ -181,7 +208,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     profile,
-    loading,
+    loading: loading || !hydrated, // Still loading if not hydrated
+    hydrated,
     signIn,
     signOut,
     refreshAuth,

@@ -9,7 +9,7 @@ export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { user, profile, signOut, refreshAuth, loading } = useAuth();
+  const { user, profile, signOut, refreshAuth, loading, hydrated } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function UserMenu() {
     setIsOpen(false);
   };
 
-  if (loading) {
+  if (loading || !hydrated) {
     return (
       <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>
     );
