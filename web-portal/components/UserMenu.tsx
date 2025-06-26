@@ -42,7 +42,66 @@ export default function UserMenu() {
     window.location.reload();
   };
 
+  // Detect corrupted state: stuck loading after hydration, or user without profile
+  const isCorrupted = (loading && hydrated) || (user && !profile && !loading);
+
   if (loading || !hydrated) {
+    // If we're stuck loading after hydration, show recovery options instead of grey box
+    if (isCorrupted) {
+      return (
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex items-center space-x-2 text-sm font-medium text-amber-700 hover:text-amber-900 bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 rounded-md px-3 py-2 transition-colors"
+          >
+            <div className="flex items-center space-x-2">
+              <div className="p-1 rounded-full bg-amber-100">
+                <RefreshCw className="h-4 w-4 text-amber-600" />
+              </div>
+              <span className="hidden sm:block">Auth Issue</span>
+            </div>
+            <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {isOpen && (
+            <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+              <div className="py-1">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <div className="text-sm font-medium text-amber-900">Authentication Stuck</div>
+                  <div className="text-sm text-amber-700">Session detected but profile won't load</div>
+                </div>
+
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="flex items-center w-full px-4 py-2 text-sm text-amber-700 hover:bg-amber-50 hover:text-amber-900 transition-colors"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                  {refreshing ? 'Refreshing...' : 'Refresh Session'}
+                </button>
+                
+                <button
+                  onClick={handleHardRefresh}
+                  className="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50 hover:text-red-900 transition-colors"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Hard Refresh Page
+                </button>
+
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors border-t border-gray-100"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>
     );
@@ -55,9 +114,6 @@ export default function UserMenu() {
   const isAdmin = profile?.role === 'admin';
   const displayName = profile?.full_name || user.email?.split('@')[0] || 'User';
   const roleDisplay = profile?.role === 'admin' ? 'Administrator' : 'Limited Access';
-  
-  // Detect corrupted state: user exists but no profile, or stuck loading
-  const isCorrupted = (user && !profile && !loading) || (loading && hydrated);
 
   return (
     <div className="relative" ref={dropdownRef}>
