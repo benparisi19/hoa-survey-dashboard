@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { Building2, Users, MapPin, Phone, Mail, Calendar, AlertTriangle, CheckCircle, Settings, MessageSquare, Plus } from 'lucide-react';
 import Link from 'next/link';
 import PropertyDetailClient from '@/components/PropertyDetailClient';
+import { createServiceClient } from '@/lib/supabase';
 
 interface PropertyDetailsData {
   property_id: string;
@@ -55,19 +56,103 @@ interface PropertyDetailsData {
 }
 
 async function getPropertyDetails(id: string): Promise<PropertyDetailsData> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  const response = await fetch(`${baseUrl}/api/properties/${id}`, {
-    next: { revalidate: 0 }
-  });
+  const supabase = createServiceClient();
 
-  if (!response.ok) {
-    if (response.status === 404) {
-      notFound();
-    }
-    throw new Error('Failed to fetch property details');
+  // Get basic property information
+  const { data: property, error: propertyError } = await supabase
+    .from('properties')
+    .select(`
+      property_id,
+      address,
+      lot_number,
+      hoa_zone,
+      street_group,
+      property_type,
+      square_footage,
+      lot_size_sqft,
+      year_built,
+      special_features,
+      notes,
+      created_at,
+      updated_at
+    `)
+    .eq('property_id', id)
+    .single();
+
+  if (propertyError) {
+    console.error('Error fetching property:', propertyError);
+    notFound();
   }
 
-  return response.json();
+  // Get current residents (placeholder data for now)
+  const residents = [
+    {
+      resident_id: 'placeholder-1',
+      relationship_type: 'unknown' as const,
+      is_primary_contact: true,
+      is_hoa_responsible: true,
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: null,
+      notes: 'Contact information to be determined',
+      people: {
+        person_id: 'placeholder-person-1',
+        first_name: 'Contact',
+        last_name: 'TBD',
+        email: '',
+        phone: '',
+        emergency_contact_name: '',
+        emergency_contact_phone: '',
+        preferred_contact_method: 'email' as const
+      }
+    }
+  ];
+
+  // Get survey history (using existing responses table for now)
+  const { data: surveys, error: surveysError } = await supabase
+    .from('responses')
+    .select(`
+      response_id,
+      address,
+      created_at,
+      review_status,
+      name
+    `)
+    .eq('address', property.address)
+    .order('created_at', { ascending: false });
+
+  if (surveysError) {
+    console.error('Error fetching surveys:', surveysError);
+  }
+
+  // Format survey data
+  const surveyHistory = surveys?.map(survey => ({
+    survey_id: survey.response_id,
+    survey_name: 'Landscaping 2024',
+    survey_type: 'landscaping',
+    completed_date: survey.created_at,
+    status: survey.review_status === 'reviewed' ? 'complete' : 'pending',
+    respondent: survey.name || 'Anonymous'
+  })) || [];
+
+  // Get recent activity (placeholder for now)
+  const recentActivity = [
+    {
+      activity_id: 'activity-1',
+      type: 'survey_completed',
+      description: 'Landscaping survey completed',
+      date: new Date().toISOString(),
+      status: 'completed'
+    }
+  ];
+
+  return {
+    ...property,
+    current_residents: residents,
+    survey_history: surveyHistory,
+    recent_activity: recentActivity,
+    issues_count: 0, // Placeholder
+    status: 'active' as const // Placeholder
+  };
 }
 
 function PropertyHeader({ property }: { property: PropertyDetailsData }) {
