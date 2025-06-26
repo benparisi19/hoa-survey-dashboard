@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { User, LogOut, Shield, ChevronDown } from 'lucide-react';
 
@@ -8,6 +9,7 @@ export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, profile, signOut, loading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -25,6 +27,7 @@ export default function UserMenu() {
   const handleSignOut = async () => {
     await signOut();
     setIsOpen(false);
+    router.push('/login');
   };
 
   if (loading) {

@@ -32,10 +32,8 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
       setLoading(false);
-    } else {
-      // Redirect will happen via useEffect when user state updates
-      router.push('/');
     }
+    // Don't manually redirect - let the useEffect handle it when auth state updates
   };
 
   // Show loading while checking auth status

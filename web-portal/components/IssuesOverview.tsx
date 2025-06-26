@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-server';
 
 interface IssueData {
   name: string;
@@ -8,6 +8,8 @@ interface IssueData {
 
 async function getIssuesData(): Promise<IssueData[]> {
   try {
+    const supabase = createClient();
+    
     const { data, error } = await supabase
       .from('q4_landscaping_issues')
       .select('*');
