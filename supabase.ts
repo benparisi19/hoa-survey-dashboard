@@ -34,6 +34,282 @@ export type Database = {
   }
   public: {
     Tables: {
+      people: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          first_name: string
+          is_official_owner: boolean | null
+          last_name: string
+          mailing_address: string | null
+          mailing_city: string | null
+          mailing_state: string | null
+          mailing_zip: string | null
+          person_id: string
+          phone: string | null
+          preferred_contact_method: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          first_name: string
+          is_official_owner?: boolean | null
+          last_name: string
+          mailing_address?: string | null
+          mailing_city?: string | null
+          mailing_state?: string | null
+          mailing_zip?: string | null
+          person_id?: string
+          phone?: string | null
+          preferred_contact_method?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          first_name?: string
+          is_official_owner?: boolean | null
+          last_name?: string
+          mailing_address?: string | null
+          mailing_city?: string | null
+          mailing_state?: string | null
+          mailing_zip?: string | null
+          person_id?: string
+          phone?: string | null
+          preferred_contact_method?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          address: string
+          architectural_style: string | null
+          created_at: string | null
+          external_property_id: string | null
+          hoa_zone: string
+          lot_number: string | null
+          lot_size_sqft: number | null
+          notes: string | null
+          property_id: string
+          property_type: string | null
+          source: string | null
+          special_features: Json | null
+          square_footage: number | null
+          street_group: string | null
+          updated_at: string | null
+          year_built: number | null
+        }
+        Insert: {
+          address: string
+          architectural_style?: string | null
+          created_at?: string | null
+          external_property_id?: string | null
+          hoa_zone: string
+          lot_number?: string | null
+          lot_size_sqft?: number | null
+          notes?: string | null
+          property_id?: string
+          property_type?: string | null
+          source?: string | null
+          special_features?: Json | null
+          square_footage?: number | null
+          street_group?: string | null
+          updated_at?: string | null
+          year_built?: number | null
+        }
+        Update: {
+          address?: string
+          architectural_style?: string | null
+          created_at?: string | null
+          external_property_id?: string | null
+          hoa_zone?: string
+          lot_number?: string | null
+          lot_size_sqft?: number | null
+          notes?: string | null
+          property_id?: string
+          property_type?: string | null
+          source?: string | null
+          special_features?: Json | null
+          square_footage?: number | null
+          street_group?: string | null
+          updated_at?: string | null
+          year_built?: number | null
+        }
+        Relationships: []
+      }
+      property_residents: {
+        Row: {
+          created_at: string | null
+          end_date: string | null
+          is_hoa_responsible: boolean | null
+          is_primary_contact: boolean | null
+          move_in_reason: string | null
+          move_out_reason: string | null
+          notes: string | null
+          person_id: string
+          property_id: string
+          relationship_type: string
+          resident_id: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          end_date?: string | null
+          is_hoa_responsible?: boolean | null
+          is_primary_contact?: boolean | null
+          move_in_reason?: string | null
+          move_out_reason?: string | null
+          notes?: string | null
+          person_id: string
+          property_id: string
+          relationship_type: string
+          resident_id?: string
+          start_date: string
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string | null
+          is_hoa_responsible?: boolean | null
+          is_primary_contact?: boolean | null
+          move_in_reason?: string | null
+          move_out_reason?: string | null
+          notes?: string | null
+          person_id?: string
+          property_id?: string
+          relationship_type?: string
+          resident_id?: string
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_residents_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["person_id"]
+          },
+          {
+            foreignKeyName: "property_residents_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["owner_person_id"]
+          },
+          {
+            foreignKeyName: "property_residents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_residents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["property_id"]
+          },
+        ]
+      }
+      property_surveys: {
+        Row: {
+          created_at: string | null
+          is_anonymous: boolean | null
+          notes: string | null
+          property_id: string
+          resident_id: string | null
+          responses: Json
+          review_status: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          submitted_date: string | null
+          survey_definition_id: string
+          survey_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          is_anonymous?: boolean | null
+          notes?: string | null
+          property_id: string
+          resident_id?: string | null
+          responses: Json
+          review_status?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          submitted_date?: string | null
+          survey_definition_id: string
+          survey_id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          is_anonymous?: boolean | null
+          notes?: string | null
+          property_id?: string
+          resident_id?: string | null
+          responses?: Json
+          review_status?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          submitted_date?: string | null
+          survey_definition_id?: string
+          survey_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_surveys_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_surveys_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_surveys_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "property_residents"
+            referencedColumns: ["resident_id"]
+          },
+          {
+            foreignKeyName: "property_surveys_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_surveys_survey_definition_id_fkey"
+            columns: ["survey_definition_id"]
+            isOneToOne: false
+            referencedRelation: "survey_definitions"
+            referencedColumns: ["survey_definition_id"]
+          },
+          {
+            foreignKeyName: "property_surveys_survey_definition_id_fkey"
+            columns: ["survey_definition_id"]
+            isOneToOne: false
+            referencedRelation: "survey_participation_summary"
+            referencedColumns: ["survey_definition_id"]
+          },
+        ]
+      }
       q1_q2_preference_rating: {
         Row: {
           created_at: string | null
@@ -437,6 +713,7 @@ export type Database = {
           pdf_file_path: string | null
           pdf_storage_url: string | null
           pdf_uploaded_at: string | null
+          property_id: string | null
           response_id: string
           review_notes: string | null
           review_status: string | null
@@ -453,6 +730,7 @@ export type Database = {
           pdf_file_path?: string | null
           pdf_storage_url?: string | null
           pdf_uploaded_at?: string | null
+          property_id?: string | null
           response_id: string
           review_notes?: string | null
           review_status?: string | null
@@ -469,6 +747,7 @@ export type Database = {
           pdf_file_path?: string | null
           pdf_storage_url?: string | null
           pdf_uploaded_at?: string | null
+          property_id?: string | null
           response_id?: string
           review_notes?: string | null
           review_status?: string | null
@@ -477,6 +756,62 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      survey_definitions: {
+        Row: {
+          active_period_end: string | null
+          active_period_start: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          display_config: Json | null
+          is_active: boolean | null
+          response_schema: Json
+          survey_definition_id: string
+          survey_name: string
+          survey_type: string
+          target_audience: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          active_period_end?: string | null
+          active_period_start?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_config?: Json | null
+          is_active?: boolean | null
+          response_schema: Json
+          survey_definition_id?: string
+          survey_name: string
+          survey_type: string
+          target_audience?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          active_period_end?: string | null
+          active_period_start?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_config?: Json | null
+          is_active?: boolean | null
+          response_schema?: Json
+          survey_definition_id?: string
+          survey_name?: string
+          survey_type?: string
+          target_audience?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_definitions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       survey_notes: {
         Row: {
@@ -537,6 +872,92 @@ export type Database = {
             referencedColumns: ["response_id"]
           },
         ]
+      }
+      user_filter_presets: {
+        Row: {
+          created_at: string | null
+          filter_data: Json
+          is_default: boolean | null
+          is_shared: boolean | null
+          preset_description: string | null
+          preset_id: string
+          preset_name: string
+          updated_at: string | null
+          usage_count: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          filter_data: Json
+          is_default?: boolean | null
+          is_shared?: boolean | null
+          preset_description?: string | null
+          preset_id?: string
+          preset_name: string
+          updated_at?: string | null
+          usage_count?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          filter_data?: Json
+          is_default?: boolean | null
+          is_shared?: boolean | null
+          preset_description?: string | null
+          preset_id?: string
+          preset_name?: string
+          updated_at?: string | null
+          usage_count?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_filter_presets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          is_active: boolean | null
+          last_sign_in: string | null
+          promoted_at: string | null
+          promoted_by: string | null
+          role: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          is_active?: boolean | null
+          last_sign_in?: string | null
+          promoted_at?: string | null
+          promoted_by?: string | null
+          role?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sign_in?: string | null
+          promoted_at?: string | null
+          promoted_by?: string | null
+          role?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -620,6 +1041,30 @@ export type Database = {
           },
         ]
       }
+      property_directory: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          current_resident_count: number | null
+          hoa_zone: string | null
+          lot_number: string | null
+          notes: string | null
+          owner_email: string | null
+          owner_mailing_address: string | null
+          owner_name: string | null
+          owner_person_id: string | null
+          owner_phone: string | null
+          property_id: string | null
+          property_type: string | null
+          special_features: Json | null
+          square_footage: number | null
+          street_group: string | null
+          total_surveys: number | null
+          updated_at: string | null
+          year_built: number | null
+        }
+        Relationships: []
+      }
       survey_notes_with_response_info: {
         Row: {
           address: string | null
@@ -656,6 +1101,20 @@ export type Database = {
           },
         ]
       }
+      survey_participation_summary: {
+        Row: {
+          active_period_end: string | null
+          active_period_start: string | null
+          participation_rate_percent: number | null
+          properties_participated: number | null
+          survey_definition_id: string | null
+          survey_name: string | null
+          survey_type: string | null
+          total_properties: number | null
+          total_responses: number | null
+        }
+        Relationships: []
+      }
       survey_summary: {
         Row: {
           count: number | null
@@ -666,7 +1125,59 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      demote_user_from_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      get_current_residents: {
+        Args: { property_id: string }
+        Returns: {
+          resident_id: string
+          person_id: string
+          full_name: string
+          relationship_type: string
+          is_primary_contact: boolean
+          email: string
+          phone: string
+        }[]
+      }
+      get_current_user_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          full_name: string
+          role: string
+          is_active: boolean
+          created_at: string
+          last_sign_in: string
+        }[]
+      }
+      get_non_participating_properties: {
+        Args: { survey_def_id: string }
+        Returns: {
+          property_id: string
+          address: string
+          lot_number: string
+          hoa_zone: string
+        }[]
+      }
+      increment_filter_preset_usage: {
+        Args: { preset_id: string }
+        Returns: undefined
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      promote_user_to_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      set_default_filter_preset: {
+        Args: { preset_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

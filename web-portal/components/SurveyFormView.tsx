@@ -9,6 +9,7 @@ import PDFViewer from './PDFViewer';
 import { saveResponse } from '@/app/actions/saveResponse';
 import { updateResponsePDF } from '@/app/actions/updatePDF';
 import { supabase } from '@/lib/supabase';
+import PropertyAddressInput from './PropertyAddressInput';
 
 interface SurveyNote {
   note_id: number;
@@ -465,12 +466,10 @@ export default function SurveyFormView({ response, notes = [] }: SurveyFormViewP
               {isEditing ? (
                 <div className="flex-1">
                   <label className="text-xs font-medium text-gray-700">Address:</label>
-                  <input
-                    type="text"
+                  <PropertyAddressInput
                     value={editedResponse.address || ''}
-                    onChange={(e) => updateField('address', e.target.value)}
-                    placeholder=""
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                    onChange={(value) => updateField('address', value)}
+                    placeholder="Start typing a property address..."
                   />
                 </div>
               ) : (
