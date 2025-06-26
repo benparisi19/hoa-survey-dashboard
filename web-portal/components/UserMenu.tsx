@@ -38,6 +38,10 @@ export default function UserMenu() {
     setIsOpen(false);
   };
 
+  const handleHardRefresh = () => {
+    window.location.reload();
+  };
+
   if (loading || !hydrated) {
     return (
       <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>
@@ -52,8 +56,8 @@ export default function UserMenu() {
   const displayName = profile?.full_name || user.email?.split('@')[0] || 'User';
   const roleDisplay = profile?.role === 'admin' ? 'Administrator' : 'Limited Access';
   
-  // Detect corrupted state: user exists but no profile
-  const isCorrupted = user && !profile && !loading;
+  // Detect corrupted state: user exists but no profile, or stuck loading
+  const isCorrupted = (user && !profile && !loading) || (loading && hydrated);
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -108,14 +112,24 @@ export default function UserMenu() {
 
             {/* Actions */}
             {isCorrupted && (
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="flex items-center w-full px-4 py-2 text-sm text-amber-700 hover:bg-amber-50 hover:text-amber-900 transition-colors border-b border-gray-100"
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                {refreshing ? 'Refreshing...' : 'Refresh Session'}
-              </button>
+              <>
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="flex items-center w-full px-4 py-2 text-sm text-amber-700 hover:bg-amber-50 hover:text-amber-900 transition-colors"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                  {refreshing ? 'Refreshing...' : 'Refresh Session'}
+                </button>
+                
+                <button
+                  onClick={handleHardRefresh}
+                  className="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50 hover:text-red-900 transition-colors border-b border-gray-100"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Hard Refresh Page
+                </button>
+              </>
             )}
             
             <button

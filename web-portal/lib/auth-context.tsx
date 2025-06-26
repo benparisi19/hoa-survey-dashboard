@@ -47,6 +47,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!hydrated) return; // Wait for hydration
     
+    let isMounted = true; // Prevent state updates if component unmounts
+    
     // Get initial session
     const getInitialSession = async () => {
       try {
@@ -59,6 +61,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: session?.user?.email,
           error: error?.message
         });
+        
+        if (!isMounted) return; // Component was unmounted
         
         if (error) {
           console.error('Error getting session:', error);
@@ -78,12 +82,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null);
         }
         
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        setUser(null);
-        setProfile(null);
-        setLoading(false);
+        if (isMounted) {
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+        }
       }
     };
 
@@ -92,6 +100,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!isMounted) return; // Component was unmounted
+        
         console.log('Auth state change:', event, session?.user?.email || 'no user');
         
         setUser(session?.user ?? null);
@@ -102,11 +112,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null);
         }
         
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     );
 
-    return () => subscription?.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription?.unsubscribe();
+    };
   }, [hydrated, supabase.auth]);
 
   const fetchUserProfile = async (userId: string) => {
