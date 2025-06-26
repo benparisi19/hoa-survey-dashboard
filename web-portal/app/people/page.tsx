@@ -9,20 +9,45 @@ export const dynamic = 'force-dynamic';
 
 async function getPeopleData(): Promise<PersonData[]> {
   try {
-    // Fetch from our API endpoint with property counts
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/people?includePropertyCount=true`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store'
-    });
+    // Use direct database query for SSR instead of API call
+    const { createServiceClient } = await import('@/lib/supabase');
+    const supabase = createServiceClient();
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch people');
+    // Get people with property relationships (same logic as API)
+    const { data, error } = await supabase
+      .from('people')
+      .select(`
+        person_id,
+        first_name,
+        last_name,
+        email,
+        phone,
+        preferred_contact_method,
+        is_official_owner,
+        created_at,
+        updated_at,
+        property_residents(property_id, end_date, properties(address))
+      `)
+      .order('first_name');
+
+    if (error) {
+      console.error('Error fetching people:', error);
+      return [];
     }
-    
-    const peopleData = await response.json();
+
+    // Transform data (same logic as API)
+    const peopleData = (data || []).map(person => {
+      if (!person || typeof person !== 'object' || Array.isArray(person)) return null;
+      
+      const currentProperties = (person as any).property_residents?.filter((r: any) => !r.end_date) || [];
+      
+      return {
+        ...(person as any),
+        full_name: `${(person as any).first_name || ''} ${(person as any).last_name || ''}`.trim(),
+        property_count: currentProperties.length,
+        primary_property_address: currentProperties[0]?.properties?.address || null
+      };
+    }).filter(Boolean);
     
     console.log('People API result:', { 
       dataLength: peopleData?.length,

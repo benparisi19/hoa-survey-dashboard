@@ -39,20 +39,51 @@ export interface PropertyData {
 
 async function getPropertiesData(): Promise<PropertyData[]> {
   try {
-    // Fetch from our API endpoint which now includes residents count
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/properties`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store'
-    });
+    // Use direct database query for SSR instead of API call
+    const { createServiceClient } = await import('@/lib/supabase');
+    const supabase = createServiceClient();
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch properties');
+    // Get properties with residents count (same logic as API)
+    const { data, error } = await supabase
+      .from('properties')
+      .select(`
+        property_id,
+        address,
+        lot_number,
+        hoa_zone,
+        street_group,
+        property_type,
+        square_footage,
+        lot_size_sqft,
+        year_built,
+        special_features,
+        notes,
+        created_at,
+        updated_at,
+        property_residents (
+          resident_id,
+          end_date
+        )
+      `)
+      .order('address');
+
+    if (error) {
+      console.error('Error fetching properties:', error);
+      return [];
     }
-    
-    const propertiesData = await response.json();
+
+    // Transform data to include current_residents count (same logic as API)
+    const propertiesData = (data || []).map(property => {
+      const currentResidents = property.property_residents
+        ? property.property_residents.filter((r: any) => !r.end_date).length
+        : 0;
+
+      const { property_residents, ...propertyData } = property;
+      return {
+        ...propertyData,
+        current_residents: currentResidents
+      };
+    });
     
     console.log('Properties API result:', { 
       dataLength: propertiesData?.length,
