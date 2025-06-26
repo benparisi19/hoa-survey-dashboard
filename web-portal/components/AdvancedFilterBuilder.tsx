@@ -613,7 +613,7 @@ export default function AdvancedFilterBuilder({
               disabled={hasErrors}
               className="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Apply Filters
+              Refresh View
             </button>
           </div>
         </div>

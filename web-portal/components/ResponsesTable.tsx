@@ -94,9 +94,30 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
     let filtered: ResponseData[];
     
     // Choose filtering method
-    if (useAdvancedFilters && advancedFilterSet.groups.length > 0) {
-      // Use advanced filters
-      filtered = applyAdvancedFilters(responses, advancedFilterSet);
+    if (useAdvancedFilters) {
+      // Check if there are any actual filter conditions
+      const hasActiveConditions = advancedFilterSet.groups.some(group => 
+        group.conditions.some(condition => {
+          // Some operators don't require values
+          const noValueOperators = ['exists', 'not_exists', 'is_empty', 'is_not_empty'];
+          if (noValueOperators.includes(condition.operator)) {
+            return true; // These operators are always active when set
+          }
+          // For other operators, check if value is provided
+          return condition.value !== null && condition.value !== undefined && condition.value !== '';
+        })
+      );
+      
+      if (hasActiveConditions) {
+        // Use advanced filters
+        console.log('Applying advanced filters:', advancedFilterSet);
+        filtered = applyAdvancedFilters(responses, advancedFilterSet);
+        console.log(`Advanced filtering: ${responses.length} -> ${filtered.length} responses`);
+      } else {
+        // No active conditions, show all responses
+        filtered = responses;
+        console.log('Advanced filters active but no conditions set, showing all responses');
+      }
     } else {
       // Use simple filters
       filtered = responses.filter(response => {
@@ -339,7 +360,44 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
 
   const applyAdvancedFilterSet = () => {
     // Filters are applied automatically via useMemo
-    console.log('Advanced filters applied:', advancedFilterSet);
+    // This function provides user feedback that filters have been applied
+    const hasActiveConditions = advancedFilterSet.groups.some(group => 
+      group.conditions.some(condition => {
+        // Some operators don't require values
+        const noValueOperators = ['exists', 'not_exists', 'is_empty', 'is_not_empty'];
+        if (noValueOperators.includes(condition.operator)) {
+          return true; // These operators are always active when set
+        }
+        // For other operators, check if value is provided
+        return condition.value !== null && condition.value !== undefined && condition.value !== '';
+      })
+    );
+    
+    if (hasActiveConditions) {
+      const activeGroups = advancedFilterSet.groups.filter(group => 
+        group.conditions.some(condition => {
+          const noValueOperators = ['exists', 'not_exists', 'is_empty', 'is_not_empty'];
+          if (noValueOperators.includes(condition.operator)) {
+            return true;
+          }
+          return condition.value !== null && condition.value !== undefined && condition.value !== '';
+        })
+      );
+      const totalConditions = activeGroups.reduce((sum, group) => 
+        sum + group.conditions.filter(condition => {
+          const noValueOperators = ['exists', 'not_exists', 'is_empty', 'is_not_empty'];
+          if (noValueOperators.includes(condition.operator)) {
+            return true;
+          }
+          return condition.value !== null && condition.value !== undefined && condition.value !== '';
+        }).length, 0
+      );
+      
+      console.log(`✓ Applied ${totalConditions} filter conditions across ${activeGroups.length} groups`);
+      console.log(`Showing ${filteredData.length} of ${responses.length} responses`);
+    } else {
+      console.log('No active filter conditions - showing all responses');
+    }
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -407,7 +465,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
           <div className="mt-4 flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
-                Using advanced filters
+                Using advanced filters • Filters apply automatically as you build them
               </span>
               <button
                 onClick={switchToSimpleFilters}
