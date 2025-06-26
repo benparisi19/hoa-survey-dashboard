@@ -1,10 +1,17 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, Filter, Download, ChevronUp, ChevronDown, User, UserX, Mail, MailX, Phone, ExternalLink, MessageSquare, AlertTriangle, Clock } from 'lucide-react';
+import { Search, Filter, Download, ChevronUp, ChevronDown, User, UserX, Mail, MailX, Phone, ExternalLink, MessageSquare, AlertTriangle, Clock, Settings2 } from 'lucide-react';
 import Link from 'next/link';
 import { ResponseData } from '@/app/responses/page';
 import { parseContactInfo } from '@/lib/utils';
+import AdvancedFilterBuilder from './AdvancedFilterBuilder';
+import {
+  AdvancedFilterSet,
+  createEmptyFilterSet,
+  applyAdvancedFilters,
+  convertLegacyFilters
+} from '@/lib/advanced-filters';
 
 interface ResponsesTableProps {
   responses: ResponseData[];
@@ -34,6 +41,7 @@ type SortField = 'response_id' | 'address' | 'name' | 'q2_service_rating' | 'q1_
 type SortDirection = 'asc' | 'desc';
 
 export default function ResponsesTable({ responses }: ResponsesTableProps) {
+  // Simple filters state
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     serviceRating: '',
@@ -45,9 +53,14 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
     hasNotes: '',
   });
   
+  // Advanced filters state
+  const [advancedFilterSet, setAdvancedFilterSet] = useState<AdvancedFilterSet>(createEmptyFilterSet());
+  const [useAdvancedFilters, setUseAdvancedFilters] = useState(false);
+  
   const [sortField, setSortField] = useState<SortField>('response_id');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [showFilters, setShowFilters] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Helper functions
   const getContactInfo = (response: ResponseData) => {
@@ -78,7 +91,15 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
 
   // Filtered and sorted data
   const filteredData = useMemo(() => {
-    let filtered = responses.filter(response => {
+    let filtered: ResponseData[];
+    
+    // Choose filtering method
+    if (useAdvancedFilters && advancedFilterSet.groups.length > 0) {
+      // Use advanced filters
+      filtered = applyAdvancedFilters(responses, advancedFilterSet);
+    } else {
+      // Use simple filters
+      filtered = responses.filter(response => {
       // Search filter
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase();
@@ -144,8 +165,9 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
         if (filters.hasNotes === 'none' && totalNotes > 0) return false;
       }
 
-      return true;
-    });
+        return true;
+      });
+    }
 
     // Sort data
     filtered.sort((a, b) => {
@@ -203,7 +225,7 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
     });
 
     return filtered;
-  }, [responses, filters, sortField, sortDirection]);
+  }, [responses, filters, advancedFilterSet, useAdvancedFilters, sortField, sortDirection]);
 
   // Handlers
   const handleSort = (field: SortField) => {
@@ -292,6 +314,32 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
       reviewStatus: '',
       hasNotes: '',
     });
+    setAdvancedFilterSet(createEmptyFilterSet());
+    setUseAdvancedFilters(false);
+  };
+
+  const switchToAdvancedFilters = () => {
+    // Convert current simple filters to advanced format
+    const convertedFilters = convertLegacyFilters(filters);
+    setAdvancedFilterSet(convertedFilters);
+    setUseAdvancedFilters(true);
+    setShowAdvancedFilters(true);
+    setShowFilters(false);
+  };
+
+  const switchToSimpleFilters = () => {
+    setUseAdvancedFilters(false);
+    setShowAdvancedFilters(false);
+    setShowFilters(true);
+  };
+
+  const handleAdvancedFilterChange = (newFilterSet: AdvancedFilterSet) => {
+    setAdvancedFilterSet(newFilterSet);
+  };
+
+  const applyAdvancedFilterSet = () => {
+    // Filters are applied automatically via useMemo
+    console.log('Advanced filters applied:', advancedFilterSet);
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -318,10 +366,25 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
         <div className="flex gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              showFilters && !useAdvancedFilters
+                ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                : 'bg-gray-100 hover:bg-gray-200'
+            }`}
           >
             <Filter className="h-4 w-4" />
-            Filters
+            Simple Filters
+          </button>
+          <button
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              showAdvancedFilters && useAdvancedFilters
+                ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                : 'bg-gray-100 hover:bg-gray-200'
+            }`}
+          >
+            <Settings2 className="h-4 w-4" />
+            Advanced Filters
           </button>
           <button
             onClick={exportToCSV}
@@ -333,8 +396,38 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
         </div>
       </div>
 
-      {/* Filters Panel */}
-      {showFilters && (
+      {/* Advanced Filters Panel */}
+      {showAdvancedFilters && (
+        <div className="mb-6">
+          <AdvancedFilterBuilder
+            filterSet={advancedFilterSet}
+            onChange={handleAdvancedFilterChange}
+            onApply={applyAdvancedFilterSet}
+          />
+          <div className="mt-4 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                Using advanced filters
+              </span>
+              <button
+                onClick={switchToSimpleFilters}
+                className="text-sm text-blue-600 hover:text-blue-800 underline"
+              >
+                Switch to simple filters
+              </button>
+            </div>
+            <button
+              onClick={clearFilters}
+              className="text-sm text-red-600 hover:text-red-800 underline"
+            >
+              Clear all filters
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Simple Filters Panel */}
+      {showFilters && !useAdvancedFilters && (
         <div className="bg-gray-50 p-4 rounded-lg mb-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             {/* Service Rating Filter */}
@@ -464,10 +557,18 @@ export default function ResponsesTable({ responses }: ResponsesTableProps) {
             </div>
           </div>
 
-          <div className="flex justify-between items-center pt-2">
-            <span className="text-sm text-gray-600">
-              Showing {filteredData.length} of {responses.length} responses
-            </span>
+          <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                Showing {filteredData.length} of {responses.length} responses
+              </span>
+              <button
+                onClick={switchToAdvancedFilters}
+                className="text-sm text-blue-600 hover:text-blue-800 underline font-medium"
+              >
+                Upgrade to Advanced Filters
+              </button>
+            </div>
             <button
               onClick={clearFilters}
               className="text-sm text-primary-600 hover:text-primary-800"
