@@ -310,6 +310,138 @@ export interface Database {
           updated_at?: string;
         };
       };
+      properties: {
+        Row: {
+          property_id: string;
+          address: string;
+          lot_number: string | null;
+          hoa_zone: string;
+          street_group: string | null;
+          property_type: string | null;
+          square_footage: number | null;
+          lot_size_sqft: number | null;
+          year_built: number | null;
+          special_features: string | null;
+          notes: string | null;
+          latitude: number | null;
+          longitude: number | null;
+          geocoded_at: string | null;
+          geocoding_accuracy: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          property_id?: string;
+          address: string;
+          lot_number?: string | null;
+          hoa_zone: string;
+          street_group?: string | null;
+          property_type?: string | null;
+          square_footage?: number | null;
+          lot_size_sqft?: number | null;
+          year_built?: number | null;
+          special_features?: string | null;
+          notes?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
+          geocoded_at?: string | null;
+          geocoding_accuracy?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          property_id?: string;
+          address?: string;
+          lot_number?: string | null;
+          hoa_zone?: string;
+          street_group?: string | null;
+          property_type?: string | null;
+          square_footage?: number | null;
+          lot_size_sqft?: number | null;
+          year_built?: number | null;
+          special_features?: string | null;
+          notes?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
+          geocoded_at?: string | null;
+          geocoding_accuracy?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      people: {
+        Row: {
+          person_id: string;
+          first_name: string;
+          last_name: string;
+          email: string | null;
+          phone: string | null;
+          preferred_contact_method: string | null;
+          is_official_owner: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          person_id?: string;
+          first_name: string;
+          last_name: string;
+          email?: string | null;
+          phone?: string | null;
+          preferred_contact_method?: string | null;
+          is_official_owner?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          person_id?: string;
+          first_name?: string;
+          last_name?: string;
+          email?: string | null;
+          phone?: string | null;
+          preferred_contact_method?: string | null;
+          is_official_owner?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      property_residents: {
+        Row: {
+          resident_id: string;
+          property_id: string;
+          person_id: string;
+          relationship_type: string;
+          start_date: string;
+          end_date: string | null;
+          is_primary: boolean;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          resident_id?: string;
+          property_id: string;
+          person_id: string;
+          relationship_type: string;
+          start_date?: string;
+          end_date?: string | null;
+          is_primary?: boolean;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          resident_id?: string;
+          property_id?: string;
+          person_id?: string;
+          relationship_type?: string;
+          start_date?: string;
+          end_date?: string | null;
+          is_primary?: boolean;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       survey_notes: {
         Row: {
           note_id: number;

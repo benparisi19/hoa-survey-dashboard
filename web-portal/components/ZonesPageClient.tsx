@@ -137,14 +137,6 @@ export default function ZonesPageClient({ zones, properties }: ZonesPageClientPr
   };
 
   const hasValidCoordinates = properties.some(p => p.latitude !== null && p.longitude !== null);
-  
-  // Debug logging
-  console.log('Properties data:', {
-    totalProperties: properties.length,
-    withCoordinates: properties.filter(p => p.latitude !== null && p.longitude !== null).length,
-    sampleProperty: properties[0],
-    hasValidCoordinates
-  });
 
   return (
     <div className="space-y-6">
