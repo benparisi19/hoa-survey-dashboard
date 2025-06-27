@@ -43,13 +43,13 @@ async function SurveysContent() {
   
   // Debug logging
   console.log('Survey count:', surveys.length);
-  surveys.forEach(s => {
+  surveys.forEach((s: any) => {
     console.log(`Survey: ${s.survey_name}, template: ${s.is_template}, active: ${s.is_active}`);
   });
   
-  const activeSurveys = surveys.filter(s => !s.is_template && s.is_active);
-  const templates = surveys.filter(s => s.is_template);
-  const draftSurveys = surveys.filter(s => !s.is_template && !s.is_active);
+  const activeSurveys = surveys.filter((s: any) => !s.is_template && s.is_active);
+  const templates = surveys.filter((s: any) => s.is_template);
+  const draftSurveys = surveys.filter((s: any) => !s.is_template && !s.is_active);
   
   console.log('Filtered counts:', { active: activeSurveys.length, templates: templates.length, drafts: draftSurveys.length });
 
@@ -59,7 +59,7 @@ async function SurveysContent() {
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm">
         <strong>Debug Info:</strong> Total surveys: {surveys.length} | Active: {activeSurveys.length} | Templates: {templates.length} | Drafts: {draftSurveys.length}
         <br />
-        <strong>Survey Details:</strong> {surveys.map(s => `${s.survey_name} (template: ${s.is_template}, active: ${s.is_active})`).join(' | ')}
+        <strong>Survey Details:</strong> {surveys.map((s: any) => `${s.survey_name} (template: ${s.is_template}, active: ${s.is_active})`).join(' | ')}
       </div>
       
       {/* Header */}
@@ -119,7 +119,7 @@ async function SurveysContent() {
             <Users className="h-8 w-8 text-purple-600" />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Surveys</p>
-              <p className="text-2xl font-bold text-gray-900">{surveys.filter(s => !s.is_template).length}</p>
+              <p className="text-2xl font-bold text-gray-900">{surveys.filter((s: any) => !s.is_template).length}</p>
             </div>
           </div>
         </div>
@@ -133,7 +133,7 @@ async function SurveysContent() {
             <p className="text-sm text-gray-600">Currently accepting responses</p>
           </div>
           <div className="divide-y divide-gray-200">
-            {activeSurveys.map((survey) => (
+            {activeSurveys.map((survey: any) => (
               <SurveyCard key={survey.survey_definition_id} survey={survey} />
             ))}
           </div>
@@ -148,7 +148,7 @@ async function SurveysContent() {
             <p className="text-sm text-gray-600">Not yet published</p>
           </div>
           <div className="divide-y divide-gray-200">
-            {draftSurveys.map((survey) => (
+            {draftSurveys.map((survey: any) => (
               <SurveyCard key={survey.survey_definition_id} survey={survey} />
             ))}
           </div>
@@ -163,7 +163,7 @@ async function SurveysContent() {
             <p className="text-sm text-gray-600">Reusable survey structures</p>
           </div>
           <div className="divide-y divide-gray-200">
-            {templates.map((survey) => (
+            {templates.map((survey: any) => (
               <SurveyCard key={survey.survey_definition_id} survey={survey} />
             ))}
           </div>
