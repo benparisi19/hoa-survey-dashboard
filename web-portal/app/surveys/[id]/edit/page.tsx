@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { SurveyBuilder } from '@/components/SurveyBuilder/SurveyBuilder';
 import { SurveyDefinition } from '@/types/survey-builder';
-import { createServiceClient } from '@/lib/supabase';
 import AdminGate from '@/components/AdminGate';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -19,28 +18,17 @@ export default function SurveyEditPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     async function loadSurvey() {
       try {
-        const supabase = createServiceClient();
+        const response = await fetch(`/api/surveys/${params.id}`);
         
-        const { data, error } = await supabase
-          .from('survey_definitions')
-          .select('*')
-          .eq('survey_definition_id', params.id)
-          .single();
-
-        if (error) {
-          console.error('Database error loading survey:', error);
-          setError(`Database error: ${error.message}`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('API error loading survey:', errorData);
+          setError(`Failed to load survey: ${errorData.error || 'Unknown error'}`);
           setLoading(false);
           return;
         }
 
-        if (!data) {
-          console.error('No survey found with ID:', params.id);
-          setError('Survey not found');
-          setLoading(false);
-          return;
-        }
-
+        const data = await response.json();
         console.log('Successfully loaded survey:', data.survey_name);
         
         // Normalize the survey data to match our types
@@ -99,11 +87,12 @@ export default function SurveyEditPage({ params }: { params: { id: string } }) {
     setError(null);
     
     try {
-      const supabase = createServiceClient();
-      
-      const { data, error } = await supabase
-        .from('survey_definitions')
-        .update({
+      const response = await fetch(`/api/surveys/${params.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           survey_name: surveyDefinition.survey_name,
           survey_type: surveyDefinition.survey_type,
           description: surveyDefinition.description,
@@ -117,17 +106,15 @@ export default function SurveyEditPage({ params }: { params: { id: string } }) {
           recurrence_config: surveyDefinition.recurrence_config,
           active_period_start: surveyDefinition.active_period_start,
           active_period_end: surveyDefinition.active_period_end,
-          updated_at: new Date().toISOString()
-        })
-        .eq('survey_definition_id', params.id)
-        .select()
-        .single();
+        }),
+      });
 
-      if (error) {
-        console.error('Error updating survey:', error);
-        throw new Error(`Failed to update survey: ${error.message}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to update survey: ${errorData.error || 'Unknown error'}`);
       }
 
+      const data = await response.json();
       console.log('Survey updated successfully:', data);
       
       // Redirect to survey detail page

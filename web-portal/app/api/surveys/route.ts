@@ -5,6 +5,8 @@ export async function GET() {
   try {
     const supabase = createServiceClient();
     
+    console.log('🔍 API: Fetching surveys...');
+    
     const { data: surveys, error } = await supabase
       .from('survey_definitions')
       .select(`

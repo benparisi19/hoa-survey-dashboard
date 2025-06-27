@@ -233,11 +233,14 @@ export type Database = {
       }
       property_surveys: {
         Row: {
+          completion_percentage: number | null
           created_at: string | null
           is_anonymous: boolean | null
+          last_section_completed: string | null
           notes: string | null
           property_id: string
           resident_id: string | null
+          response_status: string | null
           responses: Json
           review_status: string | null
           reviewed_at: string | null
@@ -245,14 +248,18 @@ export type Database = {
           submitted_date: string | null
           survey_definition_id: string
           survey_id: string
+          time_spent_minutes: number | null
           updated_at: string | null
         }
         Insert: {
+          completion_percentage?: number | null
           created_at?: string | null
           is_anonymous?: boolean | null
+          last_section_completed?: string | null
           notes?: string | null
           property_id: string
           resident_id?: string | null
+          response_status?: string | null
           responses: Json
           review_status?: string | null
           reviewed_at?: string | null
@@ -260,14 +267,18 @@ export type Database = {
           submitted_date?: string | null
           survey_definition_id: string
           survey_id?: string
+          time_spent_minutes?: number | null
           updated_at?: string | null
         }
         Update: {
+          completion_percentage?: number | null
           created_at?: string | null
           is_anonymous?: boolean | null
+          last_section_completed?: string | null
           notes?: string | null
           property_id?: string
           resident_id?: string | null
+          response_status?: string | null
           responses?: Json
           review_status?: string | null
           reviewed_at?: string | null
@@ -275,6 +286,7 @@ export type Database = {
           submitted_date?: string | null
           survey_definition_id?: string
           survey_id?: string
+          time_spent_minutes?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -773,47 +785,68 @@ export type Database = {
         Row: {
           active_period_end: string | null
           active_period_start: string | null
+          auto_recurring: boolean | null
           created_at: string | null
           created_by: string | null
           description: string | null
           display_config: Json | null
           is_active: boolean | null
+          is_template: boolean | null
+          parent_survey_id: string | null
+          recurrence_config: Json | null
           response_schema: Json
           survey_definition_id: string
           survey_name: string
           survey_type: string
           target_audience: string | null
+          targeting_config: Json | null
+          template_category: string | null
           updated_at: string | null
+          version: number | null
         }
         Insert: {
           active_period_end?: string | null
           active_period_start?: string | null
+          auto_recurring?: boolean | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           display_config?: Json | null
           is_active?: boolean | null
+          is_template?: boolean | null
+          parent_survey_id?: string | null
+          recurrence_config?: Json | null
           response_schema: Json
           survey_definition_id?: string
           survey_name: string
           survey_type: string
           target_audience?: string | null
+          targeting_config?: Json | null
+          template_category?: string | null
           updated_at?: string | null
+          version?: number | null
         }
         Update: {
           active_period_end?: string | null
           active_period_start?: string | null
+          auto_recurring?: boolean | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           display_config?: Json | null
           is_active?: boolean | null
+          is_template?: boolean | null
+          parent_survey_id?: string | null
+          recurrence_config?: Json | null
           response_schema?: Json
           survey_definition_id?: string
           survey_name?: string
           survey_type?: string
           target_audience?: string | null
+          targeting_config?: Json | null
+          template_category?: string | null
           updated_at?: string | null
+          version?: number | null
         }
         Relationships: [
           {
@@ -822,6 +855,64 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_definitions_parent_survey_id_fkey"
+            columns: ["parent_survey_id"]
+            isOneToOne: false
+            referencedRelation: "survey_definitions"
+            referencedColumns: ["survey_definition_id"]
+          },
+          {
+            foreignKeyName: "survey_definitions_parent_survey_id_fkey"
+            columns: ["parent_survey_id"]
+            isOneToOne: false
+            referencedRelation: "survey_participation_summary"
+            referencedColumns: ["survey_definition_id"]
+          },
+        ]
+      }
+      survey_file_uploads: {
+        Row: {
+          content_type: string | null
+          created_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          question_id: string
+          survey_id: string
+          upload_id: string
+          uploaded_at: string | null
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          question_id: string
+          survey_id: string
+          upload_id?: string
+          uploaded_at?: string | null
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          question_id?: string
+          survey_id?: string
+          upload_id?: string
+          uploaded_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_file_uploads_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "property_surveys"
+            referencedColumns: ["survey_id"]
           },
         ]
       }
@@ -1117,11 +1208,14 @@ export type Database = {
         Row: {
           active_period_end: string | null
           active_period_start: string | null
+          completed_responses: number | null
+          is_template: boolean | null
           participation_rate_percent: number | null
           properties_participated: number | null
           survey_definition_id: string | null
           survey_name: string | null
           survey_type: string | null
+          template_category: string | null
           total_properties: number | null
           total_responses: number | null
         }
@@ -1140,6 +1234,24 @@ export type Database = {
       demote_user_from_admin: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      duplicate_survey_definition: {
+        Args: {
+          source_survey_id: string
+          new_name: string
+          new_description?: string
+        }
+        Returns: string
+      }
+      get_active_surveys_for_property: {
+        Args: { input_property_id: string }
+        Returns: {
+          survey_definition_id: string
+          survey_name: string
+          survey_type: string
+          active_period_end: string
+          has_response: boolean
+        }[]
       }
       get_current_residents: {
         Args: { property_id: string }
@@ -1172,6 +1284,17 @@ export type Database = {
           address: string
           lot_number: string
           hoa_zone: string
+        }[]
+      }
+      get_survey_participation_stats: {
+        Args: { input_survey_definition_id: string }
+        Returns: {
+          total_properties: number
+          properties_with_responses: number
+          total_responses: number
+          completed_responses: number
+          participation_rate: number
+          completion_rate: number
         }[]
       }
       increment_filter_preset_usage: {

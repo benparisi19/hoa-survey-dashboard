@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { createServiceClient } from '@/lib/supabase';
 import { SurveyDefinition } from '@/types/survey-builder';
 
@@ -32,6 +33,10 @@ export async function POST(request: NextRequest) {
       console.error('Error creating survey:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Revalidate the surveys page cache so new survey appears immediately
+    revalidatePath('/surveys');
+    revalidatePath('/api/surveys');
 
     return NextResponse.json(data);
     
