@@ -58,7 +58,7 @@ export default function PropertyMap({
 
     // Initialize map
     const firstProperty = validProperties[0];
-    const defaultCenter = firstProperty ? [
+    const defaultCenter: [number, number] = firstProperty ? [
       typeof firstProperty.longitude === 'string' ? parseFloat(firstProperty.longitude) : firstProperty.longitude!,
       typeof firstProperty.latitude === 'string' ? parseFloat(firstProperty.latitude) : firstProperty.latitude!
     ] : [-122.4194, 37.7749];
