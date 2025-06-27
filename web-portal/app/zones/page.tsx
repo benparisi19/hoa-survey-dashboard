@@ -125,10 +125,16 @@ async function getZonesData(): Promise<ZoneData[]> {
 }
 
 async function getPropertiesForMap() {
+  console.log('Environment check:', {
+    hasServiceKey: !!process.env.SUPABASE_SERVICE_KEY,
+    hasPublicUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    serviceKeyLength: process.env.SUPABASE_SERVICE_KEY?.length || 0
+  });
+  
   const supabase = createServiceClient();
 
   // Get properties with coordinates and residents for map display
-  const { data: properties } = await supabase
+  const { data: properties, error } = await supabase
     .from('properties')
     .select(`
       property_id,
@@ -139,6 +145,20 @@ async function getPropertiesForMap() {
       property_residents(resident_id, end_date, relationship_type)
     `)
     .order('address');
+
+  // Debug logging
+  console.log('getPropertiesForMap debug:', {
+    error: error,
+    propertiesCount: properties?.length || 0,
+    firstProperty: properties?.[0],
+    sampleCoordinates: properties?.slice(0, 3).map(p => ({
+      address: p.address,
+      lat: p.latitude,
+      lng: p.longitude,
+      latType: typeof p.latitude,
+      lngType: typeof p.longitude
+    }))
+  });
 
   // Transform data for map component
   return (properties || []).map(property => {
