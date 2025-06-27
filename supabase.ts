@@ -36,12 +36,17 @@ export type Database = {
     Tables: {
       people: {
         Row: {
+          account_status: string | null
+          account_type: string | null
+          auth_user_id: string | null
           created_at: string | null
           email: string | null
+          email_verified_at: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           first_name: string
           is_official_owner: boolean | null
+          last_login_at: string | null
           last_name: string
           mailing_address: string | null
           mailing_city: string | null
@@ -51,14 +56,20 @@ export type Database = {
           phone: string | null
           preferred_contact_method: string | null
           updated_at: string | null
+          verification_method: string | null
         }
         Insert: {
+          account_status?: string | null
+          account_type?: string | null
+          auth_user_id?: string | null
           created_at?: string | null
           email?: string | null
+          email_verified_at?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           first_name: string
           is_official_owner?: boolean | null
+          last_login_at?: string | null
           last_name: string
           mailing_address?: string | null
           mailing_city?: string | null
@@ -68,14 +79,20 @@ export type Database = {
           phone?: string | null
           preferred_contact_method?: string | null
           updated_at?: string | null
+          verification_method?: string | null
         }
         Update: {
+          account_status?: string | null
+          account_type?: string | null
+          auth_user_id?: string | null
           created_at?: string | null
           email?: string | null
+          email_verified_at?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           first_name?: string
           is_official_owner?: boolean | null
+          last_login_at?: string | null
           last_name?: string
           mailing_address?: string | null
           mailing_city?: string | null
@@ -85,6 +102,7 @@ export type Database = {
           phone?: string | null
           preferred_contact_method?: string | null
           updated_at?: string | null
+          verification_method?: string | null
         }
         Relationships: []
       }
@@ -157,50 +175,535 @@ export type Database = {
         }
         Relationships: []
       }
-      property_residents: {
+      property_access_audit: {
         Row: {
+          action_details: Json | null
+          action_type: string
+          audit_id: string
+          ip_address: unknown | null
+          performed_at: string | null
+          performed_by: string | null
+          person_id: string | null
+          property_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          action_details?: Json | null
+          action_type: string
+          audit_id?: string
+          ip_address?: unknown | null
+          performed_at?: string | null
+          performed_by?: string | null
+          person_id?: string | null
+          property_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          action_details?: Json | null
+          action_type?: string
+          audit_id?: string
+          ip_address?: unknown | null
+          performed_at?: string | null
+          performed_by?: string | null
+          person_id?: string | null
+          property_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_access_audit_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["person_id"]
+          },
+          {
+            foreignKeyName: "property_access_audit_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["owner_person_id"]
+          },
+          {
+            foreignKeyName: "property_access_audit_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["person_id"]
+          },
+          {
+            foreignKeyName: "property_access_audit_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["owner_person_id"]
+          },
+          {
+            foreignKeyName: "property_access_audit_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_access_audit_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_access_audit_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_ownership_summary"
+            referencedColumns: ["property_id"]
+          },
+        ]
+      }
+      property_access_requests: {
+        Row: {
+          claimed_relationship: string
+          expires_at: string | null
+          ip_address: unknown | null
+          property_id: string
+          request_id: string
+          request_message: string | null
+          requested_at: string | null
+          requester_email: string
+          requester_name: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          supporting_documents: Json | null
+          user_agent: string | null
+        }
+        Insert: {
+          claimed_relationship: string
+          expires_at?: string | null
+          ip_address?: unknown | null
+          property_id: string
+          request_id?: string
+          request_message?: string | null
+          requested_at?: string | null
+          requester_email: string
+          requester_name?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          supporting_documents?: Json | null
+          user_agent?: string | null
+        }
+        Update: {
+          claimed_relationship?: string
+          expires_at?: string | null
+          ip_address?: unknown | null
+          property_id?: string
+          request_id?: string
+          request_message?: string | null
+          requested_at?: string | null
+          requester_email?: string
+          requester_name?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          supporting_documents?: Json | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_access_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_access_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_access_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_ownership_summary"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_access_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["person_id"]
+          },
+          {
+            foreignKeyName: "property_access_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["owner_person_id"]
+          },
+        ]
+      }
+      property_invitations: {
+        Row: {
+          accepted_at: string | null
+          access_level: string | null
+          can_invite_others: boolean | null
+          expires_at: string | null
+          invitation_id: string
+          invitation_token: string | null
+          invited_by: string
+          invited_email: string
+          invited_name: string | null
+          message: string | null
+          permissions: Json | null
+          property_id: string
+          rejected_at: string | null
+          relationship_type: string
+          sent_at: string | null
+          status: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          access_level?: string | null
+          can_invite_others?: boolean | null
+          expires_at?: string | null
+          invitation_id?: string
+          invitation_token?: string | null
+          invited_by: string
+          invited_email: string
+          invited_name?: string | null
+          message?: string | null
+          permissions?: Json | null
+          property_id: string
+          rejected_at?: string | null
+          relationship_type: string
+          sent_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          access_level?: string | null
+          can_invite_others?: boolean | null
+          expires_at?: string | null
+          invitation_id?: string
+          invitation_token?: string | null
+          invited_by?: string
+          invited_email?: string
+          invited_name?: string | null
+          message?: string | null
+          permissions?: Json | null
+          property_id?: string
+          rejected_at?: string | null
+          relationship_type?: string
+          sent_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["person_id"]
+          },
+          {
+            foreignKeyName: "property_invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["owner_person_id"]
+          },
+          {
+            foreignKeyName: "property_invitations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_invitations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_invitations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_ownership_summary"
+            referencedColumns: ["property_id"]
+          },
+        ]
+      }
+      property_management: {
+        Row: {
+          authorized_by: string | null
           created_at: string | null
           end_date: string | null
+          management_id: string
+          management_type: string
+          manager_id: string
+          permissions: Json | null
+          property_id: string
+          start_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          authorized_by?: string | null
+          created_at?: string | null
+          end_date?: string | null
+          management_id?: string
+          management_type?: string
+          manager_id: string
+          permissions?: Json | null
+          property_id: string
+          start_date?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          authorized_by?: string | null
+          created_at?: string | null
+          end_date?: string | null
+          management_id?: string
+          management_type?: string
+          manager_id?: string
+          permissions?: Json | null
+          property_id?: string
+          start_date?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_management_authorized_by_fkey"
+            columns: ["authorized_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["person_id"]
+          },
+          {
+            foreignKeyName: "property_management_authorized_by_fkey"
+            columns: ["authorized_by"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["owner_person_id"]
+          },
+          {
+            foreignKeyName: "property_management_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["person_id"]
+          },
+          {
+            foreignKeyName: "property_management_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["owner_person_id"]
+          },
+          {
+            foreignKeyName: "property_management_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_management_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_management_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_ownership_summary"
+            referencedColumns: ["property_id"]
+          },
+        ]
+      }
+      property_ownership: {
+        Row: {
+          created_at: string | null
+          owner_id: string
+          ownership_end_date: string | null
+          ownership_id: string
+          ownership_percentage: number | null
+          ownership_start_date: string | null
+          ownership_type: string
+          property_id: string
+          updated_at: string | null
+          verification_documents: Json | null
+          verified_at: string | null
+          verified_by: string | null
+          verified_by_hoa: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          owner_id: string
+          ownership_end_date?: string | null
+          ownership_id?: string
+          ownership_percentage?: number | null
+          ownership_start_date?: string | null
+          ownership_type?: string
+          property_id: string
+          updated_at?: string | null
+          verification_documents?: Json | null
+          verified_at?: string | null
+          verified_by?: string | null
+          verified_by_hoa?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          owner_id?: string
+          ownership_end_date?: string | null
+          ownership_id?: string
+          ownership_percentage?: number | null
+          ownership_start_date?: string | null
+          ownership_type?: string
+          property_id?: string
+          updated_at?: string | null
+          verification_documents?: Json | null
+          verified_at?: string | null
+          verified_by?: string | null
+          verified_by_hoa?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_ownership_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["person_id"]
+          },
+          {
+            foreignKeyName: "property_ownership_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["owner_person_id"]
+          },
+          {
+            foreignKeyName: "property_ownership_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_ownership_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_ownership_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_ownership_summary"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_ownership_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["person_id"]
+          },
+          {
+            foreignKeyName: "property_ownership_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["owner_person_id"]
+          },
+        ]
+      }
+      property_residents: {
+        Row: {
+          access_level: string | null
+          can_invite_others: boolean | null
+          created_at: string | null
+          end_date: string | null
+          invited_by: string | null
           is_hoa_responsible: boolean | null
           is_primary_contact: boolean | null
           move_in_reason: string | null
           move_out_reason: string | null
           notes: string | null
+          permissions: Json | null
           person_id: string
           property_id: string
           relationship_type: string
           resident_id: string
           start_date: string
+          verification_status: string | null
         }
         Insert: {
+          access_level?: string | null
+          can_invite_others?: boolean | null
           created_at?: string | null
           end_date?: string | null
+          invited_by?: string | null
           is_hoa_responsible?: boolean | null
           is_primary_contact?: boolean | null
           move_in_reason?: string | null
           move_out_reason?: string | null
           notes?: string | null
+          permissions?: Json | null
           person_id: string
           property_id: string
           relationship_type: string
           resident_id?: string
           start_date: string
+          verification_status?: string | null
         }
         Update: {
+          access_level?: string | null
+          can_invite_others?: boolean | null
           created_at?: string | null
           end_date?: string | null
+          invited_by?: string | null
           is_hoa_responsible?: boolean | null
           is_primary_contact?: boolean | null
           move_in_reason?: string | null
           move_out_reason?: string | null
           notes?: string | null
+          permissions?: Json | null
           person_id?: string
           property_id?: string
           relationship_type?: string
           resident_id?: string
           start_date?: string
+          verification_status?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "property_residents_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["person_id"]
+          },
+          {
+            foreignKeyName: "property_residents_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["owner_person_id"]
+          },
           {
             foreignKeyName: "property_residents_person_id_fkey"
             columns: ["person_id"]
@@ -227,6 +730,13 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "property_directory"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_residents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_ownership_summary"
             referencedColumns: ["property_id"]
           },
         ]
@@ -305,10 +815,24 @@ export type Database = {
             referencedColumns: ["property_id"]
           },
           {
+            foreignKeyName: "property_surveys_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_ownership_summary"
+            referencedColumns: ["property_id"]
+          },
+          {
             foreignKeyName: "property_surveys_resident_id_fkey"
             columns: ["resident_id"]
             isOneToOne: false
             referencedRelation: "property_residents"
+            referencedColumns: ["resident_id"]
+          },
+          {
+            foreignKeyName: "property_surveys_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "verified_property_residents"
             referencedColumns: ["resident_id"]
           },
           {
@@ -1144,6 +1668,65 @@ export type Database = {
           },
         ]
       }
+      pending_property_requests: {
+        Row: {
+          address: string | null
+          claimed_relationship: string | null
+          expires_at: string | null
+          hoa_zone: string | null
+          ip_address: unknown | null
+          is_expired: boolean | null
+          property_id: string | null
+          request_id: string | null
+          request_message: string | null
+          requested_at: string | null
+          requester_email: string | null
+          requester_name: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          supporting_documents: Json | null
+          user_agent: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_access_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_access_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_access_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_ownership_summary"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_access_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["person_id"]
+          },
+          {
+            foreignKeyName: "property_access_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["owner_person_id"]
+          },
+        ]
+      }
       property_directory: {
         Row: {
           address: string | null
@@ -1165,6 +1748,16 @@ export type Database = {
           total_surveys: number | null
           updated_at: string | null
           year_built: number | null
+        }
+        Relationships: []
+      }
+      property_ownership_summary: {
+        Row: {
+          address: string | null
+          hoa_zone: string | null
+          owner_count: number | null
+          owners: Json[] | null
+          property_id: string | null
         }
         Relationships: []
       }
@@ -1228,6 +1821,86 @@ export type Database = {
           percentage: number | null
         }
         Relationships: []
+      }
+      verified_property_residents: {
+        Row: {
+          access_level: string | null
+          account_status: string | null
+          account_type: string | null
+          address: string | null
+          can_invite_others: boolean | null
+          created_at: string | null
+          email: string | null
+          end_date: string | null
+          first_name: string | null
+          hoa_zone: string | null
+          invited_by: string | null
+          is_hoa_responsible: boolean | null
+          is_primary_contact: boolean | null
+          last_name: string | null
+          move_in_reason: string | null
+          move_out_reason: string | null
+          notes: string | null
+          permissions: Json | null
+          person_id: string | null
+          phone: string | null
+          property_id: string | null
+          relationship_type: string | null
+          resident_id: string | null
+          start_date: string | null
+          verification_status: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_residents_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["person_id"]
+          },
+          {
+            foreignKeyName: "property_residents_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["owner_person_id"]
+          },
+          {
+            foreignKeyName: "property_residents_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["person_id"]
+          },
+          {
+            foreignKeyName: "property_residents_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["owner_person_id"]
+          },
+          {
+            foreignKeyName: "property_residents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_residents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_directory"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_residents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_ownership_summary"
+            referencedColumns: ["property_id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -1295,6 +1968,16 @@ export type Database = {
           completed_responses: number
           participation_rate: number
           completion_rate: number
+        }[]
+      }
+      get_user_accessible_properties: {
+        Args: { user_auth_id: string }
+        Returns: {
+          property_id: string
+          address: string
+          hoa_zone: string
+          access_type: string
+          permissions: Json
         }[]
       }
       increment_filter_preset_usage: {

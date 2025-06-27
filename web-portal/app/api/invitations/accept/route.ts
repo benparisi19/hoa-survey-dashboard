@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     }
 
     // If invitation has specific email, verify it matches
-    if (invitation.invitee_email && invitation.invitee_email !== email) {
+    if (invitation.invited_email && invitation.invited_email !== email) {
       return NextResponse.json(
         { error: 'This invitation is for a different email address' },
         { status: 403 }
@@ -69,8 +69,8 @@ export async function POST(request: Request) {
         email: email,
         email_confirm: true, // Auto-confirm since invited by property owner
         user_metadata: {
-          first_name: invitation.invitee_name?.split(' ')[0] || '',
-          last_name: invitation.invitee_name?.split(' ').slice(1).join(' ') || '',
+          first_name: invitation.invited_name?.split(' ')[0] || '',
+          last_name: invitation.invited_name?.split(' ').slice(1).join(' ') || '',
           account_type: 'resident',
           invited_by: invitation.inviter_id
         }
@@ -91,8 +91,8 @@ export async function POST(request: Request) {
         .from('people')
         .insert({
           auth_user_id: authUserId,
-          first_name: invitation.invitee_name?.split(' ')[0] || 'Guest',
-          last_name: invitation.invitee_name?.split(' ').slice(1).join(' ') || 'User',
+          first_name: invitation.invited_name?.split(' ')[0] || 'Guest',
+          last_name: invitation.invited_name?.split(' ').slice(1).join(' ') || 'User',
           email: email,
           account_status: 'verified',
           account_type: 'resident',
@@ -121,8 +121,8 @@ export async function POST(request: Request) {
           email: email,
           email_confirm: true,
           user_metadata: {
-            first_name: invitation.invitee_name?.split(' ')[0] || '',
-            last_name: invitation.invitee_name?.split(' ').slice(1).join(' ') || '',
+            first_name: invitation.invited_name?.split(' ')[0] || '',
+            last_name: invitation.invited_name?.split(' ').slice(1).join(' ') || '',
             account_type: 'resident',
             invited_by: invitation.inviter_id
           }

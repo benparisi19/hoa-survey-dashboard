@@ -1,12 +1,12 @@
--- Phase 4: Row Level Security Policies Update
+-- Phase 4: Row Level Security Policies Update (CORRECTED)
 -- This script updates RLS policies to properly use auth.uid() for authenticated users
+-- Only includes tables that actually exist in the database
 
 -- Enable RLS on all relevant tables (if not already enabled)
 ALTER TABLE people ENABLE ROW LEVEL SECURITY;
 ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
 ALTER TABLE property_residents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE property_ownership ENABLE ROW LEVEL SECURITY;
-ALTER TABLE property_management ENABLE ROW LEVEL SECURITY;
 ALTER TABLE property_access_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE property_invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE property_access_audit ENABLE ROW LEVEL SECURITY;
@@ -139,41 +139,6 @@ CREATE POLICY "HOA admins manage ownership" ON property_ownership
   );
 
 -- =============================================================================
--- PROPERTY_MANAGEMENT TABLE POLICIES
--- =============================================================================
-
--- Property managers can view their own management records
-CREATE POLICY "Managers view own management" ON property_management
-  FOR SELECT USING (
-    manager_id IN (
-      SELECT person_id FROM people 
-      WHERE auth_user_id = auth.uid()
-    )
-  );
-
--- Property owners can view managers for their properties
-CREATE POLICY "Owners view property managers" ON property_management
-  FOR SELECT USING (
-    property_id IN (
-      SELECT po.property_id 
-      FROM property_ownership po
-      JOIN people p ON p.person_id = po.owner_id
-      WHERE p.auth_user_id = auth.uid()
-      AND (po.ownership_end_date IS NULL OR po.ownership_end_date > CURRENT_DATE)
-    )
-  );
-
--- HOA admins can manage all property management
-CREATE POLICY "HOA admins manage property management" ON property_management
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM people 
-      WHERE auth_user_id = auth.uid() 
-      AND account_type = 'hoa_admin'
-    )
-  );
-
--- =============================================================================
 -- PROPERTY_INVITATIONS TABLE POLICIES
 -- =============================================================================
 
@@ -245,10 +210,12 @@ CREATE POLICY "HOA admins view all audit logs" ON property_access_audit
   );
 
 -- =============================================================================
--- SURVEY TABLES POLICIES
+-- SURVEY TABLES POLICIES (if they exist)
 -- =============================================================================
 
--- Enable RLS on survey tables
+-- Enable RLS on survey tables if they exist
+-- Uncomment these if survey_definitions and property_surveys tables exist
+/*
 ALTER TABLE survey_definitions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE property_surveys ENABLE ROW LEVEL SECURITY;
 
@@ -280,6 +247,7 @@ CREATE POLICY "HOA admins manage all surveys" ON property_surveys
       AND account_type = 'hoa_admin'
     )
   );
+*/
 
 -- =============================================================================
 -- HELPER FUNCTION FOR GETTING USER'S ACCESSIBLE PROPERTIES
@@ -308,7 +276,7 @@ BEGIN
       WHEN pr.relationship_type IN ('property_manager', 'hoa_manager') THEN 'manager'
       ELSE 'resident'
     END as access_type,
-    COALESCE(pr.permissions, ARRAY[]::TEXT[]) as permissions
+    COALESCE(pr.permissions::TEXT[], ARRAY[]::TEXT[]) as permissions
   FROM property_residents pr
   JOIN properties p ON p.property_id = pr.property_id
   JOIN people per ON per.person_id = pr.person_id
@@ -338,3 +306,5 @@ GRANT EXECUTE ON FUNCTION get_user_accessible_properties TO authenticated;
 -- 3. Property access is determined by active property_residents records
 -- 4. Service key operations bypass all RLS policies
 -- 5. Public operations (like access requests) don't require authentication
+-- 6. Survey table policies are commented out - uncomment if those tables exist
+-- 7. Fixed column references to match actual schema (ownership_end_date vs end_date)
