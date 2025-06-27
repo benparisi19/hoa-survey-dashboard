@@ -68,9 +68,9 @@ export default function SurveyEditPage({ params }: { params: { id: string } }) {
 
         // Fix legacy question format - move options to config.options if needed
         if (normalizedSurvey.response_schema?.sections) {
-          normalizedSurvey.response_schema.sections.forEach(section => {
+          normalizedSurvey.response_schema.sections.forEach((section: any) => {
             if (section.questions) {
-              section.questions.forEach(question => {
+              section.questions.forEach((question: any) => {
                 // Fix legacy options format
                 if (question.options && !question.config?.options) {
                   question.config = question.config || {};
