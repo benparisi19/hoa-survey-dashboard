@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase';
+import { revalidateSurveyCache } from '@/lib/cache-utils';
 
 export async function GET() {
   try {
@@ -78,12 +79,20 @@ export async function GET() {
         surveyId: insertData?.survey_definition_id
       };
       
+      // Revalidate after insert
+      if (insertData) {
+        revalidateSurveyCache(insertData.survey_definition_id);
+      }
+      
       // Clean up test survey
       if (insertData) {
         await supabase
           .from('survey_definitions')
           .delete()
           .eq('survey_definition_id', insertData.survey_definition_id);
+          
+        // Revalidate after delete
+        revalidateSurveyCache();
       }
     } catch (insertErr) {
       insertTest = {

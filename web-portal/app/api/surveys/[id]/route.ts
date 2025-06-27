@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
 import { createServiceClient } from '@/lib/supabase';
+import { revalidateSurveyCache } from '@/lib/cache-utils';
 
 export async function GET(
   request: Request,
@@ -58,9 +58,7 @@ export async function PUT(
     }
 
     // Revalidate cache for updated survey
-    revalidatePath('/surveys');
-    revalidatePath('/api/surveys');
-    revalidatePath(`/surveys/${params.id}`);
+    revalidateSurveyCache(params.id);
 
     return NextResponse.json(data);
     

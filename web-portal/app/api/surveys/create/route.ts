@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
 import { createServiceClient } from '@/lib/supabase';
 import { SurveyDefinition } from '@/types/survey-builder';
+import { revalidateSurveyCache } from '@/lib/cache-utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,8 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Revalidate the surveys page cache so new survey appears immediately
-    revalidatePath('/surveys');
-    revalidatePath('/api/surveys');
+    revalidateSurveyCache(data.survey_definition_id);
 
     return NextResponse.json(data);
     
