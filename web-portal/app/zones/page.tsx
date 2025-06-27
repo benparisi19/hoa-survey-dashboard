@@ -131,11 +131,20 @@ async function getPropertiesForMap() {
     serviceKeyLength: process.env.SUPABASE_SERVICE_KEY?.length || 0
   });
   
-  const supabase = createServiceClient();
+  // Create a completely untyped client to test
+  const { createClient } = require('@supabase/supabase-js');
+  const untypedSupabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!,
+    {
+      auth: {
+        persistSession: false,
+      },
+    }
+  );
 
   // Get properties with coordinates and residents for map display
-  // Bypass TypeScript types temporarily to test
-  const { data: properties, error } = await (supabase as any)
+  const { data: properties, error } = await untypedSupabase
     .from('properties')
     .select(`
       property_id,
