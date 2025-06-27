@@ -56,6 +56,16 @@ export type Q10Concern = Tables['q10_biggest_concern']['Row'];
 export type Q11CostReduction = Tables['q11_cost_reduction']['Row'];
 export type Q12Involvement = Tables['q12_involvement']['Row'];
 
+// Authentication and property-related types
+export type Person = Tables['people']['Row'];
+export type Property = Tables['properties']['Row'];
+export type PropertyResident = Tables['property_residents']['Row'];
+export type PropertyOwnership = Tables['property_ownership']['Row'];
+export type PropertyAccessRequest = Tables['property_access_requests']['Row'];
+export type PropertyInvitation = Tables['property_invitations']['Row'];
+export type PropertyManagement = Tables['property_management']['Row'];
+export type PropertyAccessAudit = Tables['property_access_audit']['Row'];
+
 // Combined response type for joins
 export interface CompleteResponse extends Response {
   q1_q2?: Q1Q2Rating;
