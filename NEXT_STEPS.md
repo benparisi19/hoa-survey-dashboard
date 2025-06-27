@@ -40,11 +40,13 @@ A comprehensive community management platform that:
 
 ### Phase 3: Multi-Survey Community Engagement Platform
 
-**Current Status**: Phase 3A (Survey Builder) ✅ COMPLETED | Phase 3B (Response System) 🚧 IN PROGRESS
+**Current Status**: Phase 3A (Survey Builder) ✅ COMPLETED | Phase 4 (Resident Portal) 🚧 IN PROGRESS
 
 **Completed**: Built comprehensive survey builder with flexible JSONB schema, supporting any survey type with drag-and-drop interface, 10+ question types, and full CRUD operations.
 
-**Current Focus**: Implement survey response collection system for residents to fill out surveys, with progress tracking, draft saving, and submission workflows.
+**Strategic Shift**: Moving to Phase 4 (Resident Portal) to establish authentication foundation before survey responses. This provides more value and enables future features.
+
+**Current Focus**: Implement resident authentication system with property-based access control, invitation workflows, and multi-property owner support.
 
 #### ✅ 3.1 Survey Builder & Management Platform - COMPLETED
 
@@ -185,9 +187,33 @@ CREATE TABLE property_issues (
 
 ---
 
+## 🎯 CURRENT PHASE CONTINUED
+
+### Phase 4: Resident Portal Foundation
+
+**Goal**: Establish authentication system and property-based access control as foundation for resident self-service features.
+
+**Timeline**: 3-4 weeks
+
+**Key Features**:
+- **Property-Based Authentication**: Supabase Auth integration with property access control
+- **Invitation System**: Property owners can invite residents, anyone can request access
+- **Multi-Property Support**: Handle owners with multiple properties, property managers
+- **HOA Administrative Control**: Verify ownership, resolve disputes, manage permissions
+- **Privacy by Need**: Appropriate data access levels for each user type
+
+**Database Requirements** (See PHASE_4_RESIDENT_PORTAL_SCHEMA.sql):
+```sql
+-- Extend people table for authentication
+-- Property ownership verification system
+-- Access requests and invitation workflows
+-- Multi-property support with permission management
+-- Audit trail for all access changes
+```
+
 ## 🚀 FUTURE PHASES
 
-### Phase 4: Resident Self-Service Portal
+### Phase 4B: Enhanced Resident Features
 
 **Goal**: Enable residents to access their own property information and interact with the HOA system directly.
 
@@ -233,9 +259,9 @@ CREATE TABLE community_documents (
 
 ### **🎯 CURRENT PRIORITIES (Next 1-2 months)**
 1. **✅ Survey Builder System** - COMPLETED: Multi-survey platform with flexible schema
-2. **🚧 Survey Response Collection** - IN PROGRESS: Resident-facing response interface
-3. **🔄 Legacy Data Migration** - PARALLEL: Migrate 113 existing responses to new schema
-4. **📊 Response Analytics** - FUTURE: Dynamic analytics based on flexible responses
+2. **🚧 Resident Portal Foundation** - IN PROGRESS: Authentication and property-based access control
+3. **🔄 Multi-Property Owner Support** - Authentication system supporting complex ownership scenarios
+4. **⏳ Survey Response Collection** - FUTURE: Will build on resident authentication foundation
 
 ### **🚀 FUTURE DEVELOPMENT (3-6 months)**
 1. **Resident Self-Service Portal** - Property-specific access for residents
