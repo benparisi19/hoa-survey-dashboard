@@ -27,15 +27,65 @@ export default function SurveyEditPage({ params }: { params: { id: string } }) {
           .eq('survey_definition_id', params.id)
           .single();
 
-        if (error || !data) {
-          notFound();
+        if (error) {
+          console.error('Database error loading survey:', error);
+          setError(`Database error: ${error.message}`);
+          setLoading(false);
           return;
         }
 
-        setSurvey(data as SurveyDefinition);
+        if (!data) {
+          console.error('No survey found with ID:', params.id);
+          setError('Survey not found');
+          setLoading(false);
+          return;
+        }
+
+        console.log('Successfully loaded survey:', data.survey_name);
+        
+        // Normalize the survey data to match our types
+        const normalizedSurvey = {
+          ...data,
+          // Ensure all required fields exist with defaults
+          display_config: data.display_config || {
+            theme: 'default',
+            layout: 'sections',
+            showProgress: true,
+            allowSave: true,
+            allowBack: true,
+            showQuestionNumbers: true,
+            submitButtonText: 'Submit Survey',
+            thankYouMessage: 'Thank you for your response!'
+          },
+          targeting_config: data.targeting_config || {
+            type: 'all_properties'
+          },
+          is_template: data.is_template ?? false,
+          is_active: data.is_active ?? false,
+          auto_recurring: data.auto_recurring ?? false,
+          version: data.version ?? 1
+        };
+
+        // Fix legacy question format - move options to config.options if needed
+        if (normalizedSurvey.response_schema?.sections) {
+          normalizedSurvey.response_schema.sections.forEach(section => {
+            if (section.questions) {
+              section.questions.forEach(question => {
+                // Fix legacy options format
+                if (question.options && !question.config?.options) {
+                  question.config = question.config || {};
+                  question.config.options = question.options;
+                  delete question.options;
+                }
+              });
+            }
+          });
+        }
+
+        setSurvey(normalizedSurvey as SurveyDefinition);
       } catch (err) {
-        console.error('Error loading survey:', err);
-        setError('Failed to load survey');
+        console.error('Unexpected error loading survey:', err);
+        setError(`Failed to load survey: ${err instanceof Error ? err.message : 'Unknown error'}`);
       } finally {
         setLoading(false);
       }
