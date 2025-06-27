@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Mail, UserPlus, Send, CheckCircle, AlertCircle } from 'lucide-react';
-import { useAuth, hasPropertyPermission } from '@/lib/auth-context-v2';
+import { useAuth, useProfile, hasPropertyPermission } from '@/lib/auth-context-v2';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Link from 'next/link';
 
@@ -14,7 +14,8 @@ interface Property {
 }
 
 export default function InviteResidentPage({ params }: { params: { id: string } }) {
-  const { userProfile, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { userProfile } = useProfile();
   const router = useRouter();
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);

@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useAuth } from '@/lib/auth-context-v2';
+import { useAuth, useProfile } from '@/lib/auth-context-v2';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { 
@@ -20,7 +20,8 @@ import {
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function DashboardPage() {
-  const { user, userProfile, loading, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
+  const { userProfile } = useProfile();
   const router = useRouter();
 
   useEffect(() => {

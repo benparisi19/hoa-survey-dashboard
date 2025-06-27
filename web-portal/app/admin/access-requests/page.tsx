@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/auth-context-v2';
+import { useAuth, useProfile } from '@/lib/auth-context-v2';
 import { useRouter } from 'next/navigation';
 import { 
   Shield, 
@@ -36,7 +36,8 @@ interface AccessRequest {
 }
 
 export default function AccessRequestsAdminPage() {
-  const { userProfile, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { userProfile, isAdmin } = useProfile();
   const router = useRouter();
   const [requests, setRequests] = useState<AccessRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +46,7 @@ export default function AccessRequestsAdminPage() {
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
 
   useEffect(() => {
-    if (!authLoading && (!userProfile || userProfile.account_type !== 'hoa_admin')) {
+    if (!authLoading && (!userProfile || !isAdmin())) {
       router.push('/dashboard');
       return;
     }
@@ -53,7 +54,7 @@ export default function AccessRequestsAdminPage() {
     if (userProfile) {
       fetchRequests();
     }
-  }, [userProfile, authLoading, filter]);
+  }, [userProfile, authLoading, filter, isAdmin]);
 
   const fetchRequests = async () => {
     try {
@@ -111,7 +112,7 @@ export default function AccessRequestsAdminPage() {
     );
   }
 
-  if (!userProfile || userProfile.account_type !== 'hoa_admin') {
+  if (!userProfile || !isAdmin()) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
