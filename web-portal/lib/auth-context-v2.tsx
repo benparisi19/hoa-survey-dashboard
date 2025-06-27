@@ -244,7 +244,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const isAdmin = () => {
-    return userProfile?.account_type === 'hoa_admin';
+    const result = userProfile?.account_type === 'hoa_admin';
+    console.log('🔍 isAdmin check:', {
+      userProfile: userProfile,
+      account_type: userProfile?.account_type,
+      result: result
+    });
+    return result;
   };
 
   const value = {
