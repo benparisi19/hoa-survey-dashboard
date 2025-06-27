@@ -65,7 +65,7 @@ export default function PropertyMap({
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
+      style: 'mapbox://styles/mapbox/streets-v12',
       center: defaultCenter,
       zoom: 15
     });
