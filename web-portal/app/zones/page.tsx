@@ -125,47 +125,20 @@ async function getZonesData(): Promise<ZoneData[]> {
 }
 
 async function getPropertiesForMap() {
-  console.log('Environment check:', {
-    hasServiceKey: !!process.env.SUPABASE_SERVICE_KEY,
-    hasPublicUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-    serviceKeyLength: process.env.SUPABASE_SERVICE_KEY?.length || 0
-  });
-  
-  // Create a completely untyped client to test
-  const { createClient } = require('@supabase/supabase-js');
-  const untypedSupabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_KEY!,
-    {
-      auth: {
-        persistSession: false,
-      },
-    }
-  );
-
+  const supabase = createServiceClient();
 
   // Get properties with coordinates - use * to ensure coordinates are included
-  const { data: properties, error } = await untypedSupabase
+  const { data: properties, error } = await supabase
     .from('properties')
     .select('*, property_residents(resident_id, end_date, relationship_type)')
     .order('address');
 
-  // Debug logging
-  console.log('getPropertiesForMap debug:', {
-    error: error,
-    propertiesCount: properties?.length || 0,
-    firstProperty: properties?.[0],
-    sampleCoordinates: properties?.slice(0, 3).map((p: any) => ({
-      address: p.address,
-      lat: p.latitude,
-      lng: p.longitude,
-      latType: typeof p.latitude,
-      lngType: typeof p.longitude
-    }))
-  });
+  if (error) {
+    console.error('Error fetching properties for map:', error);
+  }
 
-  // Transform data for map component - explicitly pick needed fields
-  return (properties || []).map((property: any) => {
+  // Transform data for map component
+  return (properties || []).map(property => {
     const currentResidents = property.property_residents?.filter((r: any) => !r.end_date) || [];
     const ownerResidents = currentResidents.filter((r: any) => r.relationship_type === 'owner');
     

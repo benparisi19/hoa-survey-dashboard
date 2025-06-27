@@ -40,8 +40,37 @@ interface ZonesPageClientProps {
 type ViewMode = 'cards' | 'map';
 
 export default function ZonesPageClient({ zones, properties }: ZonesPageClientProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>('cards');
-  const [selectedZone, setSelectedZone] = useState<string>('');
+  // Persist view mode across re-renders/tab focus changes
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('zones-view-mode');
+      return (saved as ViewMode) || 'cards';
+    }
+    return 'cards';
+  });
+  
+  const [selectedZone, setSelectedZone] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('zones-selected-zone') || '';
+    }
+    return '';
+  });
+
+  // Persist view mode changes
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('zones-view-mode', mode);
+    }
+  };
+
+  // Persist zone selection changes
+  const handleZoneChange = (zone: string) => {
+    setSelectedZone(zone);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('zones-selected-zone', zone);
+    }
+  };
 
   const handlePropertyClick = (propertyId: string) => {
     // Navigate to property detail page
@@ -145,7 +174,7 @@ export default function ZonesPageClient({ zones, properties }: ZonesPageClientPr
         <div className="flex items-center space-x-4">
           <div className="flex items-center bg-gray-100 rounded-lg p-1">
             <button
-              onClick={() => setViewMode('cards')}
+              onClick={() => handleViewModeChange('cards')}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 viewMode === 'cards'
                   ? 'bg-white text-gray-900 shadow-sm'
@@ -156,7 +185,7 @@ export default function ZonesPageClient({ zones, properties }: ZonesPageClientPr
               <span>Cards</span>
             </button>
             <button
-              onClick={() => setViewMode('map')}
+              onClick={() => handleViewModeChange('map')}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 viewMode === 'map'
                   ? 'bg-white text-gray-900 shadow-sm'
@@ -174,7 +203,7 @@ export default function ZonesPageClient({ zones, properties }: ZonesPageClientPr
               <label className="text-sm font-medium text-gray-700">Filter by zone:</label>
               <select
                 value={selectedZone}
-                onChange={(e) => setSelectedZone(e.target.value)}
+                onChange={(e) => handleZoneChange(e.target.value)}
                 className="text-sm border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
               >
                 <option value="">All zones</option>

@@ -54,11 +54,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getInitialUser();
 
-    // Listen for auth changes
+    // Listen for auth changes - but prevent redundant updates
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
+        // Only respond to meaningful auth events
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+          const newUser = session?.user ?? null;
+          
+          // Only update if user actually changed to prevent unnecessary re-renders
+          setUser(currentUser => {
+            if (currentUser?.id === newUser?.id) {
+              return currentUser; // No change, keep current user object
+            }
+            return newUser;
+          });
+        }
+        
+        // Only set loading to false if we're currently loading
+        setLoading(currentLoading => currentLoading ? false : currentLoading);
       }
     );
 
@@ -119,6 +132,11 @@ export function useProfile() {
       return;
     }
 
+    // Don't refetch if we already have the profile for this user
+    if (profile && profile.id === user.id) {
+      return;
+    }
+
     const fetchProfile = async () => {
       setLoading(true);
       try {
@@ -147,7 +165,7 @@ export function useProfile() {
     };
 
     fetchProfile();
-  }, [user, supabase]);
+  }, [user, supabase, profile]);
 
   const isAdmin = () => profile?.role === 'admin';
 
