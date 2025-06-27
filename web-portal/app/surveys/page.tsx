@@ -52,6 +52,13 @@ async function SurveysContent() {
 
   return (
     <div className="space-y-6">
+      {/* Debug Info */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm">
+        <strong>Debug Info:</strong> Total surveys: {surveys.length} | Active: {activeSurveys.length} | Templates: {templates.length} | Drafts: {draftSurveys.length}
+        <br />
+        <strong>Survey Details:</strong> {surveys.map(s => `${s.survey_name} (template: ${s.is_template}, active: ${s.is_active})`).join(' | ')}
+      </div>
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
