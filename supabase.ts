@@ -94,7 +94,11 @@ export type Database = {
           architectural_style: string | null
           created_at: string | null
           external_property_id: string | null
+          geocoded_at: string | null
+          geocoding_accuracy: string | null
           hoa_zone: string
+          latitude: number | null
+          longitude: number | null
           lot_number: string | null
           lot_size_sqft: number | null
           notes: string | null
@@ -112,7 +116,11 @@ export type Database = {
           architectural_style?: string | null
           created_at?: string | null
           external_property_id?: string | null
+          geocoded_at?: string | null
+          geocoding_accuracy?: string | null
           hoa_zone: string
+          latitude?: number | null
+          longitude?: number | null
           lot_number?: string | null
           lot_size_sqft?: number | null
           notes?: string | null
@@ -130,7 +138,11 @@ export type Database = {
           architectural_style?: string | null
           created_at?: string | null
           external_property_id?: string | null
+          geocoded_at?: string | null
+          geocoding_accuracy?: string | null
           hoa_zone?: string
+          latitude?: number | null
+          longitude?: number | null
           lot_number?: string | null
           lot_size_sqft?: number | null
           notes?: string | null
