@@ -10,7 +10,6 @@ npm run dev          # Start development server on localhost:3000
 npm run build        # Build for production (always run before commits)
 npm run type-check   # TypeScript validation without building
 npm run lint         # ESLint validation
-npm run bulk-update-pdfs  # Bulk link PDFs in storage to database records
 ```
 
 ### Environment Setup
@@ -21,132 +20,124 @@ cp .env.example .env # Copy environment template
 # NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN (for map integration)
 ```
 
-### Database Management
+### Database Setup
 ```bash
-# Test Supabase connection (from parent directory)
-cd ../scripts && python test_connection.py
-
-# Run schema setup (if needed)
-# Execute ../database/supabase_schema.sql in Supabase dashboard
+# Execute RLS policies in Supabase SQL Editor:
+# ../PHASE_4_RLS_POLICIES.sql (authentication and security policies)
 
 # Utility scripts for data management
-node scripts/check-response-ids.js       # Check response ID formats
-node scripts/check-specific-response.js  # Debug specific response data
-node scripts/verify_notes_import.js      # Verify notes extraction results
 node scripts/geocode-properties.js       # Geocode property addresses for map display
 node scripts/geocode-properties.js stats # Show geocoding statistics
 ```
 
-### Database Interaction Pattern
-When structural changes or data updates are needed:
-
-1. **For schema changes**: Provide SQL commands for user to execute in Supabase dashboard
-   ```sql
-   -- Example: Adding new columns
-   ALTER TABLE responses ADD COLUMN new_field TEXT;
-   ```
-
-2. **For data manipulation**: Use environment variables to connect and update data programmatically
-   - Read `.env` file to get Supabase credentials
-   - Connect using service key for write operations
-   - Execute data updates/corrections as needed
-   - Always explain what changes will be made before executing
-
 ## Architecture Overview
+
+### Platform Status
+This is a **comprehensive HOA Community Management Platform** with:
+- 232 properties with complete resident management
+- Supabase authentication with property-based access control
+- Interactive mapping with zone visualization
+- Multi-survey platform with flexible JSONB schema
+- 6-tab navigation: Neighborhood → Zones → Properties → People → Responses → Dashboard
 
 ### Core Technology Stack
 - **Next.js 14** with App Router and TypeScript
-- **Supabase** for PostgreSQL database with normalized survey schema
-- **Tailwind CSS** for styling with custom design system
+- **Supabase** for PostgreSQL database, authentication, and storage
+- **Supabase Auth** with magic link authentication and Row Level Security
+- **Mapbox GL JS** for interactive property mapping
+- **Tailwind CSS** for styling with responsive design system
 - **Recharts** for data visualizations
-- **Lucide React** for icons
 
 ### Database Architecture
-The survey data is stored in **11 normalized tables** representing different question sections:
-- `responses` - Main response metadata with review workflow columns
-- `q1_q2_preference_rating` - Landscaping preferences and service ratings
-- `q3_opt_out_reasons` - Reasons for opting out of HOA service
-- `q4_landscaping_issues` - Specific problems experienced
-- `q5_q6_construction_group` - Construction issues and group action interest
-- `q7_interest_areas` - Learning interests for landscaping topics
-- `q8_equipment_ownership` - Landscaping equipment ownership
-- `q9_dues_preference` - Dues reduction preferences
-- `q10_biggest_concern` - Open-ended concerns about HOA finances
-- `q11_cost_reduction` - Ideas for reducing costs
-- `q12_involvement` - Interest in helping find solutions
+**Schema Reference**: See `/supabase.ts` for complete TypeScript types and table definitions.
 
-Key views: `complete_responses` joins all tables for comprehensive data access.
+**Core Tables**:
+- `people` - Residents with Supabase Auth integration (`auth_user_id`)
+- `properties` - 232 properties with geocoding (lat/lng) and zone data
+- `property_residents` - Property-person relationships with permissions
+- `property_ownership` - Ownership verification and management
+- `property_invitations` - Invitation system for property access
+- `property_access_requests` - Public access request workflow
+- `property_access_audit` - Complete audit trail for security
+- `survey_definitions` - Flexible survey schemas (JSONB)
+- `property_surveys` - Survey responses linked to properties (JSONB)
 
-### Review Workflow System
-Implements a quality control system for survey transcription validation:
-- **Unreviewed** responses automatically enter edit mode for data entry/correction
-- **Reviewed** responses are locked but can be re-edited if needed
-- **Flagged** responses require attention for data quality issues
-- Review status tracked in `responses` table with `review_status`, `reviewed_by`, `reviewed_at`
+**Key Views**:
+- `property_directory` - Properties with owner information
+- `verified_property_residents` - Active residents with property details
+- `property_ownership_summary` - Ownership aggregation by property
 
-### Component Architecture
+### Authentication System (Phase 4 Complete)
+**Magic Link Flow**:
+1. User enters email at `/auth/login`
+2. Supabase sends magic link email
+3. User clicks link → redirected to `/auth/callback`
+4. Session established → redirected to `/dashboard`
 
-#### Core Layout
-- `app/layout.tsx` - Main application shell with navigation
-- `app/page.tsx` - Dashboard with metrics and charts
-- `app/responses/page.tsx` - Response browser with filtering
-- `app/responses/[id]/page.tsx` - Individual response detail view
+**Access Control**:
+- **Property-based permissions**: Users see only their accessible properties
+- **Row Level Security**: Database policies using `auth.uid()`
+- **Multi-property support**: Owners can manage multiple properties
+- **Invitation system**: Property owners invite residents via `/properties/[id]/invite`
+- **Access requests**: Public form at `/request-access` for claiming property access
 
-#### Data Presentation
-- `SurveyFormView` - Displays responses in original paper survey format with editing capabilities and PDF viewer integration
-- `ResponsesTable` - Filterable table with export functionality and review status management
-- `MetricCard` - Reusable metric display with color coding by type (success/warning/error/info)
-- Charts: `ServiceRatingChart`, `IssuesOverview`, `ContactOverview`
+**User Types**:
+- `resident` - Basic property access and survey participation
+- `owner` - Property management and resident invitation rights
+- `property_manager` - Multi-property management for professionals
+- `hoa_admin` - System-wide access and ownership verification
 
-#### PDF Management System
-- `PDFViewer` - Integrated PDF display with drag-and-drop upload functionality when editing
-- `PDFUpload` - Standalone upload component (deprecated in favor of integrated PDFViewer upload)
-- Supabase storage integration with public bucket "survey-pdfs"
-- Database tracking via `pdf_file_path`, `pdf_storage_url`, `pdf_uploaded_at` columns
-- Side-by-side layout: survey form and PDF viewer with full-width header
+### Application Structure
 
-#### Review System
-- `ReviewControls` - Simplified workflow with Mark Reviewed and Flag buttons
-- Auto-editing for unreviewed responses, manual editing for reviewed responses
-- Status tracking with database persistence
+#### Navigation Hierarchy (6 Tabs)
+1. **Neighborhood** (`/neighborhood`) - Executive dashboard and community metrics
+2. **Zones** (`/zones`) - Zone management with interactive Mapbox mapping
+3. **Properties** (`/properties`) - Property directory with filtering and detail views
+4. **People** (`/people`) - Resident management and relationship tracking
+5. **Responses** (`/responses`) - Survey analysis (legacy landscaping + flexible surveys)
+6. **Dashboard** (`/`) - Main dashboard with overview metrics
 
-#### Notes Management System  
-- `NotesSection` - Advanced marginal notes extraction and management
-- Database tables: `survey_notes` with priority levels, follow-up tracking, admin notes
-- Automated extraction from handwritten survey margins using structured analysis
-- Priority classification: low/medium/high/critical with color-coded display
+#### Authentication Routes
+- `/auth/login` - Magic link authentication
+- `/auth/callback` - Supabase auth callback handler
+- `/dashboard` - User property dashboard (post-login)
+- `/request-access` - Public property access request form
+- `/invitations/accept` - Invitation acceptance flow
+- `/admin/access-requests` - HOA admin request management
 
-### Data Processing Utilities
+#### Core Components
 
-#### Contact Information Parser (`lib/utils.ts`)
-Sophisticated parsing system for mixed contact data:
+**Layout & Navigation**:
+- `AuthProvider` - Supabase auth context with session management
+- `Navigation` - 6-tab responsive navigation with auth state
+- `ProtectedFooter` - Authenticated user footer
+
+**Property Management**:
+- `PropertyMap` - Interactive Mapbox map with zone-colored markers
+- `PropertyDirectory` - Filterable table of all 232 properties
+- `PropertyDetail` - Individual property page with residents and survey history
+- `ResidentManagement` - Add/edit residents and property relationships
+
+**Authentication Components**:
+- `AuthProvider` - Session management and user profile loading
+- `PropertyAccessForm` - Public access request form
+- `InvitationFlow` - Property owner invitation system
+- `AccessRequestManagement` - HOA admin approval workflow
+
+**Survey System**:
+- `SurveyBuilder` - Google Forms-style survey creation (Phase 3A complete)
+- `FlexibleSurveyView` - Dynamic survey rendering based on JSONB schema
+- `SurveyAnalytics` - Charts and analytics for any survey type
+- Legacy: `SurveyFormView` - Original landscaping survey display
+
+### Data Flow Patterns
+
+#### Server Components with Auth
 ```typescript
-parseContactInfo(contact: string): ContactInfo
-// Extracts emails, phones, preferences from freeform text
-// Returns structured data with type classification
-```
-
-#### Service Rating Normalizer
-Conservative approach for handling multiple/ambiguous ratings:
-```typescript
-normalizeServiceRating(rating: string): string
-// Uses worst rating when multiple selections found
-// Handles edge cases like "Not marked", contextual ratings
-```
-
-### Supabase Integration (`lib/supabase.ts`)
-- Type-safe client with database schema types
-- Error handling utilities
-- Combined response types for complex joins
-- No authentication (read-only dashboard for admins)
-
-### Key Design Patterns
-
-#### Server Components with Suspense
-Pages use async server components for data fetching with loading states:
-```typescript
+// Standard pattern for authenticated pages
 async function PageContent() {
-  const data = await fetchData();
+  const supabase = createServiceClient();
+  const { data } = await supabase.from('table').select('*');
   return <Component data={data} />;
 }
 
@@ -159,55 +150,112 @@ export default function Page() {
 }
 ```
 
-#### Progressive Enhancement
-- Base functionality works without JavaScript
-- Client components only for interactive features (editing, filtering)
-- Graceful degradation for chart components
+#### Client Components for Interactivity
+```typescript
+'use client';
+// Use for: forms, filtering, maps, real-time updates
+```
 
-#### Responsive Design System
-- Mobile-first approach with Tailwind breakpoints
-- Custom color system for survey data types
-- Consistent spacing and typography scales
+#### API Route Pattern
+```typescript
+// Standard Supabase integration with error handling
+export async function GET/POST/PUT/DELETE(request: Request) {
+  const supabase = createServiceClient(); // Server-side
+  // For auth operations: createAdminClient()
+  
+  try {
+    const { data, error } = await supabase.from('table').select();
+    if (error) throw error;
+    return NextResponse.json(data);
+  } catch (error) {
+    return NextResponse.json({ error: 'Message' }, { status: 500 });
+  }
+}
+```
+
+### Supabase Integration Patterns
+
+#### Client Types
+```typescript
+createServiceClient()    // Server-side operations (service key)
+createAdminClient()      // Auth admin operations (create users)
+createBrowserClient()    // Client-side operations (anon key)
+```
+
+#### RLS Policy Structure
+All tables use Row Level Security with `auth.uid()`:
+- Users see only their accessible properties
+- HOA admins have system-wide access
+- Service key operations bypass all RLS
+
+#### Data Relationships
+- Properties ← Property Residents → People (many-to-many)
+- People ← Auth Users (auth_user_id foreign key)
+- Properties → Survey Responses (property-centric)
+- Survey Definitions → Property Surveys (flexible schema)
+
+### Key Design Patterns
+
+#### Property-Centric Access Control
+All data access filtered by user's accessible properties:
+```typescript
+const { data } = await supabase
+  .rpc('get_user_accessible_properties', { user_auth_id: user.id })
+```
+
+#### Flexible Survey Schema
+Survey definitions use JSONB for infinite flexibility:
+```typescript
+response_schema: {
+  sections: [
+    { questions: [{ id, type, text, options, validation }] }
+  ]
+}
+```
+
+#### Progressive Enhancement
+- Base functionality without JavaScript
+- Enhanced interactivity with client components
+- Mobile-first responsive design
 
 ## Important Development Notes
 
+### Authentication Requirements
+- All protected routes require Supabase session
+- Use `createAdminClient()` for user creation operations
+- RLS policies must be executed: `../PHASE_4_RLS_POLICIES.sql`
+- Magic links logged to console in development
+
 ### Data Integrity
-- Always validate with `npm run build` before commits - TypeScript errors will fail deployment
-- Survey data represents **113 real responses** - treat with care
-- Review status changes persist immediately to database
-- Contact parsing handles real-world messy data - test edge cases
-
-### Supabase Specifics
-- Database uses Row Level Security (RLS) but currently allows anonymous access for admin dashboard
-- `complete_responses` view may not include latest schema changes - use manual joins when needed
-- Environment variables must be configured in both local `.env` and Vercel deployment
-- **Service key** required for direct database writes - read from `.env` file when needed
-- **Anonymous key** used for frontend read operations only
-- **Storage bucket** "survey-pdfs" configured for public access with 50MB file limit (free tier)
-- PDF files named with 3-digit response IDs (001.pdf, 002.pdf, etc.)
-
-### Review Workflow Rules
-- Unreviewed responses = auto-edit mode enabled
-- Reviewed responses = locked but can be unlocked with "Edit Response"  
-- Flagged responses = need attention (data quality, follow-up required)
-- Only one person should review responses to avoid conflicts
-- PDF viewer auto-shows when editing responses, hides when viewing read-only
-- Drag-and-drop PDF upload only available when in editing mode
+- 232 real properties with geocoded coordinates
+- 113 legacy survey responses preserved
+- Review status workflow maintained
+- Property-resident relationships with history tracking
 
 ### Performance Considerations
-- Dashboard metrics calculated server-side for speed
-- Large response table uses client-side filtering/sorting
-- Charts optimized for 113 response dataset size
-- Responsive design tested down to mobile screens
+- Server-side filtering for large datasets
+- Mapbox optimized for 232 property markers
+- JSONB indexes for survey response queries
+- Client-side filtering for responsive tables
 
-### Styling Standards
-- Use Tailwind utility classes, avoid custom CSS
-- Color system: green=good, red=poor, yellow=warning, blue=info
-- Icons from Lucide React only
-- Consistent spacing: `space-y-6` for sections, `space-y-4` for groups
+### Environment Variables
+```bash
+NEXT_PUBLIC_SUPABASE_URL=         # Supabase project URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=    # Public anon key (frontend)
+SUPABASE_SERVICE_KEY=             # Service key (backend operations)
+NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=  # Mapbox for property mapping
+NEXT_PUBLIC_APP_URL=              # Base URL for invitation links
+```
+
+### Database Interaction Patterns
+1. **Schema changes**: Provide SQL for user to execute in Supabase dashboard
+2. **Data updates**: Use service key with explanation of changes
+3. **User operations**: Use admin client for auth.users modifications
+4. **Always validate**: `npm run build` before commits
 
 ## Reference Documentation
 
-- **`DATABASE_SCHEMA.md`** - Complete current database schema with all 11 tables, constraints, and views
-- **`SURVEY_CONTENT.md`** - Original survey questions and content for data validation reference  
-- **`NEXT_STEPS.md`** - Planned enhancements including comprehensive notes/ticketing system for advanced quality control workflows
+- **`/supabase.ts`** - Canonical database schema with TypeScript types
+- **`README.md`** - Project overview and current platform status
+- **`NEXT_STEPS.md`** - Development roadmap and future features
+- **`PHASE_4_RLS_POLICIES.sql`** - Row Level Security policies for authentication

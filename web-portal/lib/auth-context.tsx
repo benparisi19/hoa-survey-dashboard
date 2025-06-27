@@ -10,6 +10,8 @@ type AuthContextType = {
   session: Session | null;
   loading: boolean;
   signIn: (email: string) => Promise<{ error?: string }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ error?: string }>;
+  signUp: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   userProfile: UserProfile | null;
   refreshProfile: () => Promise<void>;
@@ -167,6 +169,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithPassword = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error) {
+      return { 
+        error: error instanceof Error ? error.message : 'An unexpected error occurred' 
+      };
+    }
+  };
+
+  const signUp = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error) {
+      return { 
+        error: error instanceof Error ? error.message : 'An unexpected error occurred' 
+      };
+    }
+  };
+
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -181,6 +224,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     loading,
     signIn,
+    signInWithPassword,
+    signUp,
     signOut,
     userProfile,
     refreshProfile,
