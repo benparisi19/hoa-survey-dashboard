@@ -14,6 +14,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   isAdmin: () => boolean;
   refreshProfile: () => Promise<void>;
+  forceAuthRefresh: () => Promise<void>;
 };
 
 export type UserProfile = {
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Fetch user profile and accessible properties
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
-      // Get user's profile from people table
+      // Get user's profile from people table - FORCE NO CACHE
       const { data: profile, error: profileError } = await supabase
         .from('people')
         .select('*')
@@ -89,8 +90,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshProfile = async () => {
     if (user) {
+      console.log('🔄 Manually refreshing profile for user:', user.id);
       const profile = await fetchUserProfile(user.id);
       setUserProfile(profile);
+      console.log('✅ Profile refreshed:', profile?.account_type);
+    }
+  };
+
+  // Force a complete auth refresh to clear any cached state
+  const forceAuthRefresh = async () => {
+    console.log('🚀 FORCING COMPLETE AUTH REFRESH');
+    setLoading(true);
+    try {
+      // Force get fresh user data
+      const { data: { user: freshUser }, error } = await supabase.auth.getUser();
+      if (freshUser && !error) {
+        setUser(freshUser);
+        const profile = await fetchUserProfile(freshUser.id);
+        setUserProfile(profile);
+        console.log('✅ Complete auth refresh done:', profile?.account_type);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -127,9 +148,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (session?.user) {
           setUser(session.user);
+          // FORCE FRESH PROFILE FETCH - don't use cached data
           const profile = await fetchUserProfile(session.user.id);
           if (mounted) {
             setUserProfile(profile);
+            console.log('🔄 Fresh profile loaded:', profile?.account_type);
           }
         } else {
           setUser(null);
@@ -234,6 +257,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     isAdmin,
     refreshProfile,
+    forceAuthRefresh,
   };
 
   return (
