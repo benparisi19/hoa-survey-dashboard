@@ -10,6 +10,13 @@ export const dynamic = 'force-dynamic';
 async function getSurveys() {
   const supabase = createServiceClient();
   
+  console.log('🔍 Fetching surveys with service client...');
+  console.log('Environment check:', {
+    hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    hasServiceKey: !!process.env.SUPABASE_SERVICE_KEY,
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL
+  });
+  
   const { data: surveys, error } = await supabase
     .from('survey_definitions')
     .select(`
@@ -28,10 +35,11 @@ async function getSurveys() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching surveys:', error);
+    console.error('❌ Error fetching surveys:', error);
     return [];
   }
 
+  console.log(`✅ Successfully fetched ${surveys?.length || 0} surveys`);
   return surveys || [];
 }
 
