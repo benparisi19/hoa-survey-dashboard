@@ -8,39 +8,34 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 export const dynamic = 'force-dynamic';
 
 async function getSurveys() {
-  const supabase = createServiceClient();
-  
-  console.log('🔍 Fetching surveys with service client...');
-  console.log('Environment check:', {
-    hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-    hasServiceKey: !!process.env.SUPABASE_SERVICE_KEY,
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL
-  });
-  
-  const { data: surveys, error } = await supabase
-    .from('survey_definitions')
-    .select(`
-      survey_definition_id,
-      survey_name,
-      survey_type,
-      description,
-      is_active,
-      is_template,
-      template_category,
-      active_period_start,
-      active_period_end,
-      created_at,
-      updated_at
-    `)
-    .order('created_at', { ascending: false });
+  // Use API route instead of direct DB connection to avoid env var scoping issues
+  try {
+    // In server components, we need to construct the full URL
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'http://localhost:3000';
+    
+    const response = await fetch(`${baseUrl}/api/surveys`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Force no caching
+      cache: 'no-store'
+    });
 
-  if (error) {
-    console.error('❌ Error fetching surveys:', error);
+    if (!response.ok) {
+      console.error('❌ API error fetching surveys:', response.status, response.statusText);
+      return [];
+    }
+
+    const surveys = await response.json();
+    console.log(`✅ API fetched ${surveys?.length || 0} surveys via API route`);
+    return surveys || [];
+  } catch (error) {
+    console.error('❌ Failed to fetch surveys via API:', error);
     return [];
   }
-
-  console.log(`✅ Successfully fetched ${surveys?.length || 0} surveys`);
-  return surveys || [];
 }
 
 async function SurveysContent() {

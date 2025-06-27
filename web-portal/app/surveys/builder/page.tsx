@@ -19,34 +19,20 @@ export default function SurveyBuilderPage() {
     setSuccess(null);
     
     try {
-      const supabase = createServiceClient();
-      
-      const { data, error } = await supabase
-        .from('survey_definitions')
-        .insert({
-          survey_name: surveyDefinition.survey_name,
-          survey_type: surveyDefinition.survey_type,
-          description: surveyDefinition.description,
-          response_schema: surveyDefinition.response_schema,
-          display_config: surveyDefinition.display_config,
-          targeting_config: surveyDefinition.targeting_config,
-          is_active: surveyDefinition.is_active,
-          is_template: surveyDefinition.is_template,
-          template_category: surveyDefinition.template_category,
-          auto_recurring: surveyDefinition.auto_recurring,
-          recurrence_config: surveyDefinition.recurrence_config,
-          active_period_start: surveyDefinition.active_period_start,
-          active_period_end: surveyDefinition.active_period_end,
-          created_by: null // TODO: Get from auth context
-        })
-        .select()
-        .single();
+      const response = await fetch('/api/surveys/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(surveyDefinition),
+      });
 
-      if (error) {
-        console.error('Error creating survey:', error);
-        throw new Error(`Failed to create survey: ${error.message}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create survey');
       }
 
+      const data = await response.json();
       console.log('Survey created successfully:', data);
       setSuccess('Survey created successfully!');
       
