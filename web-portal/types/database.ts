@@ -484,6 +484,203 @@ export interface Database {
           updated_at?: string;
         };
       };
+      survey_definitions: {
+        Row: {
+          survey_definition_id: string;
+          survey_name: string;
+          survey_type: string;
+          description: string | null;
+          response_schema: any; // JSONB
+          display_config: any | null; // JSONB
+          targeting_config: any | null; // JSONB
+          is_active: boolean | null;
+          is_template: boolean | null;
+          template_category: string | null;
+          version: number | null;
+          parent_survey_id: string | null;
+          auto_recurring: boolean | null;
+          recurrence_config: any | null; // JSONB
+          active_period_start: string | null;
+          active_period_end: string | null;
+          created_by: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          survey_definition_id?: string;
+          survey_name: string;
+          survey_type: string;
+          description?: string | null;
+          response_schema: any;
+          display_config?: any | null;
+          targeting_config?: any | null;
+          is_active?: boolean | null;
+          is_template?: boolean | null;
+          template_category?: string | null;
+          version?: number | null;
+          parent_survey_id?: string | null;
+          auto_recurring?: boolean | null;
+          recurrence_config?: any | null;
+          active_period_start?: string | null;
+          active_period_end?: string | null;
+          created_by?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          survey_definition_id?: string;
+          survey_name?: string;
+          survey_type?: string;
+          description?: string | null;
+          response_schema?: any;
+          display_config?: any | null;
+          targeting_config?: any | null;
+          is_active?: boolean | null;
+          is_template?: boolean | null;
+          template_category?: string | null;
+          version?: number | null;
+          parent_survey_id?: string | null;
+          auto_recurring?: boolean | null;
+          recurrence_config?: any | null;
+          active_period_start?: string | null;
+          active_period_end?: string | null;
+          created_by?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+      };
+      property_surveys: {
+        Row: {
+          survey_id: string;
+          survey_definition_id: string;
+          property_id: string;
+          resident_id: string | null;
+          responses: any; // JSONB
+          response_status: string | null;
+          completion_percentage: number | null;
+          last_section_completed: string | null;
+          time_spent_minutes: number | null;
+          review_status: string | null;
+          reviewed_by: string | null;
+          reviewed_at: string | null;
+          submitted_date: string | null;
+          is_anonymous: boolean | null;
+          notes: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          survey_id?: string;
+          survey_definition_id: string;
+          property_id: string;
+          resident_id?: string | null;
+          responses: any;
+          response_status?: string | null;
+          completion_percentage?: number | null;
+          last_section_completed?: string | null;
+          time_spent_minutes?: number | null;
+          review_status?: string | null;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          submitted_date?: string | null;
+          is_anonymous?: boolean | null;
+          notes?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          survey_id?: string;
+          survey_definition_id?: string;
+          property_id?: string;
+          resident_id?: string | null;
+          responses?: any;
+          response_status?: string | null;
+          completion_percentage?: number | null;
+          last_section_completed?: string | null;
+          time_spent_minutes?: number | null;
+          review_status?: string | null;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          submitted_date?: string | null;
+          is_anonymous?: boolean | null;
+          notes?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+      };
+      survey_file_uploads: {
+        Row: {
+          upload_id: string;
+          survey_id: string;
+          question_id: string;
+          file_name: string;
+          file_path: string;
+          file_size: number | null;
+          content_type: string | null;
+          uploaded_at: string | null;
+          created_at: string | null;
+        };
+        Insert: {
+          upload_id?: string;
+          survey_id: string;
+          question_id: string;
+          file_name: string;
+          file_path: string;
+          file_size?: number | null;
+          content_type?: string | null;
+          uploaded_at?: string | null;
+          created_at?: string | null;
+        };
+        Update: {
+          upload_id?: string;
+          survey_id?: string;
+          question_id?: string;
+          file_name?: string;
+          file_path?: string;
+          file_size?: number | null;
+          content_type?: string | null;
+          uploaded_at?: string | null;
+          created_at?: string | null;
+        };
+      };
+      user_profiles: {
+        Row: {
+          id: string;
+          email: string;
+          full_name: string | null;
+          role: string;
+          is_active: boolean | null;
+          last_sign_in: string | null;
+          promoted_at: string | null;
+          promoted_by: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id: string;
+          email: string;
+          full_name?: string | null;
+          role?: string;
+          is_active?: boolean | null;
+          last_sign_in?: string | null;
+          promoted_at?: string | null;
+          promoted_by?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          full_name?: string | null;
+          role?: string;
+          is_active?: boolean | null;
+          last_sign_in?: string | null;
+          promoted_at?: string | null;
+          promoted_by?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+      };
     };
     Views: {
       complete_responses: {
