@@ -1,6 +1,6 @@
 # Phase 4: Resident Portal Implementation Guide
 
-**Status**: ✅ COMPLETED - Ready for Testing  
+**Status**: ✅ COMPLETED - Production Ready  
 **Date**: January 2025
 
 ## 🎉 What's Been Built
@@ -230,4 +230,20 @@ The authentication and invitation system is **production-ready** with:
 - [ ] Property access granted automatically
 - [ ] Audit trail records all actions
 
-The system is ready for comprehensive testing and user acceptance! 🚀
+The system is ready for production deployment! 🚀
+
+## 🗄️ **Database Setup**
+
+**REQUIRED**: Execute the RLS policies in Supabase to enable authentication:
+
+1. **Open Supabase SQL Editor**
+2. **Execute**: `/PHASE_4_RLS_POLICIES.sql` (the only SQL file you need to run)
+3. **Verify**: All policies created successfully
+
+The database schema is already in place. The RLS policies file contains all necessary Row Level Security policies for authentication and property-based access control.
+
+## 📚 **Documentation References**
+
+- **Database Schema**: See `/supabase.ts` for current table structure and TypeScript types
+- **Development Guide**: See `/web-portal/CLAUDE.md` for technical implementation details
+- **Testing Checklist**: See `/PHASE_4_TEST_CHECKLIST.md` for comprehensive testing scenarios
