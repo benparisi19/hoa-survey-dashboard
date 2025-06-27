@@ -37,9 +37,18 @@ async function getSurveys() {
 
 async function SurveysContent() {
   const surveys = await getSurveys();
+  
+  // Debug logging
+  console.log('Survey count:', surveys.length);
+  surveys.forEach(s => {
+    console.log(`Survey: ${s.survey_name}, template: ${s.is_template}, active: ${s.is_active}`);
+  });
+  
   const activeSurveys = surveys.filter(s => !s.is_template && s.is_active);
   const templates = surveys.filter(s => s.is_template);
   const draftSurveys = surveys.filter(s => !s.is_template && !s.is_active);
+  
+  console.log('Filtered counts:', { active: activeSurveys.length, templates: templates.length, drafts: draftSurveys.length });
 
   return (
     <div className="space-y-6">
