@@ -247,3 +247,4 @@ The database schema is already in place. The RLS policies file contains all nece
 - **Database Schema**: See `/supabase.ts` for current table structure and TypeScript types
 - **Development Guide**: See `/web-portal/CLAUDE.md` for technical implementation details
 - **Testing Checklist**: See `/PHASE_4_TEST_CHECKLIST.md` for comprehensive testing scenarios
+- **🚨 Auth Troubleshooting**: See `/AUTHENTICATION_TROUBLESHOOTING_GUIDE.md` for solving common auth issues

@@ -123,6 +123,7 @@ cp .env.example .env
 - **`NEXT_STEPS.md`** - Development roadmap with current priorities
 - **`supabase.ts`** - Canonical database schema reference (TypeScript types)
 - **`PHASE_4_RLS_POLICIES.sql`** - Row Level Security policies for authentication
+- **🚨 `AUTHENTICATION_TROUBLESHOOTING_GUIDE.md`** - Comprehensive auth issue resolution guide
 
 ## 🔄 **Platform Workflow**
 
