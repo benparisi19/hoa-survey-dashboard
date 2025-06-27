@@ -1,35 +1,37 @@
-# HOA Survey Analysis Dashboard
+# HOA Community Management Platform
 
-A modern web dashboard for analyzing HOA landscaping survey responses, built with Next.js and deployed on Vercel.
+A comprehensive property-centric platform for managing HOA operations, built with Next.js and deployed on Vercel.
 
 ## 🚀 Features
 
-- **Interactive Dashboard** - Key metrics and visualizations
-- **Response Browser** - Search and filter survey responses  
-- **PDF Viewer** - View original survey PDFs side-by-side with responses
-- **PDF Upload** - Drag-and-drop PDF uploads when editing
-- **Notes Management** - Track and manage marginal notes from surveys
-- **Analysis Tools** - Charts and detailed breakdowns
-- **Export Capabilities** - Download data as CSV
-- **Review Workflow** - Quality control system for data validation
-- **Mobile Responsive** - Works on all devices
-- **Real-time Data** - Connected to Supabase database
+- **Property Management** - Complete directory of 232 HOA properties with resident tracking
+- **Interactive Mapping** - Mapbox integration with zone visualization and geocoded properties
+- **Zone Analytics** - Zone-based management with performance insights
+- **Resident Directory** - Property relationships and contact management
+- **Multi-Survey Platform** - Expandable survey system beyond landscaping
+- **Advanced Filtering** - Sophisticated property and resident filtering with saved presets
+- **Executive Dashboard** - Neighborhood overview with community health metrics
+- **Mobile Responsive** - Optimized for all devices with responsive design
+- **Real-time Data** - Connected to property-centric Supabase database
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS
-- **Database**: Supabase (PostgreSQL)
-- **Storage**: Supabase Storage for PDF files
-- **Charts**: Recharts
-- **Deployment**: Vercel
+- **Database**: Supabase (PostgreSQL) with property-centric schema
+- **Mapping**: Mapbox GL JS with geocoding for 232 properties
+- **Storage**: Supabase Storage for PDF files and documents
+- **Charts**: Recharts for analytics and zone insights
+- **Authentication**: Supabase Auth with admin-only access
+- **Deployment**: Vercel with automatic deployments
 - **Domain**: Custom domain via Porkbun
 
 ## 📋 Prerequisites
 
-1. **Supabase Project** - Database with survey data imported
-2. **Vercel Account** - For hosting (free tier)
-3. **Porkbun Domain** - For custom domain (optional)
-4. **Node.js 18+** - For local development
+1. **Supabase Project** - Property-centric database with 232 properties and residents
+2. **Mapbox Account** - For mapping and geocoding features
+3. **Vercel Account** - For hosting (free tier)
+4. **Porkbun Domain** - For custom domain (optional)
+5. **Node.js 18+** - For local development
 
 ## 🔧 Local Development
 
@@ -47,7 +49,9 @@ A modern web dashboard for analyzing HOA landscaping survey responses, built wit
 3. **Configure environment variables**:
    ```bash
    cp .env.example .env
-   # Edit .env with your Supabase credentials
+   # Edit .env with your credentials:
+   # NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_KEY
+   # NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
    ```
 
 4. **Run the development server**:
@@ -60,18 +64,19 @@ A modern web dashboard for analyzing HOA landscaping survey responses, built wit
 ## 📝 Available Scripts
 
 ```bash
-npm run dev              # Start development server
-npm run build            # Build for production
-npm run type-check       # Validate TypeScript
-npm run lint             # Check code quality
-npm run bulk-update-pdfs # Bulk link PDFs to database records
+npm run dev                      # Start development server
+npm run build                    # Build for production
+npm run type-check               # Validate TypeScript
+npm run lint                     # Check code quality
+node scripts/geocode-properties.js        # Geocode property addresses
+node scripts/geocode-properties.js stats  # Show geocoding statistics
 ```
 
 ### Utility Scripts (in scripts/ directory):
+- `geocode-properties.js` - Geocode all property addresses for mapping
 - `check-response-ids.js` - Verify response ID formats
 - `check-specific-response.js` - Debug specific response data
 - `verify_notes_import.js` - Verify notes extraction results
-- `extract_and_import_notes.js` - Import marginal notes to database
 
 ## 🌐 Deployment to Vercel
 
@@ -96,6 +101,7 @@ npm run bulk-update-pdfs # Bulk link PDFs to database records
    NEXT_PUBLIC_SUPABASE_URL = your-supabase-url
    NEXT_PUBLIC_SUPABASE_ANON_KEY = your-anon-key
    SUPABASE_SERVICE_KEY = your-service-key
+   NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN = your-mapbox-token
    ```
 
 4. **Deploy**: Vercel will automatically build and deploy
@@ -179,12 +185,14 @@ python test_connection.py
 ## 🎯 Post-Deployment Checklist
 
 - [ ] Dashboard loads without errors
-- [ ] Charts display survey data
-- [ ] All 113 responses are visible
-- [ ] Export functionality works
-- [ ] Mobile view is responsive
+- [ ] Property directory shows all 232 properties
+- [ ] Interactive map displays with zone-colored markers
+- [ ] Property detail pages show resident information
+- [ ] Zone analytics display correctly
+- [ ] Neighborhood dashboard shows community metrics
+- [ ] Advanced filtering works with all property criteria
+- [ ] Mobile view is responsive across all pages
 - [ ] Custom domain resolves correctly
 - [ ] SSL certificate is active
-- [ ] Analytics are working (optional)
 
-Your HOA survey dashboard is now live and accessible to board members!
+Your HOA community management platform is now live and operational!

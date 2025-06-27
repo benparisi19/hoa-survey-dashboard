@@ -1,77 +1,86 @@
-# 🏠 HOA Survey Analysis Dashboard
+# 🏠 HOA Community Management Platform
 
-A production web dashboard for analyzing HOA landscaping survey responses with review workflow for quality control. **Currently live and operational** with 113 responses fully analyzed.
+A comprehensive property-centric platform for managing HOA operations, resident relationships, and community engagement. **Live and operational** with 232 properties and complete community oversight.
 
-## 🎯 **Current Status: LIVE & OPERATIONAL**
+## 🎯 **Current Status: COMPREHENSIVE PLATFORM**
 
-✅ **Live Dashboard**: https://your-custom-domain.com  
-✅ **113 Survey Responses**: Fully loaded and analyzed  
-✅ **Review System**: Quality control workflow implemented  
-✅ **Database**: Normalized schema with all survey data  
-✅ **Admin Interface**: Response editing and review management
+✅ **Live Platform**: Full property management system  
+✅ **232 Properties**: Complete property directory with residents  
+✅ **Interactive Mapping**: Mapbox integration with zone visualization  
+✅ **Multi-Survey Support**: Expandable beyond landscaping surveys  
+✅ **Advanced Analytics**: Zone-based insights and filtering  
+✅ **Resident Management**: Property relationships and contact tracking
 
-## 📊 **Key Findings From Your Data**
+## 🏘️ **Community Overview**
 
-- **📈 113 Total Responses** - Excellent participation rate
-- **⚠️ 40% Poor Ratings** - Service satisfaction needs attention  
-- **🏃 48% Want to Opt Out** - Significant desire for change
-- **📞 56% Have Contact Info** - Available for direct follow-up
-- **💧 Major Irrigation Issues** - Most common complaint
+- **🏠 232 Total Properties** - Complete HOA coverage
+- **📊 113 Landscaping Surveys** - Initial survey foundation
+- **🗺️ 3 HOA Zones** - Organized management structure
+- **📍 100% Geocoded** - All properties mapped with coordinates
+- **👥 Resident Tracking** - Property ownership and rental relationships
 
-## 🚀 **Dashboard Features**
+## 🚀 **Platform Features**
 
-### **📊 Executive Dashboard**
-- Key metrics with review status tracking
-- Service rating and preference charts
-- Contact method breakdown
-- Review progress indicators
+### **🏘️ Property Management**
+- **Property Directory**: Comprehensive filterable list of all 232 properties
+- **Property Details**: Complete property information with residents and survey history
+- **Resident Management**: Track property relationships (owners, renters, family members)
+- **Advanced Filtering**: Zone, street, survey participation, and resident status filters
+- **Bulk Operations**: Multi-property communication and survey assignment
 
-### **📋 Response Management**
-- Browse and filter all 113 responses
-- Individual response detail view in original survey format
-- Edit/correct transcribed data
-- Review workflow: Unreviewed → Reviewed/Flagged
+### **🗺️ Interactive Mapping**
+- **Zone Visualization**: Mapbox integration with zone-colored property markers
+- **Property Locations**: All 232 properties geocoded with precise coordinates
+- **Zone Management**: Interactive zone analytics and property distribution
+- **Map Controls**: Toggle between map and list views with zone filtering
 
-### **📄 PDF Management**
-- View original survey PDFs side-by-side with digital responses
-- Drag-and-drop PDF upload when editing responses
-- All 113 PDFs stored in Supabase storage
-- Automatic PDF display when editing responses
+### **📊 Multi-Survey Analytics**
+- **Survey Integration**: Landscaping survey responses linked to properties
+- **Cross-Survey Insights**: Compare responses across different survey types
+- **Zone Analytics**: Survey participation and satisfaction by HOA zone
+- **Export Capabilities**: Filtered data exports for board presentations
 
-### **📝 Notes System**
-- Extract and manage marginal notes from surveys
-- Priority levels and follow-up tracking
-- Admin notes for internal communication
-- Integration with response review workflow
+### **👥 Resident Engagement**
+- **Contact Management**: Resident contact information with preferred methods
+- **Communication Tracking**: Log interactions and follow-up requirements
+- **Survey Assignment**: Target surveys to specific properties or zones
+- **Review Workflows**: Quality control for survey data and resident information
 
-### **🔍 Quality Control**
-- Auto-editing for unreviewed responses
-- Mark responses as reviewed when validated
-- Flag responses requiring attention
-- Track review progress and completion
+### **📈 Executive Dashboard**
+- **Neighborhood Overview**: Community-wide health metrics and trends
+- **Zone Comparison**: Performance analytics across all HOA zones
+- **Activity Tracking**: Recent changes and administrative actions
+- **Key Metrics**: Property occupancy, survey participation, and issue resolution
 
 ## 🛠️ **Tech Stack**
 
 - **Frontend**: Next.js 14 + TypeScript + Tailwind CSS
-- **Database**: Supabase (PostgreSQL)
+- **Database**: Supabase (PostgreSQL) with property-centric schema
+- **Mapping**: Mapbox GL JS with geocoding API
 - **Charts**: Recharts for interactive visualizations
-- **Hosting**: Vercel (Free tier)
+- **Authentication**: Supabase Auth with admin-only access
+- **Storage**: Supabase Storage for PDF documents
+- **Hosting**: Vercel with automatic deployments
 - **Domain**: Custom domain via Porkbun DNS
 
 ## 📁 **Project Structure**
 
 ```
-├── web-portal/         # Next.js dashboard (production ready)
-│   ├── app/           # Next.js 14 app router pages
-│   ├── components/    # React components (PDFViewer, NotesSection, etc.)
-│   ├── scripts/       # Utility scripts for data management
+├── web-portal/         # Next.js platform (production ready)
+│   ├── app/           # Next.js 14 app router - 6-tab navigation
+│   │   ├── neighborhood/    # Executive dashboard
+│   │   ├── zones/          # Zone management with mapping
+│   │   ├── properties/     # Property directory and details
+│   │   ├── people/         # Resident management
+│   │   ├── responses/      # Survey analysis (original feature)
+│   │   └── page.tsx        # Main dashboard
+│   ├── components/    # React components (PropertyMap, ZoneAnalytics, etc.)
+│   ├── scripts/       # Utility scripts (geocoding, data import)
 │   └── lib/           # Utilities and Supabase client
-├── data-archive/       # Original survey data and PDFs
-│   ├── pdf/           # All 113 survey PDFs organized by response ID
-│   ├── md/            # Survey data in markdown format
-│   └── SURVEY_CONTENT.md  # Original survey questions
-├── database/          # SQL schema and query examples
-├── scripts/           # Python analysis tools
+├── data-archive/       # Historical survey data
+│   ├── pdf/           # Original survey PDFs
+│   └── property-data/ # Master property lists and owner records
+├── database/          # SQL schema for property-centric platform
 └── README.md          # This file
 ```
 
@@ -79,38 +88,47 @@ A production web dashboard for analyzing HOA landscaping survey responses with r
 
 **Main Commands** (run from `/web-portal/`):
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run type-check   # Validate TypeScript
-npm run lint         # Check code quality
+npm run dev                    # Start development server
+npm run build                  # Build for production
+npm run type-check             # Validate TypeScript
+npm run lint                   # Check code quality
+node scripts/geocode-properties.js  # Geocode property addresses
 ```
 
-**Environment Setup**: See `web-portal/README.md` for detailed setup instructions.
+**Environment Setup**: 
+```bash
+cp .env.example .env
+# Configure: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_KEY, NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
+```
+
+**Key Documentation**: See `web-portal/CLAUDE.md` for complete technical architecture and development guide.
 
 ## 📋 **Documentation**
 
-- **`web-portal/CLAUDE.md`** - Technical architecture guide for development
-- **`NEXT_STEPS.md`** - Future enhancement roadmap  
-- **`web-portal/README.md`** - Complete deployment and development guide
+- **`web-portal/CLAUDE.md`** - Complete technical architecture and API documentation
+- **`NEXT_STEPS.md`** - Development roadmap with current priorities
+- **`web-portal/README.md`** - Deployment and development guide
 
-## 🔄 **Current Workflow**
+## 🔄 **Platform Workflow**
 
-1. **Response Review**: Admin reviews transcribed survey data for accuracy
-2. **Quality Control**: Edit/correct any transcription errors 
-3. **Status Tracking**: Mark responses as Reviewed or Flag for attention
-4. **Data Analysis**: Use dashboard metrics for board decision-making
-5. **Action Items**: Contact residents based on survey feedback
+1. **Property Management**: Comprehensive directory of all 232 HOA properties
+2. **Resident Tracking**: Property ownership and rental relationship management
+3. **Survey Integration**: Multi-survey platform with property-linked responses
+4. **Zone Analytics**: Geographic insights and zone-based management
+5. **Communication**: Resident engagement and follow-up workflows
+6. **Executive Oversight**: Neighborhood dashboard for board decision-making
 
 ## 🎯 **System Status**
 
-- **Operational**: Dashboard live with all 113 responses
-- **Quality Control**: Review workflow implemented and functional  
-- **Performance**: Optimized for fast loading and mobile access
-- **Cost**: ~$10/year total operating cost
-- **Maintenance**: Minimal - automated deployments and backups
+- **Operational**: Full property management platform with 232 properties
+- **Performance**: Interactive mapping and advanced filtering optimized
+- **Scalability**: Multi-survey architecture ready for expansion
+- **Security**: Admin-only access with comprehensive property data protection
+- **Cost**: ~$15/year (including Mapbox usage for geocoding/mapping)
+- **Maintenance**: Automated deployments with state persistence
 
 ---
 
-**Status**: ✅ **Production System**  
-**Last Updated**: Active development with quality control features  
-**Next Phase**: See `NEXT_STEPS.md` for enhanced ticketing system roadmap
+**Status**: ✅ **Comprehensive Platform**  
+**Last Updated**: January 2025 - Property-centric transformation complete  
+**Next Phase**: Multi-survey import wizard and resident portal foundation
