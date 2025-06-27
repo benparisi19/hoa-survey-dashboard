@@ -9,8 +9,9 @@ type FilterPresetInsert = Database['public']['Tables']['user_filter_presets']['I
 type FilterPresetUpdate = Database['public']['Tables']['user_filter_presets']['Update'];
 
 export interface FilterPresetWithUser extends FilterPreset {
-  user_profile?: {
-    full_name: string | null;
+  people?: {
+    first_name: string;
+    last_name: string;
     email: string;
   };
 }
@@ -37,7 +38,7 @@ export async function getFilterPresets(): Promise<{
       .from('user_filter_presets')
       .select(`
         *,
-        user_profile:user_profiles!user_id(full_name, email)
+        people(first_name, last_name, email)
       `)
       .or(`user_id.eq.${user.id},is_shared.eq.true`)
       .order('updated_at', { ascending: false });

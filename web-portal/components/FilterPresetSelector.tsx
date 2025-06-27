@@ -234,9 +234,9 @@ function PresetItem({
             </p>
           )}
           <div className="flex items-center space-x-3 text-xs text-gray-500 mt-1">
-            {!isOwner && preset.user_profile && (
+            {!isOwner && preset.people && (
               <span>
-                By {preset.user_profile.full_name || preset.user_profile.email}
+                By {`${preset.people.first_name} ${preset.people.last_name}` || preset.people.email}
               </span>
             )}
             <div className="flex items-center space-x-1">

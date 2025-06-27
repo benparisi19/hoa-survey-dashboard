@@ -21,12 +21,13 @@ export async function updateReviewStatus(responseId: string, newStatus: string) 
     
     // Get user profile for display name
     const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('full_name, email')
-      .eq('id', user.id)
+      .from('people')
+      .select('first_name, last_name, email')
+      .eq('auth_user_id', user.id)
       .single();
     
-    const reviewedBy = profile?.full_name || profile?.email || user.email || 'Admin';
+    const fullName = profile ? `${profile.first_name} ${profile.last_name}` : null;
+    const reviewedBy = fullName || profile?.email || user.email || 'Admin';
 
     const updateData = {
       review_status: newStatus,

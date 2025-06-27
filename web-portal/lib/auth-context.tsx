@@ -43,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
   
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -100,10 +101,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    // Handle hydration first
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    let mounted = true;
+
     const initializeAuth = async () => {
       try {
         // Get initial session
         const { data: { session: initialSession } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
         
         if (initialSession) {
           setSession(initialSession);
@@ -111,12 +123,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           // Fetch user profile
           const profile = await fetchUserProfile(initialSession.user.id);
-          setUserProfile(profile);
+          if (mounted) setUserProfile(profile);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
@@ -125,6 +137,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+        
         console.log('Auth state changed:', event, session?.user?.email);
         
         setSession(session);
@@ -133,20 +147,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           // Fetch profile when user signs in
           const profile = await fetchUserProfile(session.user.id);
-          setUserProfile(profile);
+          if (mounted) setUserProfile(profile);
         } else {
           // Clear profile when user signs out
           setUserProfile(null);
         }
         
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [isHydrated]);
 
   const signIn = async (email: string) => {
     try {
@@ -230,6 +245,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userProfile,
     refreshProfile,
   };
+
+  // Prevent hydration mismatch by showing loading until hydrated
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={value}>
