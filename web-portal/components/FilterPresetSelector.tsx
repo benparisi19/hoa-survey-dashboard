@@ -5,7 +5,7 @@ import { ChevronDown, Filter, Star, Users, User, Trash2, Edit2, Clock } from 'lu
 import { AdvancedFilterSet } from '@/lib/advanced-filters';
 import { getFilterPresets, deleteFilterPreset, incrementPresetUsage } from '@/app/actions/filterPresets';
 import type { FilterPresetWithUser } from '@/app/actions/filterPresets';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth } from '@/lib/auth-context-v2';
 
 interface FilterPresetSelectorProps {
   onLoad: (filterSet: AdvancedFilterSet) => void;

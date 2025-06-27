@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, XCircle, Mail, Home, UserPlus, AlertCircle } from 'lucide-react';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth } from '@/lib/auth-context-v2';
 
 function AcceptInvitationContent() {
   const [status, setStatus] = useState<'loading' | 'error' | 'success' | 'prompt'>('loading');

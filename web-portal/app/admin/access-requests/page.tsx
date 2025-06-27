@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth } from '@/lib/auth-context-v2';
 import { useRouter } from 'next/navigation';
 import { 
   Shield, 

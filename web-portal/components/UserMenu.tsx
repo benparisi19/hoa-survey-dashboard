@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, useProfile } from '@/lib/auth-context';
+import { useAuth, useProfile } from '@/lib/auth-context-v2';
 import { User, LogOut, Shield, ChevronDown } from 'lucide-react';
 
 export default function UserMenu() {

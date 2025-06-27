@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth, useProfile } from '@/lib/auth-context';
+import { useAuth, useProfile } from '@/lib/auth-context-v2';
 import ResponseCount from './ResponseCount';
 
 export default function ProtectedFooter() {

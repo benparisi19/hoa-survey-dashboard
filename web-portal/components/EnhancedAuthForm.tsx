@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth } from '@/lib/auth-context-v2';
 import { createBrowserClient } from '@supabase/ssr';
 
 export default function EnhancedAuthForm() {

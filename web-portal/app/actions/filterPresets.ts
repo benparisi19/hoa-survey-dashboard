@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase-server';
+import { createClient } from '@/lib/supabase/server';
 import { AdvancedFilterSet } from '@/lib/advanced-filters';
 import { Database } from '@/types/database';
 

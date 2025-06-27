@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Mail, UserPlus, Send, CheckCircle, AlertCircle } from 'lucide-react';
-import { useAuth, hasPropertyPermission } from '@/lib/auth-context';
+import { useAuth, hasPropertyPermission } from '@/lib/auth-context-v2';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Link from 'next/link';
 

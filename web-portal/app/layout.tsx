@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { AuthProvider } from '@/lib/auth-context';
+import { AuthProvider } from '@/lib/auth-context-v2';
 import Navigation from '@/components/Navigation';
 import ProtectedFooter from '@/components/ProtectedFooter';
 import './globals.css';

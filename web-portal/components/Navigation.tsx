@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { BarChart3, Users, Building2, UserCheck, Star, MapPin } from 'lucide-react';
-import { useAuth, useProfile } from '@/lib/auth-context';
+import { useAuth, useProfile } from '@/lib/auth-context-v2';
 import UserMenu from './UserMenu';
 import ResponseCount from './ResponseCount';
 

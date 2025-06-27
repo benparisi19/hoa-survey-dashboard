@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth, useProfile } from '@/lib/auth-context';
+import { useAuth, useProfile } from '@/lib/auth-context-v2';
 import { Shield, AlertTriangle, UserX } from 'lucide-react';
 
 interface AdminGateProps {
