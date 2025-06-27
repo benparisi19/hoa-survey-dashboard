@@ -49,10 +49,6 @@ async function getPeopleData(): Promise<PersonData[]> {
       };
     }).filter(Boolean);
     
-    console.log('People API result:', { 
-      dataLength: peopleData?.length,
-      sampleData: peopleData?.[0] 
-    });
     
     // Transform the data to match our interface
     const transformedData: PersonData[] = (peopleData || []).map((person: any) => ({
@@ -70,7 +66,6 @@ async function getPeopleData(): Promise<PersonData[]> {
       updated_at: person.updated_at
     }));
     
-    console.log('Transformed people data length:', transformedData.length);
     
     return transformedData;
   } catch (error) {

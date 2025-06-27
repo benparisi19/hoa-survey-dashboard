@@ -67,11 +67,11 @@ async function getZonesData(): Promise<ZoneData[]> {
     zoneData.propertyCount++;
     
     // Count current residents
-    const currentResidents = property.property_residents?.filter((r: any) => !r.end_date) || [];
+    const currentResidents = property.property_residents?.filter((r: { end_date: string | null }) => !r.end_date) || [];
     zoneData.residentCount += currentResidents.length;
     
     // Count owner-occupied
-    const ownerOccupied = currentResidents.filter((r: any) => r.relationship_type === 'owner');
+    const ownerOccupied = currentResidents.filter((r: { relationship_type: string }) => r.relationship_type === 'owner');
     zoneData.ownerOccupiedCount += ownerOccupied.length;
     
     // Track street groups
@@ -139,8 +139,8 @@ async function getPropertiesForMap() {
 
   // Transform data for map component
   return (properties || []).map(property => {
-    const currentResidents = property.property_residents?.filter((r: any) => !r.end_date) || [];
-    const ownerResidents = currentResidents.filter((r: any) => r.relationship_type === 'owner');
+    const currentResidents = property.property_residents?.filter((r: { end_date: string | null }) => !r.end_date) || [];
+    const ownerResidents = currentResidents.filter((r: { relationship_type: string }) => r.relationship_type === 'owner');
     
     let status: 'occupied' | 'vacant' | 'owner_occupied' = 'vacant';
     if (ownerResidents.length > 0) {
@@ -152,12 +152,12 @@ async function getPropertiesForMap() {
     return {
       property_id: property.property_id,
       address: property.address,
-      latitude: property.latitude,  // Now these should have values
-      longitude: property.longitude, // Now these should have values
+      latitude: property.latitude,
+      longitude: property.longitude,
       hoa_zone: property.hoa_zone,
       current_residents: currentResidents.length,
       status,
-      survey_count: 0 // TODO: Match with actual survey responses
+      survey_count: 0
     };
   });
 }

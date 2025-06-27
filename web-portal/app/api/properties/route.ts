@@ -79,16 +79,12 @@ export async function GET(request: NextRequest) {
 
     // Transform data to include current_residents count
     const transformedData = (data || []).map(property => {
-      // Debug: Log all property_residents data
-      console.log(`\n🏠 Property: ${property.address}`);
-      console.log(`   property_residents:`, property.property_residents);
       
       // Count current residents (those without end_date)
       const currentResidents = property.property_residents
         ? property.property_residents.filter((r: any) => r.end_date === null || r.end_date === undefined).length
         : 0;
 
-      console.log(`   Current residents calculated: ${currentResidents}`);
 
       // Remove the property_residents array and add the count
       const { property_residents, ...propertyData } = property;
@@ -98,7 +94,6 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    console.log(`\n📊 Returning ${transformedData.length} properties, ${transformedData.filter(p => p.current_residents > 0).length} with residents`);
 
     return NextResponse.json(transformedData);
   } catch (error) {

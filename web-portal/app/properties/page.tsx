@@ -85,10 +85,6 @@ async function getPropertiesData(): Promise<PropertyData[]> {
       };
     });
     
-    console.log('Properties API result:', { 
-      dataLength: propertiesData?.length,
-      sampleData: propertiesData?.[0] 
-    });
     
     // Transform the data to match our interface
     const transformedData: PropertyData[] = (propertiesData || []).map((property: any) => ({
@@ -121,7 +117,6 @@ async function getPropertiesData(): Promise<PropertyData[]> {
       status: 'active' as const
     }));
     
-    console.log('Transformed data length:', transformedData.length);
     
     return transformedData;
   } catch (error) {
