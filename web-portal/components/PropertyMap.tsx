@@ -42,23 +42,31 @@ export default function PropertyMap({
   const [mapLoaded, setMapLoaded] = useState(false);
 
   // Filter properties with valid coordinates
-  const validProperties = properties.filter(p => 
-    p.latitude !== null && 
-    p.longitude !== null &&
-    !isNaN(p.latitude) && 
-    !isNaN(p.longitude)
-  );
+  const validProperties = properties.filter(p => {
+    const lat = typeof p.latitude === 'string' ? parseFloat(p.latitude) : p.latitude;
+    const lng = typeof p.longitude === 'string' ? parseFloat(p.longitude) : p.longitude;
+    return lat !== null && 
+           lng !== null && 
+           !isNaN(lat) && 
+           !isNaN(lng) &&
+           lat !== 0 && 
+           lng !== 0;
+  });
 
   useEffect(() => {
     if (!mapContainer.current || !process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN) return;
 
     // Initialize map
+    const firstProperty = validProperties[0];
+    const defaultCenter = firstProperty ? [
+      typeof firstProperty.longitude === 'string' ? parseFloat(firstProperty.longitude) : firstProperty.longitude!,
+      typeof firstProperty.latitude === 'string' ? parseFloat(firstProperty.latitude) : firstProperty.latitude!
+    ] : [-122.4194, 37.7749];
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/satellite-streets-v12',
-      center: validProperties.length > 0 
-        ? [validProperties[0].longitude!, validProperties[0].latitude!]
-        : [-122.4194, 37.7749], // Default to SF if no properties
+      center: defaultCenter,
       zoom: 15
     });
 
@@ -91,8 +99,8 @@ export default function PropertyMap({
     validProperties.forEach(property => {
       if (selectedZone && property.hoa_zone !== selectedZone) return;
 
-      const longitude = property.longitude!;
-      const latitude = property.latitude!;
+      const longitude = typeof property.longitude === 'string' ? parseFloat(property.longitude) : property.longitude!;
+      const latitude = typeof property.latitude === 'string' ? parseFloat(property.latitude) : property.latitude!;
 
       bounds.extend([longitude, latitude]);
 
