@@ -143,59 +143,11 @@ async function getPropertiesForMap() {
     }
   );
 
-  // Diagnostic tests to isolate the issue
-  console.log('\n=== DIAGNOSTIC TESTS ===');
-  
-  // Test 1: Get ALL columns with select('*')
-  const { data: test1, error: error1 } = await untypedSupabase
-    .from('properties')
-    .select('*')
-    .limit(1);
-    
-  console.log('Test 1 - Select * :', {
-    error: error1,
-    hasData: !!test1?.[0],
-    columns: test1?.[0] ? Object.keys(test1[0]) : [],
-    latitude: test1?.[0]?.latitude,
-    longitude: test1?.[0]?.longitude
-  });
-  
-  // Test 2: Select ONLY coordinates
-  const { data: test2, error: error2 } = await untypedSupabase
-    .from('properties')
-    .select('latitude, longitude')
-    .limit(1);
-    
-  console.log('Test 2 - Only coords:', {
-    error: error2,
-    data: test2?.[0]
-  });
-  
-  // Test 3: Use .sql() to bypass PostgREST
-  const { data: test3, error: error3 } = await untypedSupabase
-    .rpc('get_raw_sql', {
-      query_text: 'SELECT property_id, latitude, longitude FROM properties LIMIT 1'
-    })
-    .catch(() => ({ data: null, error: 'RPC not available' }));
-    
-  console.log('Test 3 - Raw SQL (if available):', {
-    error: error3,
-    data: test3
-  });
-  
-  console.log('=== END DIAGNOSTIC TESTS ===\n');
 
-  // Get properties with coordinates and residents for map display
+  // Get properties with coordinates - use * to ensure coordinates are included
   const { data: properties, error } = await untypedSupabase
     .from('properties')
-    .select(`
-      property_id,
-      address,
-      latitude,
-      longitude,
-      hoa_zone,
-      property_residents(resident_id, end_date, relationship_type)
-    `)
+    .select('*, property_residents(resident_id, end_date, relationship_type)')
     .order('address');
 
   // Debug logging
@@ -212,7 +164,7 @@ async function getPropertiesForMap() {
     }))
   });
 
-  // Transform data for map component
+  // Transform data for map component - explicitly pick needed fields
   return (properties || []).map((property: any) => {
     const currentResidents = property.property_residents?.filter((r: any) => !r.end_date) || [];
     const ownerResidents = currentResidents.filter((r: any) => r.relationship_type === 'owner');
@@ -227,8 +179,8 @@ async function getPropertiesForMap() {
     return {
       property_id: property.property_id,
       address: property.address,
-      latitude: property.latitude,
-      longitude: property.longitude,
+      latitude: property.latitude,  // Now these should have values
+      longitude: property.longitude, // Now these should have values
       hoa_zone: property.hoa_zone,
       current_residents: currentResidents.length,
       status,
