@@ -152,7 +152,7 @@ async function getPropertiesForMap() {
     error: error,
     propertiesCount: properties?.length || 0,
     firstProperty: properties?.[0],
-    sampleCoordinates: properties?.slice(0, 3).map(p => ({
+    sampleCoordinates: properties?.slice(0, 3).map((p: any) => ({
       address: p.address,
       lat: p.latitude,
       lng: p.longitude,
@@ -162,7 +162,7 @@ async function getPropertiesForMap() {
   });
 
   // Transform data for map component
-  return (properties || []).map(property => {
+  return (properties || []).map((property: any) => {
     const currentResidents = property.property_residents?.filter((r: any) => !r.end_date) || [];
     const ownerResidents = currentResidents.filter((r: any) => r.relationship_type === 'owner');
     
