@@ -6,15 +6,11 @@ import { createClient } from '@/lib/supabase/client';
 
 type AuthContextType = {
   user: User | null;
-  userProfile: UserProfile | null;
   loading: boolean;
   signIn: (email: string) => Promise<{ error?: string }>;
   signInWithPassword: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
-  isAdmin: () => boolean;
-  refreshProfile: () => Promise<void>;
-  forceAuthRefresh: () => Promise<void>;
 };
 
 export type UserProfile = {
@@ -40,136 +36,47 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   
   const supabase = createClient();
 
-  // Fetch user profile and accessible properties
-  const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
-    try {
-      // Get user's profile from people table - FORCE NO CACHE
-      const { data: profile, error: profileError } = await supabase
-        .from('people')
-        .select('*')
-        .eq('auth_user_id', userId)
-        .single();
-
-      if (profileError) {
-        console.error('Error fetching user profile:', profileError);
-        return null;
-      }
-
-      if (!profile) {
-        console.log('No profile found for user:', userId);
-        return null;
-      }
-
-      // Get user's accessible properties
-      const { data: properties, error: propertiesError } = await supabase
-        .rpc('get_user_accessible_properties', { user_auth_id: userId });
-
-      if (propertiesError) {
-        console.error('Error fetching accessible properties:', propertiesError);
-        return {
-          ...profile,
-          accessible_properties: []
-        };
-      }
-
-      return {
-        ...profile,
-        accessible_properties: properties || []
-      };
-
-    } catch (error) {
-      console.error('Unexpected error fetching user profile:', error);
-      return null;
-    }
-  };
-
-  const refreshProfile = async () => {
-    if (user) {
-      console.log('🔄 Manually refreshing profile for user:', user.id);
-      const profile = await fetchUserProfile(user.id);
-      setUserProfile(profile);
-      console.log('✅ Profile refreshed:', profile?.account_type);
-    }
-  };
-
-  // Force a complete auth refresh to clear any cached state
-  const forceAuthRefresh = async () => {
-    console.log('🚀 FORCING COMPLETE AUTH REFRESH');
-    setLoading(true);
-    try {
-      // Force get fresh user data
-      const { data: { user: freshUser }, error } = await supabase.auth.getUser();
-      if (freshUser && !error) {
-        setUser(freshUser);
-        const profile = await fetchUserProfile(freshUser.id);
-        setUserProfile(profile);
-        console.log('✅ Complete auth refresh done:', profile?.account_type);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Initialize auth state
   useEffect(() => {
-    let mounted = true;
-
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!mounted) return;
-      
-      if (session?.user) {
-        setUser(session.user);
-        const profile = await fetchUserProfile(session.user.id);
-        if (mounted) {
-          setUserProfile(profile);
+    // Get initial user (more reliable than getSession)
+    const getInitialUser = async () => {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) {
+          console.error('Error getting user:', error);
+          setUser(null);
+        } else {
+          setUser(user);
         }
-      }
-      
-      if (mounted) {
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        setUser(null);
+      } finally {
         setLoading(false);
       }
     };
 
-    getInitialSession();
+    getInitialUser();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return;
-        
         console.log('Auth state changed:', event);
-        
-        if (session?.user) {
-          setUser(session.user);
-          // FORCE FRESH PROFILE FETCH - don't use cached data
-          const profile = await fetchUserProfile(session.user.id);
-          if (mounted) {
-            setUserProfile(profile);
-            console.log('🔄 Fresh profile loaded:', profile?.account_type);
-          }
-        } else {
-          setUser(null);
-          setUserProfile(null);
-        }
-        
-        if (mounted) {
+        setUser(session?.user ?? null);
+        if (!session?.user) {
           setLoading(false);
         }
       }
     );
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase.auth]);
 
   const signIn = async (email: string) => {
     try {
@@ -237,33 +144,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await supabase.auth.signOut();
       setUser(null);
-      setUserProfile(null);
     } catch (error) {
       console.error('Error signing out:', error);
     }
   };
 
-  const isAdmin = () => {
-    const result = userProfile?.account_type === 'hoa_admin';
-    console.log('🔍 isAdmin check:', {
-      userProfile: userProfile,
-      account_type: userProfile?.account_type,
-      result: result
-    });
-    return result;
-  };
-
   const value = {
     user,
-    userProfile,
     loading,
     signIn,
     signInWithPassword,
     signUp,
     signOut,
-    isAdmin,
-    refreshProfile,
-    forceAuthRefresh,
   };
 
   return (
@@ -279,6 +171,110 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
+
+// Separate hook for profile data - prevents auth/profile race conditions
+export function useProfile() {
+  const { user } = useAuth();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  // Fetch user profile and accessible properties
+  const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    try {
+      // Get user's profile from people table
+      const { data: profile, error: profileError } = await supabase
+        .from('people')
+        .select('*')
+        .eq('auth_user_id', userId)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching user profile:', profileError);
+        return null;
+      }
+
+      if (!profile) {
+        console.log('No profile found for user:', userId);
+        return null;
+      }
+
+      // Get user's accessible properties
+      const { data: properties, error: propertiesError } = await supabase
+        .rpc('get_user_accessible_properties', { user_auth_id: userId });
+
+      if (propertiesError) {
+        console.error('Error fetching accessible properties:', propertiesError);
+        return {
+          ...profile,
+          accessible_properties: []
+        };
+      }
+
+      return {
+        ...profile,
+        accessible_properties: properties || []
+      };
+
+    } catch (error) {
+      console.error('Unexpected error fetching user profile:', error);
+      return null;
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      console.log('🔄 Refreshing profile for user:', user.id);
+      setLoading(true);
+      const profile = await fetchUserProfile(user.id);
+      setUserProfile(profile);
+      setLoading(false);
+      console.log('✅ Profile refreshed:', profile?.account_type);
+    }
+  };
+
+  const isAdmin = () => {
+    const result = userProfile?.account_type === 'hoa_admin';
+    console.log('🔍 isAdmin check:', {
+      userProfile: userProfile,
+      account_type: userProfile?.account_type,
+      result: result
+    });
+    return result;
+  };
+
+  // Fetch profile when user changes
+  useEffect(() => {
+    if (user) {
+      setLoading(true);
+      fetchUserProfile(user.id).then((profile) => {
+        setUserProfile(profile);
+        setLoading(false);
+        console.log('🔄 Profile loaded for user:', profile?.account_type);
+      });
+    } else {
+      setUserProfile(null);
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  return {
+    userProfile,
+    loading,
+    refreshProfile,
+    isAdmin,
+    // Legacy compatibility
+    profile: userProfile ? {
+      id: userProfile.person_id,
+      email: userProfile.email,
+      full_name: `${userProfile.first_name} ${userProfile.last_name}`,
+      role: userProfile.account_type === 'hoa_admin' ? 'admin' as const : 'no_access' as const,
+      is_active: userProfile.account_status === 'verified',
+      created_at: new Date().toISOString(),
+      last_sign_in: null
+    } : null
+  };
 }
 
 // Helper function to check if user has specific permission for a property
@@ -309,36 +305,4 @@ export function hasPropertyPermission(
 export function getAccessiblePropertyIds(userProfile: UserProfile | null): string[] {
   if (!userProfile) return [];
   return userProfile.accessible_properties.map(p => p.property_id);
-}
-
-// Legacy compatibility for existing components
-export interface UserProfile_Legacy {
-  id: string;
-  email: string;
-  full_name: string | null;
-  role: 'no_access' | 'admin';
-  is_active: boolean;
-  created_at: string;
-  last_sign_in: string | null;
-}
-
-export function useProfile() {
-  const { userProfile, loading, isAdmin } = useAuth();
-  
-  // Map new profile format to legacy format
-  const legacyProfile: UserProfile_Legacy | null = userProfile ? {
-    id: userProfile.person_id,
-    email: userProfile.email,
-    full_name: `${userProfile.first_name} ${userProfile.last_name}`,
-    role: userProfile.account_type === 'hoa_admin' ? 'admin' : 'no_access',
-    is_active: userProfile.account_status === 'verified',
-    created_at: new Date().toISOString(),
-    last_sign_in: null
-  } : null;
-
-  return { 
-    profile: legacyProfile, 
-    loading, 
-    isAdmin 
-  };
 }

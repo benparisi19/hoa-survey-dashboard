@@ -8,8 +8,8 @@ import { User, LogOut, Shield, ChevronDown } from 'lucide-react';
 export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { user, userProfile, signOut, forceAuthRefresh } = useAuth();
-  const { profile, loading: profileLoading, isAdmin } = useProfile();
+  const { user, signOut } = useAuth();
+  const { userProfile, profile, loading: profileLoading, isAdmin, refreshProfile } = useProfile();
   const router = useRouter();
 
   useEffect(() => {
@@ -99,8 +99,8 @@ export default function UserMenu() {
             {/* Force Refresh - Debug Only */}
             <button
               onClick={() => {
-                console.log('🚀 Manual auth refresh triggered');
-                forceAuthRefresh();
+                console.log('🚀 Manual profile refresh triggered');
+                refreshProfile();
               }}
               className="flex items-center w-full px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 hover:text-blue-900 transition-colors border-b border-gray-100"
             >
