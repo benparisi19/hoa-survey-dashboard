@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase';
+import { createServiceClient, createAdminClient } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 
 export async function PATCH(
@@ -59,18 +59,45 @@ export async function PATCH(
 
     // If approved, create the user account and property access
     if (action === 'approve') {
+      const adminClient = createAdminClient();
+      
       // Check if person already exists in people table
       let { data: person, error: personError } = await supabase
         .from('people')
-        .select('person_id')
+        .select('person_id, auth_user_id')
         .eq('email', accessRequest.requester_email)
         .single();
 
-      // If person doesn't exist, create them
+      let authUserId: string | null = null;
+
+      // If person doesn't exist, create them with Supabase Auth
       if (personError || !person) {
+        // First, create the Supabase Auth user
+        const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+          email: accessRequest.requester_email,
+          email_confirm: true, // Auto-confirm email since HOA is verifying
+          user_metadata: {
+            first_name: accessRequest.requester_name.split(' ')[0] || accessRequest.requester_name,
+            last_name: accessRequest.requester_name.split(' ').slice(1).join(' ') || '',
+            account_type: accessRequest.claimed_relationship === 'owner' ? 'owner' : 'resident',
+          }
+        });
+
+        if (authError) {
+          console.error('Error creating Supabase Auth user:', authError);
+          return NextResponse.json(
+            { error: 'Failed to create authentication account' },
+            { status: 500 }
+          );
+        }
+
+        authUserId = authData.user.id;
+
+        // Then create the person record linked to the auth user
         const { data: newPerson, error: createPersonError } = await supabase
           .from('people')
           .insert({
+            auth_user_id: authUserId, // Link to Supabase Auth!
             first_name: accessRequest.requester_name.split(' ')[0] || accessRequest.requester_name,
             last_name: accessRequest.requester_name.split(' ').slice(1).join(' ') || '',
             email: accessRequest.requester_email,
@@ -83,13 +110,56 @@ export async function PATCH(
 
         if (createPersonError) {
           console.error('Error creating person:', createPersonError);
+          // Clean up auth user if person creation fails
+          await adminClient.auth.admin.deleteUser(authUserId);
           return NextResponse.json(
             { error: 'Failed to create user account' },
             { status: 500 }
           );
         }
 
-        person = newPerson;
+        person = { ...newPerson, auth_user_id: authUserId };
+      } else if (!person.auth_user_id) {
+        // Person exists but no auth user - create auth user and link
+        const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+          email: accessRequest.requester_email,
+          email_confirm: true,
+          user_metadata: {
+            first_name: accessRequest.requester_name.split(' ')[0] || accessRequest.requester_name,
+            last_name: accessRequest.requester_name.split(' ').slice(1).join(' ') || '',
+            account_type: accessRequest.claimed_relationship === 'owner' ? 'owner' : 'resident',
+          }
+        });
+
+        if (authError) {
+          console.error('Error creating Supabase Auth user:', authError);
+          return NextResponse.json(
+            { error: 'Failed to create authentication account' },
+            { status: 500 }
+          );
+        }
+
+        authUserId = authData.user.id;
+
+        // Update person record with auth_user_id
+        const { error: updatePersonError } = await supabase
+          .from('people')
+          .update({ 
+            auth_user_id: authUserId,
+            account_status: 'verified',
+            verification_method: 'hoa_verified'
+          })
+          .eq('person_id', person.person_id);
+
+        if (updatePersonError) {
+          console.error('Error updating person with auth_user_id:', updatePersonError);
+          // Clean up auth user
+          await adminClient.auth.admin.deleteUser(authUserId);
+          return NextResponse.json(
+            { error: 'Failed to link authentication account' },
+            { status: 500 }
+          );
+        }
       }
 
       // Create property_residents relationship
@@ -127,6 +197,20 @@ export async function PATCH(
             verified_at: new Date().toISOString()
           });
       }
+
+      // TODO: Send email notification to requester
+      // For approved requests, send magic link for first login
+      if (authUserId) {
+        // In production, this would send an email with magic link
+        console.log(`Access request approved for ${accessRequest.requester_email}`);
+        console.log(`User should receive magic link email to complete setup`);
+        
+        // Could optionally generate a magic link here:
+        // const { data: magicLink } = await adminClient.auth.admin.generateLink({
+        //   type: 'magiclink',
+        //   email: accessRequest.requester_email,
+        // });
+      }
     }
 
     // Log the action in audit trail
@@ -143,8 +227,9 @@ export async function PATCH(
         performed_by: reviewed_by
       });
 
-    // TODO: Send email notification to requester
-    console.log(`Access request ${action}d for ${accessRequest.requester_email}`);
+    if (action === 'reject') {
+      console.log(`Access request rejected for ${accessRequest.requester_email}`);
+    }
 
     // Revalidate relevant pages
     revalidatePath('/admin/access-requests');

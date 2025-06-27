@@ -133,9 +133,13 @@ export async function POST(
         performed_by: invitationData.invited_by
       });
 
+    // Generate invitation link
+    const invitationLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/invitations/accept?token=${invitation.invitation_token}`;
+
     // TODO: Send email notification to invited person
     // This would integrate with your email service (SendGrid, AWS SES, etc.)
     console.log(`Invitation created for ${invitationData.invited_email} to property ${property.address}`);
+    console.log(`Invitation link: ${invitationLink}`);
 
     // Revalidate relevant pages
     revalidatePath(`/properties/${params.id}`);
@@ -144,6 +148,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       invitation_id: invitation.invitation_id,
+      invitation_link: invitationLink,
       message: 'Invitation sent successfully'
     });
 

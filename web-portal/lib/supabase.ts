@@ -34,6 +34,20 @@ export const createServiceClient = () => {
   });
 };
 
+// Create admin client for auth operations (only available on server-side)
+export const createAdminClient = () => {
+  if (!supabaseServiceKey) {
+    throw new Error('Missing env.SUPABASE_SERVICE_KEY - admin operations not available');
+  }
+  
+  return createClient<Database>(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+};
+
 // Helper function to handle Supabase errors
 export function handleSupabaseError(error: any): string {
   if (error?.message) {

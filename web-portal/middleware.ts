@@ -59,18 +59,21 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  // Allow access to login page always
-  if (request.nextUrl.pathname.startsWith('/login')) {
-    // If user is already authenticated, redirect to dashboard
-    if (session) {
-      return NextResponse.redirect(new URL('/', request.url));
+  // Allow access to auth routes and public pages
+  const publicPaths = ['/auth/login', '/auth/callback', '/request-access', '/invitations/accept'];
+  const isPublicPath = publicPaths.some(path => request.nextUrl.pathname.startsWith(path));
+  
+  if (isPublicPath) {
+    // If user is already authenticated and trying to access login, redirect to dashboard
+    if (session && request.nextUrl.pathname === '/auth/login') {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
     return response;
   }
 
   // Protect all other routes - require authentication
   if (!session) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
   return response;
