@@ -134,7 +134,8 @@ async function getPropertiesForMap() {
   const supabase = createServiceClient();
 
   // Get properties with coordinates and residents for map display
-  const { data: properties, error } = await supabase
+  // Bypass TypeScript types temporarily to test
+  const { data: properties, error } = await (supabase as any)
     .from('properties')
     .select(`
       property_id,
