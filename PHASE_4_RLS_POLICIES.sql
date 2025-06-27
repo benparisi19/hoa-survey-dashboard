@@ -180,7 +180,7 @@ CREATE POLICY "HOA admins manage property management" ON property_management
 -- Users can view invitations they sent
 CREATE POLICY "Users view sent invitations" ON property_invitations
   FOR SELECT USING (
-    inviter_id IN (
+    invited_by IN (
       SELECT person_id FROM people 
       WHERE auth_user_id = auth.uid()
     )
@@ -267,7 +267,7 @@ CREATE POLICY "Users manage own property surveys" ON property_surveys
       JOIN people p ON p.person_id = pr.person_id
       WHERE p.auth_user_id = auth.uid()
       AND pr.end_date IS NULL
-      AND 'survey_access' = ANY(pr.permissions)
+      AND pr.permissions ? 'survey_access'
     )
   );
 
@@ -292,7 +292,7 @@ RETURNS TABLE (
   address TEXT,
   hoa_zone TEXT,
   access_type TEXT,
-  permissions TEXT[]
+  permissions JSONB
 ) 
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -308,7 +308,7 @@ BEGIN
       WHEN pr.relationship_type IN ('property_manager', 'hoa_manager') THEN 'manager'
       ELSE 'resident'
     END as access_type,
-    COALESCE(pr.permissions, ARRAY[]::TEXT[]) as permissions
+    COALESCE(pr.permissions, '{}'::JSONB) as permissions
   FROM property_residents pr
   JOIN properties p ON p.property_id = pr.property_id
   JOIN people per ON per.person_id = pr.person_id
