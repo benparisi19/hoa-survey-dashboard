@@ -1,53 +1,57 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { Plus, FileText, Edit, Eye } from 'lucide-react';
+import { Plus, FileText, Calendar, Users, Settings } from 'lucide-react';
+import { createServiceClient } from '@/lib/supabase';
 import AdminGate from '@/components/AdminGate';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 export const dynamic = 'force-dynamic';
 
-async function getSurveysData() {
+async function getSurveys() {
+  // Use API route instead of direct DB connection to avoid env var scoping issues
   try {
-    // Use the same pattern as properties page - await import
-    const { createServiceClient } = await import('@/lib/supabase');
-    const supabase = createServiceClient();
+    // In server components, we need to construct the full URL
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'http://localhost:3000';
     
-    const { data: surveys, error } = await supabase
-      .from('survey_definitions')
-      .select(`
-        survey_definition_id,
-        survey_name,
-        survey_type,
-        description,
-        is_active,
-        is_template,
-        template_category,
-        active_period_start,
-        active_period_end,
-        created_at,
-        updated_at
-      `)
-      .order('created_at', { ascending: false });
+    const response = await fetch(`${baseUrl}/api/surveys`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Force no caching
+      cache: 'no-store'
+    });
 
-    if (error) {
-      console.error('Error fetching surveys:', error);
+    if (!response.ok) {
+      console.error('❌ API error fetching surveys:', response.status, response.statusText);
       return [];
     }
 
-    console.log(`✅ Successfully fetched ${surveys?.length || 0} surveys`);
+    const surveys = await response.json();
+    console.log(`✅ API fetched ${surveys?.length || 0} surveys via API route`);
     return surveys || [];
   } catch (error) {
-    console.error('Failed to fetch surveys:', error);
+    console.error('❌ Failed to fetch surveys via API:', error);
     return [];
   }
 }
 
 async function SurveysContent() {
-  const surveys = await getSurveysData();
+  const surveys = await getSurveys();
+  
+  // Debug logging
+  console.log('Survey count:', surveys.length);
+  surveys.forEach((s: any) => {
+    console.log(`Survey: ${s.survey_name}, template: ${s.is_template}, active: ${s.is_active}`);
+  });
   
   const activeSurveys = surveys.filter((s: any) => !s.is_template && s.is_active);
   const templates = surveys.filter((s: any) => s.is_template);
   const draftSurveys = surveys.filter((s: any) => !s.is_template && !s.is_active);
+  
+  console.log('Filtered counts:', { active: activeSurveys.length, templates: templates.length, drafts: draftSurveys.length });
 
   return (
     <div className="space-y-6">
@@ -57,14 +61,16 @@ async function SurveysContent() {
         <br />
         <strong>Survey Details:</strong> {surveys.map((s: any) => `${s.survey_name} (template: ${s.is_template}, active: ${s.is_active})`).join(' | ')}
       </div>
-
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <FileText className="h-8 w-8 text-blue-600" />
+          <FileText className="h-8 w-8 text-primary-600" />
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Survey Management</h1>
-            <p className="text-gray-600">Create and manage community surveys</p>
+            <p className="text-gray-600">
+              Create and manage community surveys
+            </p>
           </div>
         </div>
         <Link
@@ -74,6 +80,49 @@ async function SurveysContent() {
           <Plus className="h-4 w-4 mr-2" />
           Create Survey
         </Link>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white rounded-lg shadow-card border border-gray-200 p-6">
+          <div className="flex items-center">
+            <FileText className="h-8 w-8 text-blue-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Active Surveys</p>
+              <p className="text-2xl font-bold text-gray-900">{activeSurveys.length}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow-card border border-gray-200 p-6">
+          <div className="flex items-center">
+            <Settings className="h-8 w-8 text-green-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Templates</p>
+              <p className="text-2xl font-bold text-gray-900">{templates.length}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow-card border border-gray-200 p-6">
+          <div className="flex items-center">
+            <Calendar className="h-8 w-8 text-orange-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Draft Surveys</p>
+              <p className="text-2xl font-bold text-gray-900">{draftSurveys.length}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow-card border border-gray-200 p-6">
+          <div className="flex items-center">
+            <Users className="h-8 w-8 text-purple-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Total Surveys</p>
+              <p className="text-2xl font-bold text-gray-900">{surveys.filter((s: any) => !s.is_template).length}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Active Surveys */}
@@ -188,16 +237,14 @@ function SurveyCard({ survey }: { survey: any }) {
         <div className="flex items-center space-x-2">
           <Link
             href={`/surveys/${survey.survey_definition_id}/edit`}
-            className="inline-flex items-center px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
           >
-            <Edit className="h-4 w-4 mr-1" />
             Edit
           </Link>
           <Link
             href={`/surveys/${survey.survey_definition_id}`}
-            className="inline-flex items-center px-3 py-2 text-sm text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+            className="text-gray-600 hover:text-gray-700 text-sm font-medium"
           >
-            <Eye className="h-4 w-4 mr-1" />
             View
           </Link>
         </div>
