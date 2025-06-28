@@ -175,12 +175,29 @@ export async function GET/POST/PUT/DELETE(request: Request) {
 
 ### Supabase Integration Patterns
 
-#### Client Types
+#### Client Types & Security Guidelines
+
+**🚨 CRITICAL SECURITY WARNING: Service Client Usage**
+
 ```typescript
-createServiceClient()    // Server-side operations (service key)
+// ❌ DANGEROUS - Bypasses ALL security (RLS policies)
+createServiceClient()    // Use ONLY for admin operations after auth check
+
+// ✅ SECURE - Respects user permissions and RLS policies  
+createClient()           // From @/lib/supabase/server - USE THIS FOR USER DATA
+
+// ✅ ADMIN ONLY - For Supabase Auth admin operations
 createAdminClient()      // Auth admin operations (create users)
+
+// ✅ CLIENT - For browser/client-side operations
 createBrowserClient()    // Client-side operations (anon key)
 ```
+
+**Security Rules:**
+1. **NEVER use `createServiceClient()` for user-facing data** - bypasses all RLS
+2. **ALWAYS use `createClient()` for pages and APIs** - respects user permissions
+3. **ONLY use `createServiceClient()` after verifying admin status**
+4. **Test with non-admin users** to verify data isolation works
 
 #### RLS Policy Structure
 All tables use Row Level Security with `auth.uid()`:
