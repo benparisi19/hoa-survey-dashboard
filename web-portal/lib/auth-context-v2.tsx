@@ -185,7 +185,7 @@ export function useProfile() {
   // Fetch user profile and accessible properties
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
-      // Get user's profile from people table
+      // Get user's profile from people table (this should work with basic RLS)
       const { data: profile, error: profileError } = await supabase
         .from('people')
         .select('*')
@@ -202,7 +202,16 @@ export function useProfile() {
         return null;
       }
 
-      // Get user's accessible properties
+      // If user is admin, they get all properties (handled by service client in pages)
+      // For regular users, get their accessible properties
+      if (profile.account_type === 'hoa_admin') {
+        return {
+          ...profile,
+          accessible_properties: [] // Admins use service client, don't need this list
+        };
+      }
+
+      // Get user's accessible properties for non-admin users
       const { data: properties, error: propertiesError } = await supabase
         .rpc('get_user_accessible_properties', { user_auth_id: userId });
 

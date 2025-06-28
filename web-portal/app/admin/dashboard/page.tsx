@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { Users, AlertCircle, CheckCircle2, BarChart3, Mail, Phone } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { getServiceClient } from '@/lib/admin-client';
 import { formatPercentage, CHART_COLORS, SERVICE_RATING_ORDER, parseContactInfo } from '@/lib/utils';
 import ServiceRatingChart from '@/components/ServiceRatingChart';
 import IssuesOverview from '@/components/IssuesOverview';
@@ -39,7 +40,8 @@ interface ServiceRatingData {
 
 async function getDashboardStats(): Promise<DashboardStats> {
   try {
-    const supabase = createClient();
+    // Use service client for admin operations to bypass RLS
+    const supabase = getServiceClient();
     
     // Get total responses with review status
     const { data: responses, error: responsesError } = await supabase
@@ -118,7 +120,8 @@ async function getDashboardStats(): Promise<DashboardStats> {
 
 async function getServiceRatingData(): Promise<ServiceRatingData[]> {
   try {
-    const supabase = createClient();
+    // Use service client for admin operations to bypass RLS
+    const supabase = getServiceClient();
     
     const { data, error } = await supabase
       .from('q1_q2_preference_rating')

@@ -4,6 +4,7 @@ import { Building2, Users, MapPin, Phone, Mail, Calendar, AlertTriangle, CheckCi
 import Link from 'next/link';
 import PropertyDetailClient from '@/components/PropertyDetailClient';
 import { createClient } from '@/lib/supabase/server';
+import { getClientForUser } from '@/lib/admin-client';
 
 interface PropertyDetailsData {
   property_id: string;
@@ -56,7 +57,8 @@ interface PropertyDetailsData {
 }
 
 async function getPropertyDetails(id: string): Promise<PropertyDetailsData> {
-  const supabase = createClient();
+  // Get the appropriate client based on user's admin status
+  const { client: supabase, isAdmin } = await getClientForUser();
 
   // First check if user is authenticated
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -88,8 +90,11 @@ async function getPropertyDetails(id: string): Promise<PropertyDetailsData> {
 
   if (propertyError) {
     console.error('Error fetching property:', propertyError);
-    // If the query failed due to RLS, it means user doesn't have access
-    // Return a more helpful error instead of 404
+    // If admin and still failed, it's a real error
+    if (isAdmin) {
+      throw new Error('PROPERTY_NOT_FOUND');
+    }
+    // If regular user and failed, it means no access
     throw new Error('PROPERTY_ACCESS_DENIED');
   }
 
