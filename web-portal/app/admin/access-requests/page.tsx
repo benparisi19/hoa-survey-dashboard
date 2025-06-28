@@ -37,7 +37,7 @@ interface AccessRequest {
 
 export default function AccessRequestsAdminPage() {
   const { user, loading: authLoading } = useAuth();
-  const { userProfile, isAdmin } = useProfile();
+  const { userProfile, isAdmin, loading: profileLoading } = useProfile();
   const router = useRouter();
   const [requests, setRequests] = useState<AccessRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,15 +46,20 @@ export default function AccessRequestsAdminPage() {
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
 
   useEffect(() => {
-    if (!authLoading && (!userProfile || !isAdmin())) {
+    // Wait for both auth and profile to load
+    if (authLoading || profileLoading) {
+      return;
+    }
+
+    // Redirect if not admin
+    if (!userProfile || !isAdmin()) {
       router.push('/dashboard');
       return;
     }
 
-    if (userProfile) {
-      fetchRequests();
-    }
-  }, [userProfile, authLoading, filter, isAdmin]);
+    // Fetch requests if admin
+    fetchRequests();
+  }, [userProfile, authLoading, profileLoading, filter, isAdmin]);
 
   const fetchRequests = async () => {
     try {
@@ -104,7 +109,7 @@ export default function AccessRequestsAdminPage() {
 
   const isExpired = (expiresAt: string) => new Date(expiresAt) < new Date();
 
-  if (authLoading || loading) {
+  if (authLoading || profileLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />
