@@ -32,12 +32,35 @@ export async function GET(request: NextRequest) {
     );
     
     try {
-      await supabase.auth.exchangeCodeForSession(code);
+      const { data: { user }, error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
       
-      // Redirect to dashboard after successful authentication
+      if (sessionError || !user) {
+        console.error('Error exchanging code for session:', sessionError);
+        return NextResponse.redirect(new URL('/auth/login?error=auth_error', request.url));
+      }
+
+      // Check if user has a profile in the people table
+      const { data: profile, error: profileError } = await supabase
+        .from('people')
+        .select('person_id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        // PGRST116 is "not found" - which is expected for new users
+        console.error('Error checking user profile:', profileError);
+        return NextResponse.redirect(new URL('/auth/login?error=auth_error', request.url));
+      }
+
+      if (!profile) {
+        // New user - redirect to profile setup
+        return NextResponse.redirect(new URL(`/auth/setup-profile?email=${encodeURIComponent(user.email || '')}`, request.url));
+      }
+
+      // Existing user - redirect to dashboard
       return NextResponse.redirect(new URL('/dashboard', request.url));
     } catch (error) {
-      console.error('Error exchanging code for session:', error);
+      console.error('Error in auth callback:', error);
       // Redirect to login with error
       return NextResponse.redirect(new URL('/auth/login?error=auth_error', request.url));
     }

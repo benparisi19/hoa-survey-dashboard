@@ -24,20 +24,8 @@ export default function InviteResidentPage({ params }: { params: { id: string } 
   
   const [formData, setFormData] = useState({
     invited_email: '',
-    invited_name: '',
-    relationship_type: 'resident' as 'primary_renter' | 'resident' | 'family' | 'caretaker',
-    message: '',
-    access_level: 'basic' as 'basic' | 'standard' | 'full',
-    can_invite_others: false,
-    permissions: ['survey_access', 'property_info'] as string[]
+    message: ''
   });
-
-  const permissionOptions = [
-    { id: 'survey_access', label: 'Complete Surveys', description: 'Participate in community surveys' },
-    { id: 'property_info', label: 'View Property Info', description: 'See property details and resident list' },
-    { id: 'communications', label: 'Community Communications', description: 'Receive HOA communications' },
-    { id: 'maintenance_requests', label: 'Maintenance Requests', description: 'Submit maintenance requests' }
-  ];
 
   useEffect(() => {
     if (!authLoading && !userProfile) {
@@ -81,8 +69,13 @@ export default function InviteResidentPage({ params }: { params: { id: string } 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
-          invited_by: userProfile.person_id
+          invited_email: formData.invited_email,
+          message: formData.message,
+          invited_by: userProfile.person_id,
+          relationship_type: 'resident', // Default relationship
+          permissions: ['survey_access', 'property_info'], // Default permissions
+          access_level: 'basic',
+          can_invite_others: false
         })
       });
 
@@ -97,12 +90,7 @@ export default function InviteResidentPage({ params }: { params: { id: string } 
         // Reset form
         setFormData({
           invited_email: '',
-          invited_name: '',
-          relationship_type: 'resident',
-          message: '',
-          access_level: 'basic',
-          can_invite_others: false,
-          permissions: ['survey_access', 'property_info']
+          message: ''
         });
       } else {
         setMessage({ type: 'error', text: result.error || 'Failed to send invitation' });
@@ -112,15 +100,6 @@ export default function InviteResidentPage({ params }: { params: { id: string } 
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handlePermissionChange = (permissionId: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      permissions: checked 
-        ? [...prev.permissions, permissionId]
-        : prev.permissions.filter(p => p !== permissionId)
-    }));
   };
 
   if (authLoading || loading) {
@@ -193,9 +172,8 @@ export default function InviteResidentPage({ params }: { params: { id: string } 
         {/* Invitation Form */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Resident Information</h3>
+              <h3 className="text-lg font-medium text-gray-900">Email Invitation</h3>
               
               <div>
                 <label htmlFor="invited_email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -215,97 +193,47 @@ export default function InviteResidentPage({ params }: { params: { id: string } 
                     placeholder="resident@example.com"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label htmlFor="invited_name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  id="invited_name"
-                  value={formData.invited_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, invited_name: e.target.value }))}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="John Doe"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="relationship_type" className="block text-sm font-medium text-gray-700 mb-1">
-                  Relationship to Property *
-                </label>
-                <select
-                  id="relationship_type"
-                  required
-                  value={formData.relationship_type}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
-                    relationship_type: e.target.value as typeof formData.relationship_type 
-                  }))}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="resident">Resident</option>
-                  <option value="primary_renter">Primary Renter</option>
-                  <option value="family">Family Member</option>
-                  <option value="caretaker">Caretaker</option>
-                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  Enter the email address of the person you want to invite. They'll complete their profile after accepting.
+                </p>
               </div>
             </div>
 
-            {/* Permissions */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Access Permissions</h3>
-              
-              <div className="space-y-3">
-                {permissionOptions.map((permission) => (
-                  <div key={permission.id} className="flex items-start">
-                    <div className="flex items-center h-5">
-                      <input
-                        id={permission.id}
-                        type="checkbox"
-                        checked={formData.permissions.includes(permission.id)}
-                        onChange={(e) => handlePermissionChange(permission.id, e.target.checked)}
-                        className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
-                      />
-                    </div>
-                    <div className="ml-3 text-sm">
-                      <label htmlFor={permission.id} className="font-medium text-gray-700">
-                        {permission.label}
-                      </label>
-                      <p className="text-gray-500">{permission.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  id="can_invite_others"
-                  type="checkbox"
-                  checked={formData.can_invite_others}
-                  onChange={(e) => setFormData(prev => ({ ...prev, can_invite_others: e.target.checked }))}
-                  className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
-                />
-                <label htmlFor="can_invite_others" className="ml-2 block text-sm font-medium text-gray-700">
-                  Allow this person to invite other residents
-                </label>
-              </div>
-            </div>
-
-            {/* Personal Message */}
+            {/* Welcome Message */}
             <div>
               <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                Personal Message (Optional)
+                Welcome Message (Optional)
               </label>
               <textarea
                 id="message"
-                rows={3}
+                rows={4}
                 value={formData.message}
                 onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Welcome to our community! You'll have access to..."
+                placeholder="Welcome to our community! Once you accept this invitation, you'll be able to access property information and participate in surveys."
               />
+            </div>
+
+            {/* Info Box */}
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <CheckCircle className="h-5 w-5 text-blue-400" />
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-blue-800">
+                    What happens next?
+                  </h3>
+                  <div className="mt-2 text-sm text-blue-700">
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>The person will receive an email invitation</li>
+                      <li>They can create an account or sign in if they already have one</li>
+                      <li>They'll gain access to property information and surveys</li>
+                      <li>You can manage their access from the property page</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Submit Button */}

@@ -1,10 +1,36 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { createServiceClient } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication and admin status first
+    const authSupabase = createClient();
+    const { data: { user }, error: authError } = await authSupabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Check if user is admin
+    const { data: profile, error: profileError } = await authSupabase
+      .from('people')
+      .select('account_type')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (profileError || profile?.account_type !== 'hoa_admin') {
+      return NextResponse.json(
+        { error: 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
     const supabase = createServiceClient();
     
     // Parse query parameters
