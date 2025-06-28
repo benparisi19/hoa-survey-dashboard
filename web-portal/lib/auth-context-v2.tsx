@@ -18,6 +18,8 @@ export type UserProfile = {
   first_name: string;
   last_name: string;
   email: string;
+  phone?: string;
+  preferred_contact_method?: 'email' | 'phone' | 'text' | 'mail';
   account_status: string;
   account_type: string;
   verification_method?: string;
