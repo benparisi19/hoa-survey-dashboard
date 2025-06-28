@@ -55,8 +55,7 @@ export const ROUTE_TIERS = {
     '/auth/login',
     '/auth/signup', 
     '/auth/callback',
-    '/about',
-    '/request-access' // Keep during transition
+    '/request-access'
   ],
   
   [RouteTier.ONBOARDING]: [
@@ -71,14 +70,13 @@ export const ROUTE_TIERS = {
     '/dashboard',
     '/properties',
     '/surveys',
-    '/community',
     '/invitations'
   ],
   
   [RouteTier.ADMIN]: [
     '/admin',
-    '/people', // Current admin-only pages
-    '/zones',
+    '/people',
+    '/zones', 
     '/neighborhood',
     '/responses'
   ]

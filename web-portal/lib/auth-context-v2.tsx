@@ -207,7 +207,10 @@ export function useProfile() {
         .rpc('get_user_accessible_properties', { user_auth_id: userId });
 
       if (propertiesError) {
-        console.error('Error fetching accessible properties:', propertiesError);
+        // 406 errors are common for new users with no property access - this is expected
+        if (propertiesError.code !== 'PGRST406') {
+          console.error('Error fetching accessible properties:', propertiesError);
+        }
         return {
           ...profile,
           accessible_properties: []

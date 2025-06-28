@@ -89,12 +89,13 @@ async function getPropertyDetails(id: string): Promise<PropertyDetailsData> {
   if (propertyError) {
     console.error('Error fetching property:', propertyError);
     // If the query failed due to RLS, it means user doesn't have access
-    notFound();
+    // Return a more helpful error instead of 404
+    throw new Error('PROPERTY_ACCESS_DENIED');
   }
 
   if (!property) {
     // No property returned - either doesn't exist or user has no access
-    notFound();
+    throw new Error('PROPERTY_NOT_FOUND');
   }
 
   // Get current residents from property_residents table
@@ -396,37 +397,95 @@ function ActivitySection({ activities, issuesCount }: {
 }
 
 async function PropertyDetailsContent({ id }: { id: string }) {
-  const property = await getPropertyDetails(id);
+  try {
+    const property = await getPropertyDetails(id);
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <PropertyHeader property={property} />
-      
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column */}
-          <div className="space-y-6">
-            <div className="bg-white shadow rounded-lg p-6">
-              <PropertyDetailClient 
-                propertyId={property.property_id}
-                initialResidents={property.current_residents}
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <PropertyHeader property={property} />
+        
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="space-y-6">
+              <div className="bg-white shadow rounded-lg p-6">
+                <PropertyDetailClient 
+                  propertyId={property.property_id}
+                  initialResidents={property.current_residents}
+                />
+              </div>
+              <SurveyHistorySection surveys={property.survey_history} />
+            </div>
+            
+            {/* Right Column */}
+            <div className="space-y-6">
+              <PropertyInfoSection property={property} />
+              <ActivitySection 
+                activities={property.recent_activity} 
+                issuesCount={property.issues_count}
               />
             </div>
-            <SurveyHistorySection surveys={property.survey_history} />
-          </div>
-          
-          {/* Right Column */}
-          <div className="space-y-6">
-            <PropertyInfoSection property={property} />
-            <ActivitySection 
-              activities={property.recent_activity} 
-              issuesCount={property.issues_count}
-            />
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === 'PROPERTY_ACCESS_DENIED') {
+        return (
+          <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+            <div className="max-w-md w-full text-center">
+              <div className="bg-orange-100 rounded-full p-3 w-fit mx-auto mb-4">
+                <Building2 className="h-8 w-8 text-orange-600" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Property Access Required</h2>
+              <p className="text-gray-600 mb-6">
+                You don't have access to view this property. You'll need to request access or be invited by the property owner.
+              </p>
+              <div className="space-y-3">
+                <Link
+                  href="/property-search"
+                  className="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Find & Request Access
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Back to Dashboard
+                </Link>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      
+      if (error.message === 'PROPERTY_NOT_FOUND') {
+        return (
+          <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+            <div className="max-w-md w-full text-center">
+              <h1 className="text-6xl font-bold text-gray-300 mb-4">404</h1>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Property Not Found</h2>
+              <p className="text-gray-600 mb-6">
+                The property you're looking for doesn't exist or has been removed.
+              </p>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Back to Dashboard
+              </Link>
+            </div>
+          </div>
+        );
+      }
+    }
+    
+    // For any other error, show generic error
+    throw error;
+  }
 }
 
 export default function PropertyDetailPage({ params }: { params: { id: string } }) {
