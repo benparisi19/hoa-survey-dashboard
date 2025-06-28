@@ -71,10 +71,10 @@ export default function PersonNameInput({
 
     const searchTerm = value.toLowerCase().trim();
     const matches = people.filter(person => 
-      person.full_name.toLowerCase().includes(searchTerm) ||
-      person.first_name.toLowerCase().includes(searchTerm) ||
-      person.last_name.toLowerCase().includes(searchTerm) ||
-      person.email.toLowerCase().includes(searchTerm)
+      (person.full_name || '').toLowerCase().includes(searchTerm) ||
+      (person.first_name || '').toLowerCase().includes(searchTerm) ||
+      (person.last_name || '').toLowerCase().includes(searchTerm) ||
+      (person.email || '').toLowerCase().includes(searchTerm)
     ).slice(0, 10); // Limit to 10 suggestions
 
     setFilteredPeople(matches);
@@ -127,7 +127,7 @@ export default function PersonNameInput({
 
   // Check if current value matches a person exactly
   const matchedPerson = people.find(p => 
-    p.full_name.toLowerCase() === value.toLowerCase()
+    (p.full_name || '').toLowerCase() === value.toLowerCase()
   );
 
   return (

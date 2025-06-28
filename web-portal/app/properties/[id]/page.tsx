@@ -1,9 +1,9 @@
 import { Suspense } from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { Building2, Users, MapPin, Phone, Mail, Calendar, AlertTriangle, CheckCircle, Settings, MessageSquare, Plus } from 'lucide-react';
 import Link from 'next/link';
 import PropertyDetailClient from '@/components/PropertyDetailClient';
-import { createServiceClient } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 
 interface PropertyDetailsData {
   property_id: string;
@@ -56,7 +56,14 @@ interface PropertyDetailsData {
 }
 
 async function getPropertyDetails(id: string): Promise<PropertyDetailsData> {
-  const supabase = createServiceClient();
+  const supabase = createClient();
+
+  // First check if user is authenticated
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !user) {
+    redirect('/auth/login');
+  }
 
   // Get basic property information
   const { data: property, error: propertyError } = await supabase
@@ -81,6 +88,12 @@ async function getPropertyDetails(id: string): Promise<PropertyDetailsData> {
 
   if (propertyError) {
     console.error('Error fetching property:', propertyError);
+    // If the query failed due to RLS, it means user doesn't have access
+    notFound();
+  }
+
+  if (!property) {
+    // No property returned - either doesn't exist or user has no access
     notFound();
   }
 
