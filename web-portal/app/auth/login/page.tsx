@@ -213,13 +213,7 @@ function LoginContent() {
               href="/auth/signup" 
               className="block text-center w-full px-3 py-2 text-sm text-blue-600 border border-blue-200 rounded-md hover:bg-blue-50 transition-colors"
             >
-              Create Account
-            </a>
-            <a 
-              href="/request-access" 
-              className="block text-center w-full px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
-            >
-              Request Property Access
+              Create Account & Find Property
             </a>
           </div>
         </div>

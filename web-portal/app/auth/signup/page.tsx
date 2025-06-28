@@ -212,10 +212,10 @@ function SignupContent() {
           </p>
           <div className="space-y-2">
             <a 
-              href="/request-access" 
+              href="/auth/login" 
               className="block text-center w-full px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
             >
-              Learn About Property Access
+              Already have an account? Sign In
             </a>
           </div>
         </div>

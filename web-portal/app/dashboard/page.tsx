@@ -116,9 +116,20 @@ export default function DashboardPage() {
 
         {/* Property Access Overview */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Your Properties ({userProfile.accessible_properties.length})
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Your Properties ({userProfile.accessible_properties.length})
+            </h2>
+            {userProfile.accessible_properties.length > 0 && (
+              <a
+                href="/property-search"
+                className="inline-flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Another Property
+              </a>
+            )}
+          </div>
           
           {userProfile.accessible_properties.length === 0 ? (
             <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
@@ -130,11 +141,11 @@ export default function DashboardPage() {
                 You don't have access to any properties yet. Request access or contact your property owner.
               </p>
               <a
-                href="/request-access"
+                href="/property-search"
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Request Property Access
+                Find Your Property
               </a>
             </div>
           ) : (

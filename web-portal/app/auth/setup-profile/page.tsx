@@ -55,12 +55,12 @@ function SetupProfileContent() {
 
       setMessage({ 
         type: 'success', 
-        text: 'Profile created successfully! Redirecting to dashboard...' 
+        text: 'Profile created successfully! Now let\'s find your property...' 
       });
 
-      // Redirect to dashboard after successful setup
+      // Redirect to property search after successful setup
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push('/property-search');
       }, 1500);
 
     } catch (error) {
@@ -186,15 +186,12 @@ function SetupProfileContent() {
             What's next?
           </h3>
           <p className="text-xs text-gray-600 mb-3">
-            After completing your profile, you can request access to your property or wait for an invitation from the property owner.
+            After completing your profile, you'll search for your property address to request access to the community portal.
           </p>
-          <div className="space-y-2">
-            <a 
-              href="/request-access" 
-              className="block text-center w-full px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
-            >
-              Request Property Access
-            </a>
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+            <p className="text-xs text-blue-800">
+              <strong>Step 2:</strong> Find your property → Request access → Get approved by property owner/HOA admin
+            </p>
           </div>
         </div>
       </div>
