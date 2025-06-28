@@ -2,7 +2,7 @@
 
 import { useAuth, useProfile } from '@/lib/auth-context-v2';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { 
   Home, 
   Search, 
@@ -12,7 +12,14 @@ import {
   HelpCircle,
   ArrowRight,
   UserCheck,
-  Clock
+  Clock,
+  AlertTriangle,
+  Info,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+  BookOpen,
+  Target
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Link from 'next/link';
@@ -21,6 +28,8 @@ export default function GettingStartedPage() {
   const { user, loading, signOut } = useAuth();
   const { userProfile } = useProfile();
   const router = useRouter();
+  const [expandedGuide, setExpandedGuide] = useState<string | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -249,6 +258,278 @@ export default function GettingStartedPage() {
           </div>
         </div>
 
+        {/* Detailed Guides */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold text-gray-900">Step-by-Step Guides</h3>
+            <button
+              onClick={() => setShowTutorial(!showTutorial)}
+              className="inline-flex items-center px-3 py-2 text-sm text-blue-600 hover:text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-50"
+            >
+              <Target className="h-4 w-4 mr-2" />
+              {showTutorial ? 'Hide Tutorial' : 'Start Tutorial'}
+            </button>
+          </div>
+
+          {showTutorial && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+              <div className="flex items-start">
+                <Info className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                <div>
+                  <h4 className="font-medium text-blue-900 mb-2">Interactive Tutorial</h4>
+                  <p className="text-blue-800 text-sm mb-4">
+                    This tutorial will walk you through finding and requesting access to your property. It typically takes 2-3 minutes.
+                  </p>
+                  <div className="space-y-2 text-sm text-blue-700">
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2">1</div>
+                      Go to the property search page
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2">2</div>
+                      Enter your property address or use the map
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2">3</div>
+                      Request access and provide your relationship to the property
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2">4</div>
+                      Wait for approval from property owner or HOA admin
+                    </div>
+                  </div>
+                  <Link
+                    href="/property-search?tutorial=true"
+                    className="inline-flex items-center mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    Start Guided Tour
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {/* Guide 1: Finding Your Property */}
+            <div className="bg-white border border-gray-200 rounded-lg">
+              <button
+                onClick={() => setExpandedGuide(expandedGuide === 'property-search' ? null : 'property-search')}
+                className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50"
+              >
+                <div className="flex items-center">
+                  <Search className="h-5 w-5 text-blue-600 mr-3" />
+                  <div>
+                    <h4 className="font-medium text-gray-900">How to Find Your Property</h4>
+                    <p className="text-sm text-gray-500">Learn different ways to search for your property</p>
+                  </div>
+                </div>
+                {expandedGuide === 'property-search' ? (
+                  <ChevronUp className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                )}
+              </button>
+              
+              {expandedGuide === 'property-search' && (
+                <div className="px-6 pb-4 border-t border-gray-100">
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <h5 className="font-medium text-gray-900 mb-2">Method 1: Address Search</h5>
+                      <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600 ml-4">
+                        <li>Click "Find Your Property" or use the search bar</li>
+                        <li>Enter your complete address (e.g., "123 Main St")</li>
+                        <li>Select your property from the dropdown suggestions</li>
+                        <li>Verify the property details match your residence</li>
+                      </ol>
+                    </div>
+                    
+                    <div>
+                      <h5 className="font-medium text-gray-900 mb-2">Method 2: Interactive Map</h5>
+                      <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600 ml-4">
+                        <li>Use the map view on the property search page</li>
+                        <li>Navigate to your neighborhood using zoom and pan</li>
+                        <li>Click on your property marker on the map</li>
+                        <li>Confirm this is your correct address</li>
+                      </ol>
+                    </div>
+
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <div className="flex items-start">
+                        <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
+                        <div className="text-sm">
+                          <p className="font-medium text-yellow-800">Can't find your property?</p>
+                          <p className="text-yellow-700 mt-1">
+                            Try searching with different address formats, or contact support if your property doesn't appear in our system.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Guide 2: Requesting Access */}
+            <div className="bg-white border border-gray-200 rounded-lg">
+              <button
+                onClick={() => setExpandedGuide(expandedGuide === 'request-access' ? null : 'request-access')}
+                className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50"
+              >
+                <div className="flex items-center">
+                  <UserCheck className="h-5 w-5 text-green-600 mr-3" />
+                  <div>
+                    <h4 className="font-medium text-gray-900">How to Request Property Access</h4>
+                    <p className="text-sm text-gray-500">Submit a request to connect with your property</p>
+                  </div>
+                </div>
+                {expandedGuide === 'request-access' ? (
+                  <ChevronUp className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                )}
+              </button>
+              
+              {expandedGuide === 'request-access' && (
+                <div className="px-6 pb-4 border-t border-gray-100">
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <h5 className="font-medium text-gray-900 mb-2">What You'll Need</h5>
+                      <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 ml-4">
+                        <li>Your relationship to the property (Owner, Resident, Family Member, etc.)</li>
+                        <li>A brief message explaining your request (optional but helpful)</li>
+                        <li>Your contact information (already filled from your profile)</li>
+                      </ul>
+                    </div>
+                    
+                    <div>
+                      <h5 className="font-medium text-gray-900 mb-2">Step-by-Step Process</h5>
+                      <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600 ml-4">
+                        <li>Find your property using one of the search methods above</li>
+                        <li>Click "Request Access" on the property details</li>
+                        <li>Select your relationship to the property from the dropdown</li>
+                        <li>Add a personal message explaining your connection (optional)</li>
+                        <li>Review your contact information</li>
+                        <li>Submit your request</li>
+                      </ol>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <div className="flex items-start">
+                        <Info className="h-4 w-4 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
+                        <div className="text-sm">
+                          <p className="font-medium text-blue-800">Processing Time</p>
+                          <p className="text-blue-700 mt-1">
+                            Requests are typically reviewed within 24-48 hours. You'll receive an email notification when your access is approved or if additional information is needed.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Guide 3: What Happens Next */}
+            <div className="bg-white border border-gray-200 rounded-lg">
+              <button
+                onClick={() => setExpandedGuide(expandedGuide === 'what-next' ? null : 'what-next')}
+                className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50"
+              >
+                <div className="flex items-center">
+                  <Clock className="h-5 w-5 text-purple-600 mr-3" />
+                  <div>
+                    <h4 className="font-medium text-gray-900">What Happens After You Request Access</h4>
+                    <p className="text-sm text-gray-500">Understanding the approval process and next steps</p>
+                  </div>
+                </div>
+                {expandedGuide === 'what-next' ? (
+                  <ChevronUp className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                )}
+              </button>
+              
+              {expandedGuide === 'what-next' && (
+                <div className="px-6 pb-4 border-t border-gray-100">
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <h5 className="font-medium text-gray-900 mb-2">Review Process</h5>
+                      <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600 ml-4">
+                        <li>
+                          <strong>Request Submitted:</strong> Your request is sent to the property owner and HOA administrators
+                        </li>
+                        <li>
+                          <strong>Under Review:</strong> Property owner or HOA admin reviews your request and verifies your information
+                        </li>
+                        <li>
+                          <strong>Decision Made:</strong> You'll receive an email with the approval decision
+                        </li>
+                        <li>
+                          <strong>Access Granted:</strong> Once approved, you can access your property dashboard and community features
+                        </li>
+                      </ol>
+                    </div>
+                    
+                    <div>
+                      <h5 className="font-medium text-gray-900 mb-2">Once You Have Access</h5>
+                      <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 ml-4">
+                        <li>View your property details and HOA zone information</li>
+                        <li>Participate in community surveys and voting</li>
+                        <li>Access neighborhood updates and announcements</li>
+                        <li>Connect with neighbors and community resources</li>
+                        <li>Manage your household members (if you're the property owner)</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="flex items-start">
+                        <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 mr-2 flex-shrink-0" />
+                        <div className="text-sm">
+                          <p className="font-medium text-green-800">Pro Tip</p>
+                          <p className="text-green-700 mt-1">
+                            You can request access to multiple properties if you own or reside in more than one property in the community.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Tips */}
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6 mb-8">
+          <div className="flex items-start">
+            <BookOpen className="h-6 w-6 text-purple-600 mt-1 mr-3 flex-shrink-0" />
+            <div>
+              <h3 className="text-lg font-medium text-purple-900 mb-3">Quick Tips for Success</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <h4 className="font-medium text-purple-800 mb-2">✅ Do This</h4>
+                  <ul className="space-y-1 text-purple-700">
+                    <li>• Use your exact property address</li>
+                    <li>• Be specific about your relationship</li>
+                    <li>• Check your email for updates</li>
+                    <li>• Keep your profile information current</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-medium text-purple-800 mb-2">❌ Avoid This</h4>
+                  <ul className="space-y-1 text-purple-700">
+                    <li>• Don't use abbreviations in addresses</li>
+                    <li>• Don't submit duplicate requests</li>
+                    <li>• Don't forget to check spam folder</li>
+                    <li>• Don't request access for others</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Contact Support */}
         <div className="mt-8 text-center">
           <div className="bg-gray-100 rounded-lg p-6">
@@ -259,12 +540,22 @@ export default function GettingStartedPage() {
             <p className="text-gray-600 mb-4">
               If you can't find your property or run into issues, don't hesitate to reach out.
             </p>
-            <Link
-              href="/help"
-              className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              Contact Support
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                href="/help"
+                className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                <HelpCircle className="h-4 w-4 mr-2" />
+                View Help Center
+              </Link>
+              <Link
+                href="/help#contact"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Contact Support
+              </Link>
+            </div>
           </div>
         </div>
       </div>

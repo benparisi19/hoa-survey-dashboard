@@ -1,265 +1,240 @@
-import { Suspense } from 'react';
-import { Users, AlertCircle, CheckCircle2, BarChart3, Mail, Phone } from 'lucide-react';
-import { createClient } from '@/lib/supabase-server';
-import { formatPercentage, CHART_COLORS, SERVICE_RATING_ORDER, parseContactInfo } from '@/lib/utils';
-import ServiceRatingChart from '@/components/ServiceRatingChart';
-import IssuesOverview from '@/components/IssuesOverview';
-import ContactOverview from '@/components/ContactOverview';
-import MetricCard from '@/components/MetricCard';
+'use client';
+
+import { useEffect } from 'react';
+import { useAuth } from '@/lib/auth-context-v2';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { 
+  BarChart3, 
+  Shield, 
+  Users, 
+  Building2, 
+  ArrowRight,
+  MapPin,
+  Star,
+  CheckCircle
+} from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import AdminGate from '@/components/AdminGate';
 
-export const dynamic = 'force-dynamic';
+export default function LandingPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
-interface DashboardStats {
-  totalResponses: number;
-  anonymousResponses: number;
-  poorRatings: number;
-  wantOptOut: number;
-  hasContactInfo: number;
-  irrigationIssues: number;
-  unreviewed: number;
-  reviewed: number;
-  flagged: number;
-  contactByType: {
-    none: number;
-    email: number;
-    phone: number;
-    both: number;
-    other: number;
-  };
-}
+  // Redirect authenticated users to their appropriate dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, loading, router]);
 
-interface ServiceRatingData {
-  rating: string;
-  count: number;
-  percentage: number;
-}
-
-async function getDashboardStats(): Promise<DashboardStats> {
-  try {
-    const supabase = createClient();
-    
-    // Get total responses with review status
-    const { data: responses, error: responsesError } = await supabase
-      .from('responses')
-      .select('response_id, anonymous, email_contact, review_status');
-    
-    if (responsesError) throw responsesError;
-    
-    // Get service ratings
-    const { data: ratings, error: ratingsError } = await supabase
-      .from('q1_q2_preference_rating')
-      .select('q2_service_rating, q1_preference');
-    
-    if (ratingsError) throw ratingsError;
-    
-    // Get landscaping issues
-    const { data: issues, error: issuesError } = await supabase
-      .from('q4_landscaping_issues')
-      .select('irrigation');
-    
-    if (issuesError) throw issuesError;
-    
-    const totalResponses = responses?.length || 0;
-    const anonymousResponses = responses?.filter(r => r.anonymous === 'Yes').length || 0;
-    const poorRatings = ratings?.filter(r => 
-      r.q2_service_rating === 'Poor' || r.q2_service_rating === 'Very Poor'
-    ).length || 0;
-    const wantOptOut = ratings?.filter(r => 
-      r.q1_preference?.toLowerCase().includes('opt out')
-    ).length || 0;
-    // Analyze contact information
-    const contactAnalysis = { none: 0, email: 0, phone: 0, both: 0, other: 0 };
-    let hasContactInfo = 0;
-    
-    responses?.forEach(r => {
-      const contactInfo = parseContactInfo(r.email_contact);
-      contactAnalysis[contactInfo.type]++;
-      if (contactInfo.isValid) hasContactInfo++;
-    });
-    
-    const irrigationIssues = issues?.filter(i => i.irrigation === 'Yes').length || 0;
-    
-    // Calculate review status counts
-    const unreviewed = responses?.filter(r => !r.review_status || r.review_status === 'unreviewed').length || 0;
-    const reviewed = responses?.filter(r => r.review_status === 'reviewed').length || 0;
-    const flagged = responses?.filter(r => r.review_status === 'flagged').length || 0;
-    
-    return {
-      totalResponses,
-      anonymousResponses,
-      poorRatings,
-      wantOptOut,
-      hasContactInfo,
-      irrigationIssues,
-      unreviewed,
-      reviewed,
-      flagged,
-      contactByType: contactAnalysis,
-    };
-  } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
-    return {
-      totalResponses: 0,
-      anonymousResponses: 0,
-      poorRatings: 0,
-      wantOptOut: 0,
-      hasContactInfo: 0,
-      irrigationIssues: 0,
-      unreviewed: 0,
-      reviewed: 0,
-      flagged: 0,
-      contactByType: { none: 0, email: 0, phone: 0, both: 0, other: 0 },
-    };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
   }
-}
 
-async function getServiceRatingData(): Promise<ServiceRatingData[]> {
-  try {
-    const supabase = createClient();
-    
-    const { data, error } = await supabase
-      .from('q1_q2_preference_rating')
-      .select('q2_service_rating');
-    
-    if (error) throw error;
-    
-    const counts: Record<string, number> = {};
-    const total = data?.length || 0;
-    
-    data?.forEach(item => {
-      const rating = item.q2_service_rating || 'Not specified';
-      counts[rating] = (counts[rating] || 0) + 1;
-    });
-    
-    return SERVICE_RATING_ORDER
-      .filter(rating => counts[rating] > 0)
-      .map(rating => ({
-        rating,
-        count: counts[rating],
-        percentage: Math.round((counts[rating] / total) * 100),
-      }));
-  } catch (error) {
-    console.error('Error fetching service rating data:', error);
-    return [];
+  // Don't render landing page for authenticated users (they'll be redirected)
+  if (user) {
+    return null;
   }
-}
 
-async function DashboardContent() {
-  const [stats, serviceRatingData] = await Promise.all([
-    getDashboardStats(),
-    getServiceRatingData(),
-  ]);
-  
-  const keyMetrics = [
-    {
-      label: 'Unreviewed Responses',
-      value: stats.unreviewed,
-      total: stats.totalResponses,
-      type: 'warning' as const,
-      description: 'Responses that need review and validation',
-    },
-    {
-      label: 'Poor Service Ratings',
-      value: stats.poorRatings,
-      total: stats.totalResponses,
-      type: 'error' as const,
-      description: 'Residents rating service as Poor or Very Poor',
-    },
-    {
-      label: 'Want to Opt Out',
-      value: stats.wantOptOut,
-      total: stats.totalResponses,
-      type: 'warning' as const,
-      description: 'Residents who want to opt out of HOA landscaping',
-    },
-  ];
-  
-  const reviewMetrics = [
-    {
-      label: 'Reviewed',
-      value: stats.reviewed,
-      total: stats.totalResponses,
-      type: 'success' as const,
-      description: 'Responses verified and approved',
-    },
-    {
-      label: 'Flagged',
-      value: stats.flagged,
-      total: stats.totalResponses,
-      type: 'error' as const,
-      description: 'Responses requiring attention or clarification',
-    },
-    {
-      label: 'Contact Information',
-      value: stats.hasContactInfo,
-      total: stats.totalResponses,
-      type: 'info' as const,
-      description: 'Responses with contact information for follow-up',
-    },
-  ];
-  
   return (
-    <div className="space-y-8">
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {keyMetrics.map((metric) => (
-          <MetricCard key={metric.label} {...metric} />
-        ))}
-      </div>
-      
-      {/* Review Status Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {reviewMetrics.map((metric) => (
-          <MetricCard key={metric.label} {...metric} />
-        ))}
-      </div>
-      
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Service Rating Chart */}
-        <div className="bg-white rounded-lg shadow-card border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Service Ratings</h2>
-            <BarChart3 className="h-5 w-5 text-gray-400" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-3">
+              <BarChart3 className="h-8 w-8 text-blue-600" />
+              <span className="text-xl font-bold text-gray-900">
+                HOA Community Portal
+              </span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/auth/login"
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/auth/signup"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                Get Started
+              </Link>
+            </div>
           </div>
-          <ServiceRatingChart data={serviceRatingData} />
         </div>
-        
-        {/* Issues Overview */}
-        <div className="bg-white rounded-lg shadow-card border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Common Issues</h2>
-            <AlertCircle className="h-5 w-5 text-gray-400" />
+      </header>
+
+      {/* Hero Section */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="pt-16 pb-20 text-center lg:pt-32">
+          <h1 className="mx-auto max-w-4xl font-display text-5xl font-bold tracking-tight text-gray-900 sm:text-7xl">
+            Connect with your{' '}
+            <span className="relative whitespace-nowrap text-blue-600">
+              <span className="relative">community</span>
+            </span>
+          </h1>
+          <p className="mx-auto mt-6 max-w-2xl text-lg tracking-tight text-gray-700">
+            Manage your property, participate in community decisions, and stay connected with your neighbors through our comprehensive HOA platform.
+          </p>
+          <div className="mt-10 flex justify-center gap-x-6">
+            <Link
+              href="/auth/signup"
+              className="group inline-flex items-center justify-center rounded-full py-3 px-6 text-sm font-semibold focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-800 focus-visible:outline-blue-600"
+            >
+              Get started today
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+            <Link
+              href="/request-access"
+              className="group inline-flex ring-1 items-center justify-center rounded-full py-3 px-6 text-sm focus:outline-none ring-gray-200 text-gray-700 hover:text-gray-900 hover:ring-gray-300 active:bg-gray-100 active:text-gray-600 focus-visible:outline-blue-600 focus-visible:ring-gray-300"
+            >
+              Request property access
+            </Link>
           </div>
-          <Suspense fallback={<LoadingSpinner />}>
-            <IssuesOverview />
-          </Suspense>
         </div>
-        
-        {/* Contact Overview */}
-        <div className="bg-white rounded-lg shadow-card border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Contact Methods</h2>
-            <Mail className="h-5 w-5 text-gray-400" />
+
+        {/* Features Section */}
+        <div className="pb-16 lg:pb-20">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            {/* Property Management */}
+            <div className="bg-white rounded-2xl shadow-lg p-8">
+              <div className="mb-6">
+                <div className="bg-blue-100 rounded-full p-3 w-fit">
+                  <Building2 className="h-8 w-8 text-blue-600" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                Property Management
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Access your property information, manage residents, and track community updates all in one place.
+              </p>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                  View property details and history
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                  Manage household members
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                  Access community documents
+                </li>
+              </ul>
+            </div>
+
+            {/* Community Engagement */}
+            <div className="bg-white rounded-2xl shadow-lg p-8">
+              <div className="mb-6">
+                <div className="bg-green-100 rounded-full p-3 w-fit">
+                  <Users className="h-8 w-8 text-green-600" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                Community Engagement
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Participate in surveys, provide feedback, and help shape your community's future.
+              </p>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                  Complete community surveys
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                  Voice your opinions
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                  Stay informed on decisions
+                </li>
+              </ul>
+            </div>
+
+            {/* Neighborhood Insights */}
+            <div className="bg-white rounded-2xl shadow-lg p-8">
+              <div className="mb-6">
+                <div className="bg-purple-100 rounded-full p-3 w-fit">
+                  <MapPin className="h-8 w-8 text-purple-600" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                Neighborhood Insights
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Explore interactive maps, view zone information, and discover community amenities.
+              </p>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                  Interactive community map
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                  Zone-based information
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                  Community statistics
+                </li>
+              </ul>
+            </div>
           </div>
-          <ContactOverview 
-            contactByType={stats.contactByType} 
-            totalResponses={stats.totalResponses} 
-          />
         </div>
-      </div>
+
+        {/* CTA Section */}
+        <div className="bg-blue-600 rounded-2xl p-8 lg:p-12 text-center text-white mb-16">
+          <h2 className="text-3xl font-bold mb-4">
+            Ready to connect with your community?
+          </h2>
+          <p className="text-blue-100 mb-8 max-w-2xl mx-auto">
+            Join hundreds of residents already using our platform to stay connected and engaged with their HOA community.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/auth/signup"
+              className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+            >
+              Create Your Account
+            </Link>
+            <Link
+              href="/request-access"
+              className="border border-blue-300 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Request Access
+            </Link>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center space-x-3 mb-4 md:mb-0">
+              <BarChart3 className="h-6 w-6 text-blue-600" />
+              <span className="font-semibold text-gray-900">HOA Community Portal</span>
+            </div>
+            <div className="flex items-center space-x-6 text-sm text-gray-600">
+              <Link href="/help" className="hover:text-gray-900">
+                Help & Support
+              </Link>
+              <Link href="/request-access" className="hover:text-gray-900">
+                Request Access
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
-  );
-}
-
-export default function DashboardPage() {
-  return (
-    <AdminGate>
-      <Suspense fallback={<LoadingSpinner />}>
-        <DashboardContent />
-      </Suspense>
-    </AdminGate>
   );
 }

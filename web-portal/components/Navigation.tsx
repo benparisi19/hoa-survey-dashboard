@@ -1,8 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { BarChart3, Users, Building2, UserCheck, Star, MapPin } from 'lucide-react';
+import { 
+  BarChart3, 
+  Users, 
+  Building2, 
+  UserCheck, 
+  Star, 
+  MapPin,
+  Search,
+  HelpCircle,
+  User,
+  Zap
+} from 'lucide-react';
 import { useAuth, useProfile } from '@/lib/auth-context-v2';
+import { getUserState, UserState } from '@/lib/user-state';
 import UserMenu from './UserMenu';
 import ResponseCount from './ResponseCount';
 
@@ -13,7 +25,14 @@ interface NavigationItem {
   description: string;
 }
 
-const navigation: NavigationItem[] = [
+// Admin navigation (full system access)
+const adminNavigation: NavigationItem[] = [
+  {
+    name: 'Dashboard',
+    href: '/admin/dashboard',
+    icon: BarChart3,
+    description: 'Admin overview and survey metrics',
+  },
   {
     name: 'Neighborhood',
     href: '/neighborhood',
@@ -44,17 +63,71 @@ const navigation: NavigationItem[] = [
     icon: Users,
     description: 'View and filter individual responses',
   },
+];
+
+// User navigation (property owners/residents)
+const userNavigation: NavigationItem[] = [
   {
     name: 'Dashboard',
-    href: '/',
+    href: '/dashboard',
     icon: BarChart3,
-    description: 'Overview and key metrics',
+    description: 'Your property dashboard',
+  },
+  {
+    name: 'Properties',
+    href: '/properties',
+    icon: Building2,
+    description: 'Your accessible properties',
+  },
+];
+
+// Onboarding navigation (users without properties)
+const onboardingNavigation: NavigationItem[] = [
+  {
+    name: 'Getting Started',
+    href: '/getting-started',
+    icon: Zap,
+    description: 'Complete your account setup',
+  },
+  {
+    name: 'Find Property',
+    href: '/property-search',
+    icon: Search,
+    description: 'Search and claim your property',
+  },
+  {
+    name: 'Help',
+    href: '/help',
+    icon: HelpCircle,
+    description: 'Get help and support',
   },
 ];
 
 export default function Navigation() {
   const { user } = useAuth();
-  const { profile, loading: profileLoading, isAdmin } = useProfile();
+  const { userProfile, loading: profileLoading, isAdmin } = useProfile();
+  
+  // Determine user state and appropriate navigation
+  const userState = getUserState(user, userProfile);
+  
+  // Get navigation items based on user state
+  const getNavigationItems = (): NavigationItem[] => {
+    switch (userState) {
+      case UserState.ADMIN:
+        return adminNavigation;
+      case UserState.HAS_PROPERTIES:
+        return userNavigation;
+      case UserState.PROFILE_NO_PROPERTIES:
+      case UserState.AUTHENTICATED_NO_PROFILE:
+        return onboardingNavigation;
+      case UserState.UNAUTHENTICATED:
+      default:
+        return []; // No navigation for unauthenticated users
+    }
+  };
+
+  const navigationItems = getNavigationItems();
+  const showNavigation = navigationItems.length > 0 && !profileLoading;
   const userIsAdmin = isAdmin();
 
   return (
@@ -65,14 +138,14 @@ export default function Navigation() {
             <div className="flex-shrink-0 flex items-center">
               <BarChart3 className="h-8 w-8 text-primary-600" />
               <span className="ml-2 text-xl font-bold text-gray-900">
-                HOA Survey Dashboard
+                HOA Community Portal
               </span>
             </div>
             
-            {/* Only show navigation links for authenticated admins */}
-            {user && userIsAdmin && (
+            {/* Show navigation based on user state */}
+            {showNavigation && (
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                {navigation.map((item) => {
+                {navigationItems.map((item) => {
                   const Icon = item.icon;
                   return (
                     <Link
@@ -95,17 +168,17 @@ export default function Navigation() {
               <ResponseCount />
             )}
             
-            {/* Always show UserMenu - it handles its own auth state */}
-            <UserMenu />
+            {/* Show UserMenu for authenticated users */}
+            {user && <UserMenu />}
           </div>
         </div>
       </div>
       
-      {/* Mobile navigation - only for authenticated admins */}
-      {user && userIsAdmin && (
+      {/* Mobile navigation */}
+      {showNavigation && (
         <div className="sm:hidden">
           <div className="pt-2 pb-3 space-y-1">
-            {navigation.map((item) => {
+            {navigationItems.map((item) => {
               const Icon = item.icon;
               return (
                 <Link

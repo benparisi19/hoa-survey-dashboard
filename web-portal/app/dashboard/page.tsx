@@ -18,6 +18,8 @@ import {
   Eye
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import UserStateGuidance from '@/components/UserStateGuidance';
+import OnboardingTooltips from '@/components/OnboardingTooltips';
 
 export default function DashboardPage() {
   const { user, loading, signOut } = useAuth();
@@ -97,6 +99,9 @@ export default function DashboardPage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* User State Guidance */}
+        <UserStateGuidance page="dashboard" className="mb-6" />
+
         {/* Account Status Alert */}
         {userProfile.account_status !== 'verified' && (
           <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -115,7 +120,7 @@ export default function DashboardPage() {
         )}
 
         {/* Property Access Overview */}
-        <div className="mb-8">
+        <div className="mb-8" data-tooltip="properties-section">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
               Your Properties ({userProfile.accessible_properties.length})
@@ -124,6 +129,7 @@ export default function DashboardPage() {
               <a
                 href="/property-search"
                 className="inline-flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                data-tooltip="add-property"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Another Property
@@ -286,6 +292,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      
+      {/* Onboarding Tooltips */}
+      <OnboardingTooltips page="dashboard" />
     </div>
   );
 }

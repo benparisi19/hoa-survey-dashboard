@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth, useProfile } from '@/lib/auth-context-v2';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { PropertySearchGuidance, AccessRequestGuidance } from '@/components/UserStateGuidance';
 
 interface Property {
   property_id: string;
@@ -195,6 +196,9 @@ export default function PropertySearchPage() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {step === 'search' && (
           <div className="space-y-6">
+            {/* Property Search Guidance */}
+            <PropertySearchGuidance />
+
             {/* Search Instructions */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="text-center mb-6">
@@ -345,17 +349,13 @@ export default function PropertySearchPage() {
               </div>
 
               {/* Message Display */}
-              {message && (
-                <div className={`mb-6 flex items-center p-3 rounded-md ${
-                  message.type === 'success' 
-                    ? 'bg-green-50 text-green-800 border border-green-200' 
-                    : 'bg-red-50 text-red-800 border border-red-200'
-                }`}>
-                  {message.type === 'success' ? (
-                    <CheckCircle className="h-5 w-5 mr-2" />
-                  ) : (
-                    <AlertCircle className="h-5 w-5 mr-2" />
-                  )}
+              {message && message.type === 'success' && (
+                <AccessRequestGuidance />
+              )}
+              
+              {message && message.type === 'error' && (
+                <div className="mb-6 flex items-center p-3 rounded-md bg-red-50 text-red-800 border border-red-200">
+                  <AlertCircle className="h-5 w-5 mr-2" />
                   <span className="text-sm">{message.text}</span>
                 </div>
               )}

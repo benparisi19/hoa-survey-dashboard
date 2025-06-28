@@ -18,6 +18,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import UserStateGuidance from '@/components/UserStateGuidance';
 
 interface AccessRequest {
   request_id: string;
@@ -143,6 +144,9 @@ export default function AccessRequestsAdminPage() {
               <p className="text-gray-600">Review and manage resident access requests</p>
             </div>
           </div>
+
+          {/* Admin Guidance */}
+          <UserStateGuidance page="access-requests" className="mb-6" />
 
           {/* Filter Tabs */}
           <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
