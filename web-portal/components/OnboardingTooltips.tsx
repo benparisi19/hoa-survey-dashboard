@@ -195,13 +195,13 @@ export default function OnboardingTooltips({ page, enabled = true }: OnboardingT
   };
 
   const markTooltipCompleted = (tooltipId: string) => {
-    const newCompleted = new Set([...completedTooltips, tooltipId]);
+    const newCompleted = new Set(Array.from(completedTooltips).concat(tooltipId));
     setCompletedTooltips(newCompleted);
     
     try {
       localStorage.setItem(
         `${TOOLTIP_STORAGE_KEY}_${userState}`,
-        JSON.stringify([...newCompleted])
+        JSON.stringify(Array.from(newCompleted))
       );
     } catch {
       // Ignore localStorage errors
@@ -210,13 +210,13 @@ export default function OnboardingTooltips({ page, enabled = true }: OnboardingT
 
   const skipAllTooltips = () => {
     const allIds = pageTooltips.map(t => t.id);
-    const newCompleted = new Set([...completedTooltips, ...allIds]);
+    const newCompleted = new Set(Array.from(completedTooltips).concat(allIds));
     setCompletedTooltips(newCompleted);
     
     try {
       localStorage.setItem(
         `${TOOLTIP_STORAGE_KEY}_${userState}`,
-        JSON.stringify([...newCompleted])
+        JSON.stringify(Array.from(newCompleted))
       );
     } catch {
       // Ignore localStorage errors
