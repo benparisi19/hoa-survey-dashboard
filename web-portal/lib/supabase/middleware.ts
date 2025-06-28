@@ -36,12 +36,12 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Allow access to auth routes and public pages
-  const publicPaths = ['/auth/login', '/auth/callback', '/request-access', '/invitations/accept'];
+  const publicPaths = ['/auth/login', '/auth/signup', '/auth/setup-profile', '/auth/callback', '/request-access', '/invitations/accept'];
   const isPublicPath = publicPaths.some(path => request.nextUrl.pathname.startsWith(path));
   
   if (isPublicPath) {
-    // If user is already authenticated and trying to access login, redirect to dashboard
-    if (user && request.nextUrl.pathname === '/auth/login') {
+    // If user is already authenticated and trying to access login or signup, redirect to dashboard
+    if (user && (request.nextUrl.pathname === '/auth/login' || request.nextUrl.pathname === '/auth/signup')) {
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);
