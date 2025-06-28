@@ -43,14 +43,6 @@ export default function UserMenu() {
     ? `${userProfile.first_name} ${userProfile.last_name}` 
     : (profile?.full_name || user.email?.split('@')[0] || 'User');
   const roleDisplay = userProfile?.account_type === 'hoa_admin' ? 'Administrator' : 'Limited Access';
-  
-  console.log('🔍 UserMenu debug:', {
-    userProfile,
-    profile,
-    userIsAdmin,
-    displayName,
-    roleDisplay
-  });
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -95,18 +87,6 @@ export default function UserMenu() {
                 {roleDisplay}
               </div>
             </div>
-
-            {/* Force Refresh - Debug Only */}
-            <button
-              onClick={() => {
-                console.log('🚀 Manual profile refresh triggered');
-                refreshProfile();
-              }}
-              className="flex items-center w-full px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 hover:text-blue-900 transition-colors border-b border-gray-100"
-            >
-              <Shield className="h-4 w-4 mr-2" />
-              Force Refresh Profile
-            </button>
 
             {/* Sign Out */}
             <button

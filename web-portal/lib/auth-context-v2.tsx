@@ -225,23 +225,15 @@ export function useProfile() {
 
   const refreshProfile = async () => {
     if (user) {
-      console.log('🔄 Refreshing profile for user:', user.id);
       setLoading(true);
       const profile = await fetchUserProfile(user.id);
       setUserProfile(profile);
       setLoading(false);
-      console.log('✅ Profile refreshed:', profile?.account_type);
     }
   };
 
   const isAdmin = () => {
-    const result = userProfile?.account_type === 'hoa_admin';
-    console.log('🔍 isAdmin check:', {
-      userProfile: userProfile,
-      account_type: userProfile?.account_type,
-      result: result
-    });
-    return result;
+    return userProfile?.account_type === 'hoa_admin';
   };
 
   // Fetch profile when user changes
@@ -251,7 +243,6 @@ export function useProfile() {
       fetchUserProfile(user.id).then((profile) => {
         setUserProfile(profile);
         setLoading(false);
-        console.log('🔄 Profile loaded for user:', profile?.account_type);
       });
     } else {
       setUserProfile(null);
