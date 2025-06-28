@@ -9,9 +9,16 @@ export const dynamic = 'force-dynamic';
 
 async function getPeopleData(): Promise<PersonData[]> {
   try {
-    // Use direct database query for SSR instead of API call
-    const { createServiceClient } = await import('@/lib/supabase');
-    const supabase = createServiceClient();
+    // Use authenticated client that respects RLS policies
+    const { createClient } = await import('@/lib/supabase/server');
+    const supabase = createClient();
+    
+    // Check if user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      console.log('No authenticated user, returning empty people list');
+      return [];
+    }
     
     // Get people with property relationships (same logic as API)
     const { data, error } = await supabase

@@ -39,9 +39,16 @@ export interface PropertyData {
 
 async function getPropertiesData(): Promise<PropertyData[]> {
   try {
-    // Use direct database query for SSR instead of API call
-    const { createServiceClient } = await import('@/lib/supabase');
-    const supabase = createServiceClient();
+    // Use authenticated client that respects RLS policies
+    const { createClient } = await import('@/lib/supabase/server');
+    const supabase = createClient();
+    
+    // Check if user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      console.log('No authenticated user, returning empty properties list');
+      return [];
+    }
     
     // Get properties with residents count (same logic as API)
     const { data, error } = await supabase
